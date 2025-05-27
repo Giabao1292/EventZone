@@ -1,0 +1,96 @@
+package com.example.backend.model;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
+
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+@Getter
+@Setter
+@Entity
+@Table(name = "tbl_user", uniqueConstraints = {
+        @UniqueConstraint(name = "username", columnNames = {"username"}),
+        @UniqueConstraint(name = "email", columnNames = {"email"})
+})
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id", nullable = false)
+    private Integer id;
+
+    @Size(max = 50)
+    @NotNull
+    @Column(name = "username", nullable = false, length = 50)
+    private String username;
+
+    @Size(max = 255)
+    @NotNull
+    @Column(name = "password", nullable = false)
+    private String password;
+
+    @Size(max = 100)
+    @Column(name = "fullname", length = 100)
+    private String fullname;
+
+    @Size(max = 255)
+    @Column(name = "profile_url")
+    private String profileUrl;
+
+    @Column(name = "date_of_birth")
+    private LocalDate dateOfBirth;
+
+    @Size(max = 20)
+    @Column(name = "phone", length = 20)
+    private String phone;
+
+    @Size(max = 100)
+    @Column(name = "email", length = 100)
+    private String email;
+
+    @ColumnDefault("1")
+    @Column(name = "status")
+    private Integer status;
+
+    @ColumnDefault("0")
+    @Column(name = "score")
+    private Integer score;
+
+    @ColumnDefault("CURRENT_TIMESTAMP")
+    @Column(name = "createAt")
+    private Instant createAt;
+
+    @ColumnDefault("CURRENT_TIMESTAMP")
+    @Column(name = "updateAt")
+    private Instant updateAt;
+
+    @Size(max = 50)
+    @Column(name = "createdby", length = 50)
+    private String createdby;
+
+    @Size(max = 50)
+    @Column(name = "modifiedby", length = 50)
+    private String modifiedby;
+
+    @OneToMany(mappedBy = "user")
+    private Set<Booking> tblBookings = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "user")
+    private Set<Organizer> tblOrganizers = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "user")
+    private Set<Review> tblReviews = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "user")
+    private Set<UserRole> tblUserRoles = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "user")
+    private Set<com.example.backend.model.UserVoucher> tblUserVouchers = new LinkedHashSet<>();
+
+}

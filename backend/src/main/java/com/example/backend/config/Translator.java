@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import java.util.Locale;
 
 @Component
-public class Translator {
+public class  Translator {
     private static ResourceBundleMessageSource messageSource;
 
     public Translator(ResourceBundleMessageSource messageSource) {

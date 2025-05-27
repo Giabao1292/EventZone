@@ -13,14 +13,13 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class LoggingAspect {
 
-    // Áp dụng cho tất cả method trong package com.example.controller
     @Around("execution(* com.example.backend.controller..*(..))")
     public Object logAround(ProceedingJoinPoint joinPoint) throws Throwable {
         String methodName = joinPoint.getSignature().toShortString();
 
         log.info("**Start method: " + methodName);
         try {
-            Object result = joinPoint.proceed(); // gọi thực thi method gốc
+            Object result = joinPoint.proceed();
             return result;
         } finally {
             log.info("**End method: " + methodName);
