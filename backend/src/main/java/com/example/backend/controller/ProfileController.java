@@ -2,7 +2,7 @@ package com.example.backend.controller;
 
 import com.example.backend.model.User;
 import com.example.backend.repository.UserRepository;
-import com.example.backend.service.JwtService; // Nếu bạn dùng JwtService thay vì JwtUtils
+import com.example.backend.service.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,7 +17,7 @@ import java.util.Optional;
 public class ProfileController {
 
     private final UserRepository userRepository;
-    private final JwtService jwtService; // Đổi tên từ JwtUtils thành JwtService nếu cần
+    private final JwtService jwtService;
 
     @GetMapping
     public ResponseEntity<?> getProfile(HttpServletRequest request) {
@@ -28,8 +28,8 @@ public class ProfileController {
                         .body("Missing token or invalid format");
             }
 
-            String token = authHeader.substring(7); // Bỏ chữ "Bearer "
-            String username = jwtService.extractUsername(token); // Gọi hàm từ JwtService
+            String token = authHeader.substring(7);
+            String username = jwtService.extractUsername(token);
 
             Optional<User> optionalUser = userRepository.findByUsername(username);
             if (optionalUser.isEmpty()) {
