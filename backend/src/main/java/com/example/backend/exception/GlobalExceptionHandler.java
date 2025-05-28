@@ -64,7 +64,6 @@ public class GlobalExceptionHandler {
             firstIndex = message.lastIndexOf("[");
             lastIndex = message.lastIndexOf("]");
         }
-
         message = message.substring(firstIndex + 1, lastIndex - 1);
         return message;
     }
