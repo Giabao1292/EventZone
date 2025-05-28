@@ -32,7 +32,7 @@ public class AppConfig implements WebMvcConfigurer , WebSecurityCustomizer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:3000")
+                .allowedOrigins("http://localhost:5173")
                 .allowCredentials(true)
                 .allowedHeaders("*")
                 .allowedMethods("*")
@@ -46,7 +46,8 @@ public class AppConfig implements WebMvcConfigurer , WebSecurityCustomizer {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
-        return httpSecurity.csrf(AbstractHttpConfigurer::disable)
+        return httpSecurity.cors(Customizer.withDefaults())
+                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
                         .requestMatchers(WHILE_LIST).permitAll()
 
