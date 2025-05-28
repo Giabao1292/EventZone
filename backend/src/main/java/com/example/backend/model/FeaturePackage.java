@@ -61,10 +61,10 @@ public class FeaturePackage {
     @Column(name = "modified_by", length = 50)
     private String modifiedBy;
 
-    @OneToMany(mappedBy = "packageField")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "packageField")
     private Set<EventPayment> tblEventPayments = new LinkedHashSet<>();
 
-    @OneToMany(mappedBy = "packageField")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "packageField")
     private Set<com.example.backend.model.FeaturedEvent> tblFeaturedEvents = new LinkedHashSet<>();
 
 }

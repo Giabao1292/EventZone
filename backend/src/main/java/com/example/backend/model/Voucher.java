@@ -54,13 +54,13 @@ public class Voucher {
     @Column(name = "valid_until", nullable = false)
     private LocalDate validUntil;
 
-    @OneToMany(mappedBy = "voucher")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "voucher")
     private Set<Booking> tblBookings = new LinkedHashSet<>();
 
-    @OneToMany(mappedBy = "voucher")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "voucher")
     private Set<EventVoucher> tblEventVouchers = new LinkedHashSet<>();
 
-    @OneToMany(mappedBy = "voucher")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "voucher")
     private Set<UserVoucher> tblUserVouchers = new LinkedHashSet<>();
 
 }

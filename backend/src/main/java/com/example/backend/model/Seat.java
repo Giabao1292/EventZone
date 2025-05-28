@@ -53,7 +53,7 @@ public class Seat {
     @Column(name = "y")
     private Integer y;
 
-    @OneToMany(mappedBy = "seat")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "seat")
     private Set<BookingSeat> tblBookingSeats = new LinkedHashSet<>();
 
 }

@@ -26,7 +26,7 @@ public class Category {
     @Column(name = "category_name", nullable = false, length = 100)
     private String categoryName;
 
-    @OneToMany(mappedBy = "category")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "category")
     private Set<com.example.backend.model.Event> tblEvents = new LinkedHashSet<>();
 
 }

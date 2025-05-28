@@ -56,7 +56,7 @@ public class Organizer {
     @OneToMany(mappedBy = "organizer")
     private Set<Event> tblEvents = new LinkedHashSet<>();
 
-    @OneToMany(mappedBy = "organizer")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "organizer")
     private Set<EventPayment> tblEventPayments = new LinkedHashSet<>();
 
 }

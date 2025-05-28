@@ -36,7 +36,7 @@ public class ShowingTime {
     @Column(name = "showing_datetime", nullable = false)
     private Instant showingDatetime;
 
-    @OneToMany(mappedBy = "showingTime")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "showingTime")
     private Set<com.example.backend.model.TimeDetail> tblTimeDetails = new LinkedHashSet<>();
 
 }

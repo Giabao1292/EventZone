@@ -73,7 +73,7 @@ public class Booking {
     @Column(name = "qr_code_data")
     private String qrCodeData;
 
-    @OneToMany(mappedBy = "booking")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "booking")
     private Set<com.example.backend.model.BookingSeat> tblBookingSeats = new LinkedHashSet<>();
 
 }

@@ -87,19 +87,19 @@ public class Event {
     @Column(name = "modified_by", length = 50)
     private String modifiedBy;
 
-    @OneToMany(mappedBy = "event")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "event")
     private Set<com.example.backend.model.EventPayment> tblEventPayments = new LinkedHashSet<>();
 
-    @OneToMany(mappedBy = "event")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "event")
     private Set<com.example.backend.model.EventVoucher> tblEventVouchers = new LinkedHashSet<>();
 
-    @OneToMany(mappedBy = "event")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "event")
     private Set<com.example.backend.model.FeaturedEvent> tblFeaturedEvents = new LinkedHashSet<>();
 
-    @OneToMany(mappedBy = "event")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "event")
     private Set<com.example.backend.model.Review> tblReviews = new LinkedHashSet<>();
 
-    @OneToMany(mappedBy = "event")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "event")
     private Set<com.example.backend.model.ShowingTime> tblShowingTimes = new LinkedHashSet<>();
 
 }

@@ -30,7 +30,7 @@ public class TimeDetail {
     @Column(name = "time_detail", nullable = false)
     private LocalTime timeDetail;
 
-    @OneToMany(mappedBy = "timeDetail")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "timeDetail")
     private Set<Booking> tblBookings = new LinkedHashSet<>();
 
 }

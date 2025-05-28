@@ -29,7 +29,7 @@ public class SeatType {
     @Column(name = "price", nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
-    @OneToMany(mappedBy = "seatType")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "seatType")
     private Set<Seat> tblSeats = new LinkedHashSet<>();
 
 }

@@ -45,7 +45,7 @@ public class SeatZone {
     @Column(name = "price", nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
-    @OneToMany(mappedBy = "seatZone")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "seatZone")
     private Set<Seat> tblSeats = new LinkedHashSet<>();
 
 }
