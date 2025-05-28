@@ -18,16 +18,4 @@ public class UserServiceImpl implements UserService {
     public UserDetailsService getUserDetailsService() {
         return username -> userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException(username));
     }
-
-    @Override
-    public void register(RegisterRequest registerRequest) {
-        User user = new User();
-        user.setUsername(registerRequest.getUsername());
-        user.setPassword(registerRequest.getPassword());
-        user.setFullname(registerRequest.getFullName());
-        user.setEmail(registerRequest.getEmail());
-        user.setPhone(registerRequest.getPhone());
-        user.setDateOfBirth(registerRequest.getDateOfBirth());
-        userRepository.save(user);
-    }
 }
