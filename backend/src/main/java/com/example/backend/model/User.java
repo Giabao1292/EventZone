@@ -3,14 +3,22 @@ package com.example.backend.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
+import java.io.Serializable;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -19,7 +27,7 @@ import java.util.Set;
         @UniqueConstraint(name = "username", columnNames = {"username"}),
         @UniqueConstraint(name = "email", columnNames = {"email"})
 })
-public class User {
+public class User implements UserDetails, Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id", nullable = false)
@@ -87,10 +95,36 @@ public class User {
     @OneToMany(mappedBy = "user")
     private Set<Review> tblReviews = new LinkedHashSet<>();
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER)
     private Set<UserRole> tblUserRoles = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "user")
-    private Set<com.example.backend.model.UserVoucher> tblUserVouchers = new LinkedHashSet<>();
+    private Set<UserVoucher> tblUserVouchers = new LinkedHashSet<>();
 
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return tblUserRoles.stream()
+                .map(userRole -> new SimpleGrantedAuthority(userRole.getRole().getRoleName()))
+                .collect(Collectors.toSet());
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return status == 1;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return status == 1;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return status == 1;
+    }
 }
