@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.DynamicInsert;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 @Entity
+@DynamicInsert
 @Table(name = "tbl_user", uniqueConstraints = {
         @UniqueConstraint(name = "username", columnNames = {"username"}),
         @UniqueConstraint(name = "email", columnNames = {"email"})

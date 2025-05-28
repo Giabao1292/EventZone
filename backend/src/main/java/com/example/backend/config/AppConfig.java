@@ -47,8 +47,10 @@ public class AppConfig implements WebMvcConfigurer , WebSecurityCustomizer {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         return httpSecurity.csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(authorizeRequests -> authorizeRequests.requestMatchers(WHILE_LIST)
-                        .permitAll().requestMatchers("/api/admin/**")
+                .authorizeHttpRequests(authorizeRequests -> authorizeRequests
+                        .requestMatchers(WHILE_LIST).permitAll()
+
+                        .requestMatchers("/api/admin/**")
                         .hasRole("ADMIN").anyRequest().authenticated())
                 .authenticationProvider(provider()).addFilterBefore(preFilter, UsernamePasswordAuthenticationFilter.class)
                 .sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
