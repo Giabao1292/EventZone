@@ -25,7 +25,7 @@ public class ProfileController {
             String authHeader = request.getHeader("Authorization");
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body("Thiếu token hoặc định dạng không hợp lệ");
+                        .body("Missing token or invalid format");
             }
 
             String token = authHeader.substring(7); // Bỏ chữ "Bearer "
@@ -34,7 +34,7 @@ public class ProfileController {
             Optional<User> optionalUser = userRepository.findByUsername(username);
             if (optionalUser.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body("Không tìm thấy người dùng");
+                        .body("User not found");
             }
 
             User user = optionalUser.get();
@@ -42,7 +42,7 @@ public class ProfileController {
             return ResponseEntity.ok(user);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Lỗi khi lấy thông tin profile: " + e.getMessage());
+                    .body("Error while retrieving profile information: " + e.getMessage());
         }
     }
 }
