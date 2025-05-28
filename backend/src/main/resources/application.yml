@@ -1,3 +1,4 @@
+
 spring:
   profiles:
     active: dev
@@ -20,7 +21,15 @@ spring:
     multipart:
       max-file-size: 50MB
       max-request-size: 50MB
+  jpa:
+    hibernate:
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
 server:
   port: 8080
-  servlet:
-    context-path: /api
+jwt:
+  limit:
+    day: 15
+    hour: 1
+  secretKey: iEKeAbUUiOb/waueS/nKrEV4aAEtrO5LZoVq+8fk8XHgXFmMUT70euKykS3JI0yzOAelB167lBKavBiQIRf9UQ==
+
