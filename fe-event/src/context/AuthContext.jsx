@@ -13,7 +13,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const loadUser = async () => {
-      if (token) {
+      if (token && !user) {
         try {
           const userData = await getUserDetail();
           setUser(userData);
@@ -26,12 +26,16 @@ export const AuthProvider = ({ children }) => {
     };
 
     loadUser();
-  }, [token]);
+  }, [token, user]);
 
   const login = (data) => {
-    setToken(data.token);
+    setToken(data.accessToken);
     setUser(data.user);
     setIsAuthenticated(true);
+  };
+
+  const updateUser = (updatedUser) => {
+    setUser(updatedUser); // Update user data in context
   };
 
   const logout = () => {
@@ -43,12 +47,21 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ token, user, isAuthenticated, loading, login, logout }}
+      value={{
+        token,
+        user,
+        isAuthenticated,
+        loading,
+        login,
+        updateUser,
+        logout,
+      }}
     >
       {!loading && children}
     </AuthContext.Provider>
   );
 };
+
 AuthProvider.propTypes = {
   children: PropTypes.node.isRequired,
 };

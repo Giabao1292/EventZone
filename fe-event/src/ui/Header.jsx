@@ -1,8 +1,12 @@
 import { Link } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
+import avatarDefault from "../assets/images/avtDefault.jpg"; // Đường dẫn tới ảnh mặc định
 
 const Header = () => {
   const { isAuthenticated, user, logout } = useAuth();
+
+  // Lấy URL avatar từ profileUrl hoặc dùng ảnh mặc định
+  const avatarUrl = user?.profileUrl || avatarDefault;
 
   return (
     <header className="bg-gradient-to-r from-slate-50 to-blue-50 shadow-sm sticky top-0 z-50 border-b border-slate-200">
@@ -29,27 +33,27 @@ const Header = () => {
           >
             Thể loại
           </Link>
-          <a
+          <Link
             to="/home"
             className="text-slate-600 hover:text-blue-600 transition-colors duration-200 hover:scale-105 transform"
           >
             Vé của tôi
-          </a>
-          <a
-            href="/profile"
+          </Link>
+          <Link
+            to="/profile"
             className="text-slate-600 hover:text-blue-600 transition-colors duration-200 hover:scale-105 transform"
           >
             Tài khoản của tôi
-          </a>
+          </Link>
 
           {isAuthenticated ? (
             <div className="flex items-center space-x-4 pl-4 border-l border-slate-300">
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center">
-                  <span className="text-white font-medium text-xs">
-                    {user?.username?.charAt(0).toUpperCase()}
-                  </span>
-                </div>
+                <img
+                  src={avatarUrl}
+                  alt="Avatar"
+                  className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                />
                 <span className="text-slate-700 font-medium">
                   {user?.username}
                 </span>
