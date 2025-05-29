@@ -1,0 +1,8 @@
+ALTER TABLE tbl_user ADD COLUMN enabled BOOLEAN DEFAULT FALSE;
+CREATE TABLE tbl_verification_token (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    token VARCHAR(255) NOT NULL UNIQUE,
+    user_id INT NOT NULL,
+    expiry_date TIMESTAMP NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES tbl_user(user_id) ON DELETE CASCADE
+);
