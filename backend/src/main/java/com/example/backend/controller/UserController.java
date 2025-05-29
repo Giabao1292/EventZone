@@ -1,10 +1,13 @@
 package com.example.backend.controller;
 
+import com.example.backend.dto.request.UserUpdateRequest;
 import com.example.backend.dto.response.ResponseData;
 import com.example.backend.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -20,4 +23,6 @@ public class UserController {
     public ResponseData<String> getUser(@PathVariable Long id) {
         return new ResponseData(HttpStatus.OK.value(), "User with id " + id + " found", "Get User");
     }
+
+
 }
