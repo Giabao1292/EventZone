@@ -3,6 +3,7 @@ import Home from "./pages/Home";
 import LoginPage from "./features/authentication/pages/LoginPage";
 import AppLayout from "./ui/AppLayout";
 import RegisterPage from "./features/authentication/pages/RegisterPage";
+import ProfilePage from "./pages/ProfilePage";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<Navigate to="/home" replace />} />
                 <Route path="/home" element={<Home />} />
+                <Route path="/profile" element={<ProfilePage />} />
               </Routes>
             </AppLayout>
           }

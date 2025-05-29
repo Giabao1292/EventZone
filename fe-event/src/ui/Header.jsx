@@ -29,18 +29,18 @@ const Header = () => {
           >
             Thể loại
           </Link>
-          <Link
+          <a
             to="/home"
             className="text-slate-600 hover:text-blue-600 transition-colors duration-200 hover:scale-105 transform"
           >
             Vé của tôi
-          </Link>
-          <Link
-            to="/support"
+          </a>
+          <a
+            href="/profile"
             className="text-slate-600 hover:text-blue-600 transition-colors duration-200 hover:scale-105 transform"
           >
-            Hỗ trợ
-          </Link>
+            Tài khoản của tôi
+          </a>
 
           {isAuthenticated ? (
             <div className="flex items-center space-x-4 pl-4 border-l border-slate-300">
