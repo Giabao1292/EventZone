@@ -34,7 +34,7 @@ public class AuthServiceImpl implements AuthService {
     public TokenResponse authenticate(LoginRequest request) {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
         User user =  userRepository.findByUsername(request.getUsername()).orElseThrow(() -> new UsernameNotFoundException("User or Password incorrect"));
-        String token = jwtService.generate(user);
+        String token = jwtService.generateToken(user);
         return TokenResponse.builder()
                 .accessToken(token)
                 .refreshToken("refresh_token")
@@ -53,10 +53,11 @@ public class AuthServiceImpl implements AuthService {
         user.setDateOfBirth(registerRequest.getDateOfBirth());
         validateRegisterRequest(registerRequest);
         userRepository.save(user);
-        String token = jwtService.generate(user);
+        String token = jwtService.generateToken(user);
+        String refreshToken = jwtService.generateRefreshToken(user);
         return TokenResponse.builder()
                 .accessToken(token)
-                .refreshToken("refresh-token")
+                .refreshToken(refreshToken)
                 .userId(user.getId())
                 .build();
     }

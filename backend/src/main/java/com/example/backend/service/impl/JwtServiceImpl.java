@@ -39,11 +39,16 @@ public class JwtServiceImpl implements JwtService {
     }
 
     @Override
-    public String generate(UserDetails userDetails){
-        return generateToken(new HashMap<>(), userDetails);
+    public String generateToken(UserDetails userDetails){
+        return generateToken(new HashMap<>(), userDetails, limitHour);
     }
 
-    public String generateToken(Map<String, Object> claims, UserDetails userDetails) {
+    @Override
+    public String generateRefreshToken(UserDetails userDetails){
+        return generateToken(new HashMap<>(), userDetails, limitDay);
+    }
+
+    public String generateToken(Map<String, Object> claims, UserDetails userDetails, Integer limitTime) {
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(userDetails.getUsername())
