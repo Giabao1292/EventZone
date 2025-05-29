@@ -1,14 +1,23 @@
-// src/pages/ProfilePage.tsx
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { getUserDetail, updateUserDetail } from "../services/userServices";
+import {
+  getUserDetail,
+  updateUserDetail,
+  updateUserAvatar,
+} from "../services/userServices"; // Import updateUserAvatar
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import PropTypes from "prop-types";
+import avatarDefault from "../assets/images/avtDefault.jpg"; // Ảnh mặc định
+import useAuth from "../hooks/useAuth";
 
 const ProfilePage = () => {
+  const { user: authUser, updateUser } = useAuth();
   const [user, setUser] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState(
+    authUser?.profileUrl || avatarDefault
+  );
 
   const {
     register,
@@ -18,10 +27,8 @@ const ProfilePage = () => {
   } = useForm({
     defaultValues: {
       fullname: "",
-      email: "",
       phone: "",
       dateOfBirth: "",
-      username: "",
     },
   });
 
@@ -30,7 +37,13 @@ const ProfilePage = () => {
       try {
         const data = await getUserDetail();
         setUser(data);
-        reset(data);
+        const formattedData = {
+          ...data,
+          dateOfBirth: data.dateOfBirth
+            ? new Date(data.dateOfBirth).toISOString().split("T")[0]
+            : "",
+        };
+        reset(formattedData);
       } catch (error) {
         console.error("Lỗi khi tải dữ liệu người dùng:", error);
         toast.error("Không thể tải dữ liệu người dùng!");
@@ -53,8 +66,12 @@ const ProfilePage = () => {
 
       const updated = await updateUserDetail(updatedData);
       setUser(updated);
-      reset(updated);
-      setIsEditing(false);
+      reset({
+        ...updated,
+        dateOfBirth: updated.dateOfBirth
+          ? new Date(updated.dateOfBirth).toISOString().split("T")[0]
+          : "",
+      });
       toast.success("Cập nhật thành công!");
     } catch (error) {
       console.error("Lỗi khi cập nhật:", error);
@@ -64,9 +81,28 @@ const ProfilePage = () => {
     }
   };
 
-  const handleCancel = () => {
-    reset(user);
-    setIsEditing(false);
+  // Updated handler to use the service function
+  const handleAvatarUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    try {
+      setIsLoading(true);
+      const result = await updateUserAvatar(file); // Call the service function
+
+      if (result.code === 200) {
+        setAvatarUrl(result.data); // Update avatarUrl with new URL
+        updateUser({ ...authUser, profileUrl: result.data }); // Update authUser
+        toast.success("Cập nhật avatar thành công!");
+      } else {
+        toast.error("Cập nhật avatar thất bại!");
+      }
+    } catch (error) {
+      console.error("Lỗi khi upload avatar:", error);
+      toast.error(error.message || "Có lỗi xảy ra khi upload avatar!");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (!user) {
@@ -80,9 +116,31 @@ const ProfilePage = () => {
   return (
     <div className="max-w-3xl mx-auto py-12 px-6">
       <ToastContainer position="top-right" autoClose={3000} />
-      <h1 className="text-4xl font-bold text-center text-indigo-700 mb-10">
-        Hồ sơ cá nhân
-      </h1>
+      <div className="flex flex-col items-center mb-10">
+        <div className="relative">
+          <img
+            src={avatarUrl}
+            alt="Avatar"
+            className="w-24 h-24 rounded-full object-cover border-2 border-indigo-600 mb-2"
+          />
+          <label
+            htmlFor="avatar-upload"
+            className="absolute bottom-0 right-0 bg-indigo-600 text-white p-1 rounded-full cursor-pointer hover:bg-indigo-700"
+          >
+            ✏️
+          </label>
+          <input
+            id="avatar-upload"
+            type="file"
+            accept="image/*"
+            onChange={handleAvatarUpload}
+            className="hidden"
+          />
+        </div>
+        <h1 className="text-4xl font-bold text-center text-indigo-700">
+          Hồ sơ cá nhân
+        </h1>
+      </div>
 
       <form
         onSubmit={handleSubmit(onSubmit)}
@@ -91,7 +149,6 @@ const ProfilePage = () => {
         {/* Họ tên */}
         <Field
           label="Họ và tên"
-          isEditing={isEditing}
           register={register}
           name="fullname"
           error={errors.fullname?.message}
@@ -113,9 +170,9 @@ const ProfilePage = () => {
         {/* Số điện thoại */}
         <Field
           label="Số điện thoại"
-          isEditing={isEditing}
           register={register}
           name="phone"
+          error={errors.phone?.message}
         >
           {user.phone || "Chưa cập nhật"}
         </Field>
@@ -123,44 +180,25 @@ const ProfilePage = () => {
         {/* Ngày sinh */}
         <Field
           label="Ngày sinh"
-          isEditing={isEditing}
           register={register}
           name="dateOfBirth"
           type="date"
+          error={errors.dateOfBirth?.message}
         >
           {user.dateOfBirth
             ? new Date(user.dateOfBirth).toLocaleDateString("vi-VN")
             : "Chưa cập nhật"}
         </Field>
 
-        {/* Nút điều khiển */}
-        <div className="flex justify-end gap-4 pt-6">
-          {isEditing ? (
-            <>
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-xl"
-              >
-                Hủy
-              </button>
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl"
-              >
-                {isLoading ? "Đang lưu..." : "Lưu thay đổi"}
-              </button>
-            </>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setIsEditing(true)}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl"
-            >
-              ✏️ Chỉnh sửa
-            </button>
-          )}
+        {/* Nút lưu */}
+        <div className="flex justify-end pt-6">
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl"
+          >
+            {isLoading ? "Đang lưu..." : "Lưu"}
+          </button>
         </div>
       </form>
     </div>
@@ -168,12 +206,9 @@ const ProfilePage = () => {
 };
 
 // Component phụ cho form field
-import PropTypes from "prop-types";
-
 const Field = ({
   label,
   children,
-  isEditing,
   register,
   name,
   type = "text",
@@ -186,7 +221,13 @@ const Field = ({
       <label className="block text-sm font-medium text-gray-700 mb-1">
         {label}
       </label>
-      {isEditing && !readonly ? (
+      {readonly ? (
+        <input
+          className="mt-1 w-full border rounded px-4 py-2 bg-gray-100 cursor-not-allowed text-gray-700"
+          value={children}
+          disabled
+        />
+      ) : (
         <>
           <input
             type={type}
@@ -198,14 +239,6 @@ const Field = ({
           />
           {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
         </>
-      ) : readonly ? (
-        <input
-          className="mt-1 w-full border rounded px-4 py-2 bg-gray-100 cursor-not-allowed text-gray-700"
-          value={children}
-          disabled
-        />
-      ) : (
-        <p className="mt-1 text-lg text-gray-800">{children}</p>
       )}
     </div>
   );
@@ -214,7 +247,6 @@ const Field = ({
 Field.propTypes = {
   label: PropTypes.string.isRequired,
   children: PropTypes.node,
-  isEditing: PropTypes.bool,
   register: PropTypes.func,
   name: PropTypes.string,
   type: PropTypes.string,
