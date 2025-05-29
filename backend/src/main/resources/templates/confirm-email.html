@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirm Your Email</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        .logo {
+            max-width: 150px;
+        }
+
+        .content {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #007BFF;
+            color: #ffffff !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #777777;
+            margin-top: 20px;
+        }
+
+        .social-icons {
+            margin: 10px 0;
+        }
+
+        .social-icons a {
+            margin: 0 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <!-- Replace with your logo or brand name -->
+    <img src="https://example.com/logo.png" alt="Company Logo" class="logo">
+    <!-- <h1>Your Company</h1> -->
+</div>
+
+<div class="content">
+    <h2>Please Confirm Your Email Address</h2>
+    <p>Hi [First Name],</p>
+    <p>Thank you for signing up with <strong>[Company Name]</strong>! To complete your registration, please confirm your
+        email address by clicking the button below:</p>
+
+    <div style="text-align: center;">
+        <a th:href="@{${linkConfirm}}" class="button">Confirm Email</a>
+    </div>
+
+    <p>This link will expire in <strong>[X hours/days]</strong>. If you didn’t request this, please ignore this email or
+        contact our support team.</p>
+    <p>Need help? Reply to this email or contact us at <a href="mailto:support@example.com">support@example.com</a>.</p>
+</div>
+
+<div class="footer">
+    <p>© [Year] [Company Name]. All rights reserved.</p>
+    <p>[Company Address]</p>
+    <div class="social-icons">
+        <!-- Replace with your social media links -->
+        <a href="https://facebook.com/yourpage">Facebook</a>
+        <a href="https://twitter.com/yourhandle">Twitter</a>
+        <a href="https://linkedin.com/yourcompany">LinkedIn</a>
+    </div>
+</div>
+</body>
+</html>

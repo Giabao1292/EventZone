@@ -4,6 +4,7 @@ import LoginPage from "./features/authentication/pages/LoginPage";
 import AppLayout from "./ui/AppLayout";
 import RegisterPage from "./features/authentication/pages/RegisterPage";
 import ProfilePage from "./pages/ProfilePage";
+import VerifyEmail from "./pages/VerifyEmail";
 
 function App() {
   return (
@@ -11,6 +12,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
         <Route
           path="*"
           element={

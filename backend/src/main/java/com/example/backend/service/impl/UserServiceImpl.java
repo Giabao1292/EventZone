@@ -1,6 +1,5 @@
 package com.example.backend.service.impl;
 
-import com.example.backend.dto.request.RegisterRequest;
 import com.example.backend.dto.request.UserUpdateRequest;
 import com.example.backend.model.User;
 import com.example.backend.repository.UserRepository;
@@ -9,16 +8,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
-
     @Override
     public UserDetailsService getUserDetailsService() {
         return username -> userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException(username));
@@ -34,6 +27,4 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(user);
     }
-
-
 }
