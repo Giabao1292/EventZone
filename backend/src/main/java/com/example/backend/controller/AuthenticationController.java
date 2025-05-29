@@ -10,6 +10,7 @@ import com.example.backend.service.AuthService;
 import com.example.backend.service.MailService;
 import com.example.backend.service.UserService;
 import com.example.backend.service.VerificationService;
+import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,33 +31,19 @@ public class AuthenticationController {
 
     @PostMapping("/login")
     public ResponseData<TokenResponse> login(@Valid @RequestBody LoginRequest request){
-
-        try {
-            TokenResponse tokenResponse = authService.authenticate(request);
-            return new ResponseData<>(HttpStatus.OK.value(),"Login successfully", tokenResponse);
-        } catch (Exception e) {
-            return new ResponseData(HttpStatus.BAD_REQUEST.value(), e.getMessage());
-        }
+        TokenResponse tokenResponse = authService.authenticate(request);
+        return new ResponseData<>(HttpStatus.OK.value(),"Login successfully", tokenResponse);
     }
     @PostMapping("/register")
-    public ResponseData<?> register(@Valid @RequestBody RegisterRequest request){
-        try {
+    public ResponseData<?> register(@Valid @RequestBody RegisterRequest request) throws MessagingException {
             UserResponseDTO userResponseDTO = authService.register(request);
             mailService.sendConfirmEmail(userResponseDTO.getEmail(), userResponseDTO.getVerifyToken());
             return new ResponseData<>(HttpStatus.CREATED.value(),"Register successfully. Please check your email");
-        } catch (Exception e) {
-            return new ResponseData(HttpStatus.BAD_REQUEST.value(), e.getMessage());
-        }
     }
     @GetMapping("/verify-email")
     public ResponseData<TokenResponse> verifyEmail(@RequestParam(name = "token") String verifyToken){
-        try{
-            verificationService.validateToken(verifyToken);
-            return new ResponseData<>(HttpStatus.OK.value(),"Verify email successfully");
-        }
-        catch (Exception e){
-            return new ResponseData(HttpStatus.BAD_REQUEST.value(), e.getMessage());
-        }
+        verificationService.validateToken(verifyToken);
+        return new ResponseData<>(HttpStatus.OK.value(),"Verify email successfully");
     }
 //    @PostMapping("/refresh-token")
 //    public ResponseData<TokenResponse> refreshToken(@RequestBody TokenRefreshRequest request) {

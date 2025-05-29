@@ -23,6 +23,4 @@ public class UserController {
     public ResponseData<String> getUser(@PathVariable Long id) {
         return new ResponseData(HttpStatus.OK.value(), "User with id " + id + " found", "Get User");
     }
-
-
 }

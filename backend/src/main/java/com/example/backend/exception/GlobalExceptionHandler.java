@@ -4,67 +4,74 @@ import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.context.request.WebRequest;
 
 import java.util.Date;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class, HttpMessageNotReadableException.class})
+
+    // Xử lý lỗi validate @Valid cho DTO
+    @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse exceptionHandler(Exception e, WebRequest request) {
-        ErrorResponse errorResponse = new ErrorResponse();
-        errorResponse.setMessage(processMessage(e));
-        errorResponse.setStatus(HttpStatus.BAD_REQUEST.value());
-        errorResponse.setTimestamp(new Date());
-        errorResponse.setError(error(e));
-        String path = request.getDescription(false).replace("uri=", "");
-        errorResponse.setPath(path);
-        return errorResponse;
+    public ErrorResponse handleValidationError(MethodArgumentNotValidException ex, WebRequest request) {
+        String message = ex.getBindingResult().getFieldErrors().stream()
+                .map(err -> err.getField() + ": " + err.getDefaultMessage())
+                .collect(Collectors.joining(", "));
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Parameter Invalid", message, request);
     }
+    //Xử lý lỗi @RequestParam, @PathVariabl không hợp lệ
+
 
     @ExceptionHandler({MethodArgumentTypeMismatchException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleBadRequestException(Exception e, WebRequest request) {
-        ErrorResponse errorResponse = new ErrorResponse();
-        errorResponse.setMessage(e.getMessage());
-        errorResponse.setStatus(HttpStatus.BAD_REQUEST.value());
-        errorResponse.setTimestamp(new Date());
-        errorResponse.setError(e.getClass().getSimpleName());
-        String path = request.getDescription(false).replace("uri=", "");
-        errorResponse.setPath(path);
-        return errorResponse;
+    public ErrorResponse handleTypeMismatch(MethodArgumentTypeMismatchException ex, WebRequest request) {
+        String message = "Failed to convert parameter '" + ex.getName() + "' to required type";
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Parameter Invalid", message, request);
     }
 
-    public String error(Exception e) {
-        if (e instanceof ConstraintViolationException) {
-            return "Parameter Invalid";
-        } else if (e instanceof MethodArgumentNotValidException) {
-            return "PayLoad Invalid";
-        } else if (e instanceof MethodArgumentTypeMismatchException) {
-            return "Failed to convert parameter";
-        } else if (e instanceof HttpMessageNotReadableException) {
-            return "Enum Invalid";
-        } else {
-            return "";
-        }
+    // Xử lý lỗi vi phạm constraint (validate @RequestParam, @PathVariable)
+    @ExceptionHandler(ConstraintViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleConstraintViolation(ConstraintViolationException ex, WebRequest request) {
+        String message = ex.getConstraintViolations().stream()
+                .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+                .collect(Collectors.joining(", "));
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Constraint Violation", message, request);
     }
 
-    public String processMessage(Exception e) {
-        String message = e.getMessage();
-        int firstIndex = 0, lastIndex = 0;
-        if (e instanceof ConstraintViolationException || e instanceof HttpMessageNotReadableException) {
-            firstIndex = message.lastIndexOf(":") + 1;
-            lastIndex = message.length() + 1;
-        } else if (e instanceof MethodArgumentNotValidException || e instanceof MethodArgumentTypeMismatchException) {
-            firstIndex = message.lastIndexOf("[");
-            lastIndex = message.lastIndexOf("]");
-        }
-        message = message.substring(firstIndex + 1, lastIndex - 1);
-        return message;
+    // Xử lý lỗi Enum hoặc JSON không đọc được
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleNotReadable(HttpMessageNotReadableException ex, WebRequest request) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Malformed JSON or Enum Invalid", ex.getMostSpecificCause().getMessage(), request);
+    }
+
+    // Xử lý lỗi do bạn custom, ví dụ: username/email/phone đã tồn tại
+    @ExceptionHandler(ResourceNotFoundException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleResourceNotFound(ResourceNotFoundException ex, WebRequest request) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Resource Error", ex.getMessage(), request);
+    }
+
+    // Xử lý fallback nếu exception không được catch ở trên
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse handleAllUnhandled(Exception ex, WebRequest request) {
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", ex.getMessage(), request);
+    }
+
+    // Hàm helper để build JSON phản hồi
+    private ErrorResponse buildErrorResponse(HttpStatus status, String error, String message, WebRequest request) {
+        ErrorResponse err = new ErrorResponse();
+        err.setTimestamp(new Date());
+        err.setStatus(status.value());
+        err.setError(error);
+        err.setMessage(message);
+        err.setPath(request.getDescription(false).replace("uri=", ""));
+        return err;
     }
 }

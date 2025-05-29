@@ -5,6 +5,7 @@ import com.example.backend.dto.request.RegisterRequest;
 import com.example.backend.dto.response.TokenResponse;
 import com.example.backend.dto.response.UserResponseDTO;
 import com.example.backend.exception.ResourceNotFoundException;
+import com.example.backend.model.Role;
 import com.example.backend.model.User;
 import com.example.backend.model.VerificationToken;
 import com.example.backend.repository.UserRepository;
@@ -24,6 +25,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -44,7 +46,7 @@ public class AuthServiceImpl implements AuthService {
         return TokenResponse.builder()
                 .accessToken(token)
                 .refreshToken("refresh_token")
-                .userId(user.getId())
+                .roles(user.getTblUserRoles().stream().map(userRole -> userRole.getRole().getRoleName()).collect(Collectors.toList()))
                 .build();
     }
     @Override
