@@ -1,20 +1,25 @@
 package com.example.backend.service.impl;
 
 import com.example.backend.dto.request.UserUpdateRequest;
+import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.model.User;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     @Override
     public UserDetailsService getUserDetailsService() {
-        return username -> userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException(username));
+        return username -> userRepository.findByUsername(username).orElseThrow(() -> new DisabledException("Wrong username or password"));
     }
     @Override
     public void updateProfileByUsername(String username, UserUpdateRequest request) {
