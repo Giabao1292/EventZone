@@ -5,7 +5,6 @@ import avatarDefault from "../assets/images/avtDefault.jpg"; // Đường dẫn 
 const Header = () => {
   const { isAuthenticated, user, logout } = useAuth();
 
-  // Lấy URL avatar từ profileUrl hoặc dùng ảnh mặc định
   const avatarUrl = user?.profileUrl || avatarDefault;
 
   return (

@@ -52,6 +52,9 @@ public class User implements UserDetails, Serializable {
     @Size(max = 255)
     @Column(name = "profile_url")
     private String profileUrl;
+    @Size(max = 255)
+    @Column(name = "provider_id")
+    private String providerId;
 
     @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;

@@ -1,15 +1,18 @@
 package com.example.backend.controller;
 
+import com.example.backend.component.GoogleTokenVerifier;
+import com.example.backend.dto.request.GoogleLoginRequest;
 import com.example.backend.dto.request.LoginRequest;
 import com.example.backend.dto.request.RegisterRequest;
 import com.example.backend.dto.request.TokenRefreshRequest;
 import com.example.backend.dto.response.ResponseData;
 import com.example.backend.dto.response.TokenResponse;
 import com.example.backend.dto.response.UserResponseDTO;
-import com.example.backend.service.AuthService;
-import com.example.backend.service.MailService;
-import com.example.backend.service.UserService;
-import com.example.backend.service.VerificationService;
+import com.example.backend.model.User;
+import com.example.backend.repository.UserRepository;
+import com.example.backend.service.*;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +22,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
+
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -26,7 +31,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthenticationController {
     private final MailService mailService;
     private final AuthService authService;
-    private final UserService userService;
+    private final GoogleAuthService googleAuthService;
     private final VerificationService verificationService;
 
     @PostMapping("/login")
@@ -49,4 +54,10 @@ public class AuthenticationController {
 //    public ResponseData<TokenResponse> refreshToken(@RequestBody TokenRefreshRequest request) {
 //        return ResponseEntity.ok(authService.refreshToken(request));
 //    }
+    @PostMapping("/google")
+    public ResponseData<TokenResponse> loginWithGoogle(@RequestBody GoogleLoginRequest request) {
+    TokenResponse tokenResponse = googleAuthService.loginWithGoogle(request.getIdToken());
+    return new ResponseData<>(HttpStatus.OK.value(),"Login successfully", tokenResponse);
+}
+
 }

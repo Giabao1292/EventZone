@@ -80,8 +80,5 @@ public class AuthServiceImpl implements AuthService {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new ResourceNotFoundException("Email already exists");
         }
-        if (userRepository.findByPhone(request.getPhone()).isPresent()) {
-            throw new ResourceNotFoundException("Phone already exists");
-        }
     }
 }

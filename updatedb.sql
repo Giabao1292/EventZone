@@ -6,3 +6,5 @@ CREATE TABLE tbl_verification_token (
     expiry_date TIMESTAMP NOT NULL,
     FOREIGN KEY (user_id) REFERENCES tbl_user(user_id) ON DELETE CASCADE
 );
+
+ALTER TABLE tbl_user ADD COLUMN provider_id VARCHAR(255);
