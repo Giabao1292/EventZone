@@ -17,3 +17,11 @@ export const logout = async () => {
   await apiClient.post("auth/logout");
   removeToken();
 };
+export const loginWithGoogle = async ({ idToken }) => {
+  const res = await apiClient.post("auth/google", { idToken });
+  const { accessToken, user } = res.data.data;
+
+  saveToken(accessToken);
+
+  return { accessToken, user };
+};

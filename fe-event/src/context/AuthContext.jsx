@@ -13,20 +13,31 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const loadUser = async () => {
-      if (token && !user) {
+      if (token) {
         try {
           const userData = await getUserDetail();
-          setUser(userData);
-          setIsAuthenticated(true);
+          if (userData) {
+            setUser(userData);
+            setIsAuthenticated(true);
+          } else {
+            console.error("Không nhận được dữ liệu người dùng hợp lệ");
+            logout();
+          }
         } catch (error) {
-          logout();
+          console.error("Lỗi khi tải thông tin người dùng:", error.message);
+          if (
+            error.response?.status === 401 ||
+            error.response?.status === 403
+          ) {
+            logout(); // Chỉ đăng xuất nếu lỗi xác thực
+          }
         }
       }
       setLoading(false);
     };
 
     loadUser();
-  }, [token, user]);
+  }, [token]);
 
   const login = (data) => {
     setToken(data.accessToken);
@@ -35,7 +46,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const updateUser = (updatedUser) => {
-    setUser(updatedUser); // Update user data in context
+    setUser(updatedUser);
   };
 
   const logout = () => {
