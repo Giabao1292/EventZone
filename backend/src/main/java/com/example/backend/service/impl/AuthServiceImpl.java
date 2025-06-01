@@ -1,6 +1,7 @@
 package com.example.backend.service.impl;
 
 import com.example.backend.dto.request.LoginRequest;
+import com.example.backend.dto.request.RegisterPassword;
 import com.example.backend.dto.request.RegisterRequest;
 import com.example.backend.dto.response.TokenResponse;
 import com.example.backend.exception.ResourceNotFoundException;
@@ -44,7 +45,7 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
     @Override
-    public TokenResponse register(RegisterRequest registerRequest) {
+    public TokenResponse register(RegisterPassword registerRequest) {
         User user = new User();
         user.setUsername(registerRequest.getUsername());
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));

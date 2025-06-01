@@ -25,8 +25,12 @@ const RegisterForm = () => {
       };
 
       await registerApi(newData);
-      setSuccessMessage("🎉 Đăng ký thành công! Bạn có thể đăng nhập ngay.");
-      setApiError(null);
+
+      // Lưu dữ liệu bước 1 vào sessionStorage để dùng ở trang verify
+      sessionStorage.setItem("registerData", JSON.stringify(newData));
+
+      // Chuyển sang trang verify và truyền data tạm qua state (không bắt buộc)
+      navigate("/verify-email");
     } catch (error) {
       setApiError(error.response?.data?.message || "Đăng ký thất bại");
     }
@@ -41,163 +45,119 @@ const RegisterForm = () => {
         Đăng ký tài khoản
       </h2>
 
-      {successMessage ? (
-        <div className="text-center space-y-3">
-          <p className="text-green-600 font-medium">{successMessage}</p>
-          <button
-            onClick={() => navigate("/login")}
-            type="button"
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition duration-150"
-          >
-            Chuyển đến trang đăng nhập
-          </button>
-        </div>
-      ) : (
-        <>
-          {/* Tên đăng nhập */}
-          <div>
-            <label className="block text-xs font-medium text-gray-700">
-              Tên đăng nhập
-            </label>
-            <input
-              type="text"
-              {...formField("username", {
-                required: "Vui lòng nhập tên đăng nhập",
-              })}
-              className="mt-1 w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none transition"
-            />
-            {errors.username && (
-              <p className="text-xs text-red-500 mt-1">
-                {errors.username.message}
-              </p>
-            )}
-          </div>
+      {/* Tên đăng nhập */}
+      <div>
+        <label className="block text-xs font-medium text-gray-700">
+          Tên đăng nhập
+        </label>
+        <input
+          type="text"
+          {...formField("username", {
+            required: "Vui lòng nhập tên đăng nhập",
+          })}
+          className="mt-1 w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none transition"
+        />
+        {errors.username && (
+          <p className="text-xs text-red-500 mt-1">{errors.username.message}</p>
+        )}
+      </div>
 
-          {/* Mật khẩu */}
-          <div>
-            <label className="block text-xs font-medium text-gray-700">
-              Mật khẩu
-            </label>
-            <input
-              type="password"
-              {...formField("password", {
-                required: "Vui lòng nhập mật khẩu",
-              })}
-              className="mt-1 w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none transition"
-            />
-            {errors.password && (
-              <p className="text-xs text-red-500 mt-1">
-                {errors.password.message}
-              </p>
-            )}
-          </div>
+      {/* Họ tên */}
+      <div>
+        <label className="block text-xs font-medium text-gray-700">
+          Họ tên
+        </label>
+        <input
+          type="text"
+          {...formField("fullName", {
+            required: "Vui lòng nhập họ tên",
+          })}
+          className="mt-1 w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none transition"
+        />
+        {errors.fullName && (
+          <p className="text-xs text-red-500 mt-1">{errors.fullName.message}</p>
+        )}
+      </div>
 
-          {/* Họ tên */}
-          <div>
-            <label className="block text-xs font-medium text-gray-700">
-              Họ tên
-            </label>
-            <input
-              type="text"
-              {...formField("fullName", {
-                required: "Vui lòng nhập họ tên",
-              })}
-              className="mt-1 w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none transition"
-            />
-            {errors.fullName && (
-              <p className="text-xs text-red-500 mt-1">
-                {errors.fullName.message}
-              </p>
-            )}
-          </div>
+      {/* Email */}
+      <div>
+        <label className="block text-xs font-medium text-gray-700">Email</label>
+        <input
+          type="email"
+          {...formField("email", {
+            required: "Vui lòng nhập email",
+            pattern: {
+              value: /^\S+@\S+$/i,
+              message: "Email không hợp lệ",
+            },
+          })}
+          className="mt-1 w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none transition"
+        />
+        {errors.email && (
+          <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>
+        )}
+      </div>
 
-          {/* Email */}
-          <div>
-            <label className="block text-xs font-medium text-gray-700">
-              Email
-            </label>
-            <input
-              type="email"
-              {...formField("email", {
-                required: "Vui lòng nhập email",
-                pattern: {
-                  value: /^\S+@\S+$/i,
-                  message: "Email không hợp lệ",
-                },
-              })}
-              className="mt-1 w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none transition"
-            />
-            {errors.email && (
-              <p className="text-xs text-red-500 mt-1">
-                {errors.email.message}
-              </p>
-            )}
-          </div>
+      {/* Số điện thoại */}
+      <div>
+        <label className="block text-xs font-medium text-gray-700">
+          Số điện thoại
+        </label>
+        <input
+          type="text"
+          {...formField("phone", {
+            required: "Vui lòng nhập số điện thoại",
+          })}
+          className="mt-1 w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none transition"
+        />
+        {errors.phone && (
+          <p className="text-xs text-red-500 mt-1">{errors.phone.message}</p>
+        )}
+      </div>
 
-          {/* Số điện thoại */}
-          <div>
-            <label className="block text-xs font-medium text-gray-700">
-              Số điện thoại
-            </label>
-            <input
-              type="text"
-              {...formField("phone", {
-                required: "Vui lòng nhập số điện thoại",
-              })}
-              className="mt-1 w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none transition"
-            />
-            {errors.phone && (
-              <p className="text-xs text-red-500 mt-1">
-                {errors.phone.message}
-              </p>
-            )}
-          </div>
+      {/* Ngày sinh */}
+      <div>
+        <label className="block text-xs font-medium text-gray-700">
+          Ngày sinh
+        </label>
+        <input
+          type="date"
+          {...formField("dateOfBirth", {
+            required: "Vui lòng chọn ngày sinh",
+            validate: (value) => {
+              const today = new Date().toISOString().split("T")[0];
+              return value <= today || "Ngày sinh không hợp lệ";
+            },
+          })}
+          className="mt-1 w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none transition"
+        />
+        {errors.dateOfBirth && (
+          <p className="text-xs text-red-500 mt-1">
+            {errors.dateOfBirth.message}
+          </p>
+        )}
+      </div>
 
-          {/* Ngày sinh */}
-          <div>
-            <label className="block text-xs font-medium text-gray-700">
-              Ngày sinh
-            </label>
-            <input
-              type="date"
-              {...formField("dateOfBirth", {
-                required: "Vui lòng chọn ngày sinh",
-                validate: (value) => {
-                  const today = new Date().toISOString().split("T")[0];
-                  return value <= today || "Ngày sinh không hợp lệ";
-                },
-              })}
-              className="mt-1 w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none transition"
-            />
-            {errors.dateOfBirth && (
-              <p className="text-xs text-red-500 mt-1">
-                {errors.dateOfBirth.message}
-              </p>
-            )}
-          </div>
-
-          {/* Lỗi API */}
-          {apiError && (
-            <p className="text-xs text-red-500 text-center">{apiError}</p>
-          )}
-
-          {/* Nút submit */}
-          <button
-            type="submit"
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 rounded-lg transition duration-150"
-          >
-            Đăng ký
-          </button>
-
-          {/* Chuyển đến đăng nhập */}
-          <div className="text-center text-xs text-gray-600">
-            Đã có tài khoản?{" "}
-            <a href="/login" className="text-blue-500 hover:underline">
-              Đăng nhập
-            </a>
-          </div>
-        </>
+      {/* Lỗi API */}
+      {apiError && (
+        <p className="text-xs text-red-500 text-center">{apiError}</p>
       )}
+
+      {/* Nút submit */}
+      <button
+        type="submit"
+        className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 rounded-lg transition duration-150"
+      >
+        Đăng ký
+      </button>
+
+      {/* Chuyển đến đăng nhập */}
+      <div className="text-center text-xs text-gray-600">
+        Đã có tài khoản?{" "}
+        <a href="/login" className="text-blue-500 hover:underline">
+          Đăng nhập
+        </a>
+      </div>
     </form>
   );
 };

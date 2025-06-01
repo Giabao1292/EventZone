@@ -13,6 +13,15 @@ export const register = async (userData) => {
   const res = await apiClient.post("auth/register", userData);
   return res.data;
 };
+export const verifyRegisterApi = (data) => {
+  const { code, ...rest } = data;
+  return apiClient.post("auth/verify", rest, {
+    headers: {
+      verificationToken: code,
+    },
+  });
+};
+
 export const logout = async () => {
   await apiClient.post("auth/logout");
   removeToken();

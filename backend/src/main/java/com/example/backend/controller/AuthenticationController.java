@@ -1,10 +1,7 @@
 package com.example.backend.controller;
 
 import com.example.backend.component.GoogleTokenVerifier;
-import com.example.backend.dto.request.GoogleLoginRequest;
-import com.example.backend.dto.request.LoginRequest;
-import com.example.backend.dto.request.RegisterRequest;
-import com.example.backend.dto.request.TokenRefreshRequest;
+import com.example.backend.dto.request.*;
 import com.example.backend.dto.response.ResponseData;
 import com.example.backend.dto.response.TokenResponse;
 import com.example.backend.dto.response.UserResponseDTO;
@@ -50,12 +47,12 @@ public class AuthenticationController {
             verificationService.save(request, token);
             //Tao token va luu tam vao db khi xac thuc email thanh cong thi tao tai khoan
             mailService.sendConfirmEmail(request.getEmail(), token);
-            return new ResponseData<>(HttpStatus.CREATED.value(),"Register successfully. Please check your email");
+            return new ResponseData<>(HttpStatus.CREATED.value(),"Register successfully. Please check your email to verify account", request);
     }
     @PostMapping("/verify-email")
-    public ResponseData<TokenResponse> verifyEmail(@RequestBody RegisterRequest userRegister, HttpServletRequest request) throws MessagingException {
+    public ResponseData<TokenResponse> verifyEmail(@RequestBody RegisterPassword userRegister, HttpServletRequest request) throws MessagingException {
         TokenResponse tokenResponse = new TokenResponse();
-        if(verificationService.validateToken((String)request.getHeader("verifyToken"), userRegister.getEmail())){
+        if(verificationService.validateToken((String)request.getHeader("verificationToken"), userRegister.getEmail())){
             tokenResponse = authService.register(userRegister);
         }
         return new ResponseData<>(HttpStatus.OK.value(),"Verify email successfully", tokenResponse);
@@ -68,6 +65,6 @@ public class AuthenticationController {
     public ResponseData<TokenResponse> loginWithGoogle(@RequestBody GoogleLoginRequest request) {
     TokenResponse tokenResponse = googleAuthService.loginWithGoogle(request.getIdToken());
     return new ResponseData<>(HttpStatus.OK.value(),"Login successfully", tokenResponse);
-}
+    }
 
 }
