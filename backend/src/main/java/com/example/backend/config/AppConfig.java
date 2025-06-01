@@ -51,9 +51,7 @@ public class AppConfig implements WebMvcConfigurer , WebSecurityCustomizer {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
                         .requestMatchers(WHILE_LIST).permitAll()
-
-                        .requestMatchers("/api/admin/**")
-                        .hasRole("ADMIN").anyRequest().authenticated())
+                        .anyRequest().authenticated())
                 .authenticationProvider(provider()).addFilterBefore(preFilter, UsernamePasswordAuthenticationFilter.class)
                 .sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .build();

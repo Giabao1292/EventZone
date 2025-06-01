@@ -71,10 +71,6 @@ public class User implements UserDetails, Serializable {
     @Column(name = "status")
     private Integer status;
 
-    @ColumnDefault("false")
-    @Column(name = "enabled")
-    private Boolean enabled;
-
     @ColumnDefault("0")
     @Column(name = "score")
     private Integer score;
@@ -134,6 +130,6 @@ public class User implements UserDetails, Serializable {
 
     @Override
     public boolean isEnabled() {
-        return enabled;
+        return true;
     }
 }

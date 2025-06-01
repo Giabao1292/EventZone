@@ -3,8 +3,7 @@ package com.example.backend.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -13,8 +12,11 @@ import java.time.Instant;
 @Getter
 @Setter
 @Entity
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "tbl_verification_token", indexes = {
-        @Index(name = "user_id", columnList = "user_id")
+        @Index(name = "expiry_date", columnList = "expiry_date")
 }, uniqueConstraints = {
         @UniqueConstraint(name = "token", columnNames = {"token"})
 })
@@ -30,13 +32,10 @@ public class VerificationToken {
     private String token;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @Column(name = "email", nullable = false)
+    private String email;
 
     @NotNull
     @Column(name = "expiry_date", nullable = false)
     private Instant expiryDate;
-
 }

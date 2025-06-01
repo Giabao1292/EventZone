@@ -1,5 +1,6 @@
 package com.example.backend.service.impl;
 
+import com.example.backend.dto.request.RegisterRequest;
 import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.model.User;
 import com.example.backend.model.VerificationToken;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Optional;
@@ -20,12 +22,31 @@ import java.util.Optional;
 public class VerificationServiceImpl implements VerificationService {
     private final VerificationRepository verificationRepository;
     private final UserRepository userRepository;
+    private final SecureRandom random = new SecureRandom();
     @Override
-    public Boolean validateToken(String token) {
-        VerificationToken verificationToken = verificationRepository.findByTokenAndExpiryDateAfter(token, Instant.now()).orElseThrow(() -> new ResourceNotFoundException("Token expired"));
-        User user = verificationToken.getUser();
-        user.setEnabled(true);
-        userRepository.save(user);
+    public Boolean validateToken(String token, String email) {
+        VerificationToken verificationToken = verificationRepository.findByTokenAndEmail(token, email).orElseThrow(() -> new ResourceNotFoundException("Wrong code"));
+        if(verificationToken.getExpiryDate().isAfter(Instant.now())){
+            throw new ResourceNotFoundException("Code is expired");
+        }
         return true;
+    }
+    @Override
+    public void save(RegisterRequest registerRequest, String token){
+        VerificationToken verificationToken = VerificationToken.builder().email(registerRequest.getEmail()).token(token).expiryDate(Instant.now()).build();
+        verificationRepository.save(verificationToken);
+    }
+    @Override
+    public String generateToken() {
+        int token = 100000 + random.nextInt(9000000);
+        return String.valueOf(token);
+    }
+    @Override
+    public String resendToken(String email){
+        VerificationToken verificationToken = verificationRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("Wrong email"));
+        if(verificationToken.getExpiryDate().isAfter(Instant.now())){
+            throw new ResourceNotFoundException("Code is expired");
+        }
+        return verificationToken.getToken();
     }
 }
