@@ -15,6 +15,5 @@ public class LoginRequest {
     private String username;
 
     @NotBlank(message = "Password must be not blank")
-    @Size(min = 6, message = "Password must be at least 6 characters")
     private String password;
 }

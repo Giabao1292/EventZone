@@ -29,9 +29,8 @@ public class MailService {
         MimeMessage messsage = mailSender.createMimeMessage();
         MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(messsage, true, "UTF-8");
         Context context = new Context();
-        String linkConfirm = "http://localhost:5173/verify-email?token=" + verifyToken;
         Map<String, Object> properties = new HashMap<>();
-        properties.put("linkConfirm", linkConfirm);
+        properties.put("verifyToken", verifyToken);
         context.setVariables(properties);
         mimeMessageHelper.setTo(emailTo);
         mimeMessageHelper.setFrom(emailFrom);
