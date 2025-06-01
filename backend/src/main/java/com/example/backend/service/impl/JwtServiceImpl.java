@@ -52,7 +52,7 @@ public class JwtServiceImpl implements JwtService {
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(userDetails.getUsername())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000L * 60 * 60 * limitHour))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000L * 60 * 60 * limitTime))
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .signWith(getKey())
                 .compact();
@@ -75,4 +75,5 @@ public class JwtServiceImpl implements JwtService {
         final Claims claims = getClaimsFromToken(token);
         return claimsResolver.apply(claims);
     }
+
 }

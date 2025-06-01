@@ -2,10 +2,7 @@ package com.example.backend.dto.request;
 
 import com.example.backend.util.Phone;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import lombok.Getter;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -18,7 +15,7 @@ public class RegisterRequest {
     private String username;
 
     @NotBlank(message = "Password must not be blank")
-    @Min(value = 6)
+    @Size(min = 6, message = "Password must be at least 6 characters")
     private String password;
 
     @NotBlank(message = "Fullname must not be blank")

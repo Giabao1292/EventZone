@@ -11,9 +11,12 @@ import com.example.backend.service.MailService;
 import com.example.backend.service.UserService;
 import com.example.backend.service.VerificationService;
 import jakarta.mail.MessagingException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -36,14 +39,21 @@ public class AuthenticationController {
     }
     @PostMapping("/register")
     public ResponseData<?> register(@Valid @RequestBody RegisterRequest request) throws MessagingException {
-            UserResponseDTO userResponseDTO = authService.register(request);
-            mailService.sendConfirmEmail(userResponseDTO.getEmail(), userResponseDTO.getVerifyToken());
+            authService.validateRegister(request);
+            //Check userRequest
+            String token = verificationService.generateToken();
+            verificationService.save(request, token);
+            //Tao token va luu tam vao db khi xac thuc email thanh cong thi tao tai khoan
+            mailService.sendConfirmEmail(request.getEmail(), token);
             return new ResponseData<>(HttpStatus.CREATED.value(),"Register successfully. Please check your email");
     }
-    @GetMapping("/verify-email")
-    public ResponseData<TokenResponse> verifyEmail(@RequestParam(name = "token") String verifyToken){
-        verificationService.validateToken(verifyToken);
-        return new ResponseData<>(HttpStatus.OK.value(),"Verify email successfully");
+    @PostMapping("/verify-email")
+    public ResponseData<TokenResponse> verifyEmail(@RequestBody RegisterRequest userRegister, HttpServletRequest request) throws MessagingException {
+        TokenResponse tokenResponse = new TokenResponse();
+        if(verificationService.validateToken((String)request.getHeader("verifyToken"), userRegister.getEmail())){
+            tokenResponse = authService.register(userRegister);
+        }
+        return new ResponseData<>(HttpStatus.OK.value(),"Verify email successfully", tokenResponse);
     }
 //    @PostMapping("/refresh-token")
 //    public ResponseData<TokenResponse> refreshToken(@RequestBody TokenRefreshRequest request) {

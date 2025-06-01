@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
@@ -60,13 +61,24 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, "Resource Error", ex.getMessage(), request);
     }
 
-    // Xử lý fallback nếu exception không được catch ở trên
-    @ExceptionHandler({BadCredentialsException.class, DisabledException.class})
+    @ExceptionHandler(BadCredentialsException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleLogin(Exception ex, WebRequest request) {
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), "Wrong username or password", request);
+    public ErrorResponse handleBadCredentials(Exception ex, WebRequest request) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Bad Credentials", "Wrong username or password", request);
     }
 
+    @ExceptionHandler(AuthenticationException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ErrorResponse handleAuthenticationFailure(AuthenticationException ex, WebRequest request) {
+        String message = switch (ex.getClass().getSimpleName()) {
+            case "DisabledException" -> "Your account is not activated";
+            case "LockedException" -> "Your account is locked";
+            case "AccountExpiredException" -> "Your account has expired";
+            case "CredentialsExpiredException" -> "Your credentials have expired";
+            default -> "Authentication failed";
+        };
+        return buildErrorResponse(HttpStatus.FORBIDDEN, "Authentication Error", message, request);
+    }
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
