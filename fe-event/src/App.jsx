@@ -5,6 +5,7 @@ import AppLayout from "./ui/AppLayout";
 import RegisterPage from "./features/authentication/pages/RegisterPage";
 import ProfilePage from "./pages/ProfilePage";
 import VerifyPage from "./features/authentication/pages/VerifyPage";
+import ForgotPasswordForm from "./features/authentication/pages/ForgotPasswordForm";
 
 function App() {
   return (
@@ -20,7 +21,9 @@ function App() {
               <Routes>
                 <Route path="/" element={<Navigate to="/home" replace />} />
                 <Route path="/home" element={<Home />} />
-                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/profile" element={<ProfilePage />} /><Route path="/forgot-password" element={<ForgotPasswordForm />} />
+                {/*<Route path="/forgot-password" element={<ForgotPasswordForm />} />*/}
+
               </Routes>
             </AppLayout>
           }

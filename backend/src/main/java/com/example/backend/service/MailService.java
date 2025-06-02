@@ -39,4 +39,26 @@ public class MailService {
         mailSender.send(messsage);
         log.info("Email has been sent successfully to {}", emailTo);
     }
+
+    public void sendResetPasswordEmail(String emailTo, String resetToken) throws MessagingException {
+        log.info("Sending reset password email with token {}", resetToken);
+
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(message, true, "UTF-8");
+
+        Context context = new Context();
+        Map<String, Object> properties = new HashMap<>();
+        properties.put("resetToken", resetToken);
+        properties.put("resetLink", "http://localhost:8080/auth/reset-password?token=" + resetToken);
+        context.setVariables(properties);
+
+        mimeMessageHelper.setTo(emailTo);
+        mimeMessageHelper.setFrom(emailFrom);
+        mimeMessageHelper.setSubject("Reset Your Password");
+        mimeMessageHelper.setText(templateEngine.process("reset-password-email.html", context), true);
+
+        mailSender.send(message);
+        log.info("Reset password email has been sent successfully to {}", emailTo);
+    }
+
 }

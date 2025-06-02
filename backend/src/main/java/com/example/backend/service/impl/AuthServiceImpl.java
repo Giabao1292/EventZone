@@ -5,10 +5,12 @@ import com.example.backend.dto.request.RegisterPassword;
 import com.example.backend.dto.request.RegisterRequest;
 import com.example.backend.dto.response.TokenResponse;
 import com.example.backend.exception.ResourceNotFoundException;
+import com.example.backend.model.PasswordResetToken;
 import com.example.backend.model.Role;
 import com.example.backend.model.Token;
 import com.example.backend.model.User;
 import com.example.backend.model.UserRole;
+import com.example.backend.repository.PasswordResetTokenRepository;
 import com.example.backend.repository.RoleRepository;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.repository.VerificationRepository;
@@ -25,6 +27,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.example.backend.util.TokenType.REFRESH_TOKEN;
@@ -32,7 +35,7 @@ import static com.example.backend.util.TokenType.REFRESH_TOKEN;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AuthServiceImpl implements AuthService {
+public  class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
     private final AuthenticationManager authenticationManager;
@@ -42,6 +45,7 @@ public class AuthServiceImpl implements AuthService {
     private final VerificationRepository verificationRepository;
     private final RoleRepository roleRepository;
     private final TokenService tokenService;
+    private final PasswordResetTokenRepository tokenRepository;
 
     @Override
     public TokenResponse authenticate(LoginRequest request) {
@@ -108,4 +112,27 @@ public class AuthServiceImpl implements AuthService {
             throw new ResourceNotFoundException("Email already exists");
         }
     }
+
+    @Override
+    public Optional<User> findByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
+    @Override
+    public boolean resetPasswordWithToken(String token, String newPassword) {
+        PasswordResetToken resetToken = tokenRepository.findByToken(token);
+
+        if (resetToken == null || resetToken.isExpired()) {
+            return false;
+        }
+
+        User user = resetToken.getUser();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        tokenRepository.delete(resetToken); // xóa token sau khi dùng
+
+        return true;
+    }
+
+
 }

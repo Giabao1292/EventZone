@@ -90,4 +90,31 @@ public class AuthenticationController {
     public ResponseData<TokenResponse> logout(HttpServletRequest request) throws MessagingException {
         return null;
     }
+
+    @PostMapping("/forgot-password")
+    public ResponseData<?> forgotPassword(@RequestBody ForgotPasswordRequest request) throws MessagingException {
+        Optional<User> userOptional = authService.findByEmail(request.getEmail());
+
+        if (userOptional.isEmpty()) {
+            return new ResponseData<>(HttpStatus.NOT_FOUND.value(), "Email not found", null);
+        }
+
+        String resetToken = verificationService.generateToken(); // có thể tái sử dụng hàm này
+        verificationService.saveResetToken(userOptional.get(), resetToken); // bạn cần tạo hàm lưu token
+
+        mailService.sendResetPasswordEmail(request.getEmail(), resetToken);
+
+        return new ResponseData<>(HttpStatus.OK.value(), "Reset password email sent", null);
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseData<?> resetPassword(@RequestBody ResetPasswordRequest request) {
+        boolean success = authService.resetPasswordWithToken(request.getToken(), request.getNewPassword());
+        if (!success) {
+            return new ResponseData<>(HttpStatus.BAD_REQUEST.value(), "Invalid or expired token", null);
+        }
+
+        return new ResponseData<>(HttpStatus.OK.value(), "Password reset successfully", null);
+    }
+
 }
