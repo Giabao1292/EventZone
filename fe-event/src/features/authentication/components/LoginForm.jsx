@@ -1,12 +1,12 @@
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { login, loginWithGoogle } from "../../../services/authServices"; // Thêm hàm loginWithGoogle
+import { login, loginWithGoogle } from "../../../services/authServices";
 import useAuth from "../../../hooks/useAuth";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 
 const clientId =
-  "4148311475-r0lvc33sk1i36ok7kgimvfqlhejub0p5.apps.googleusercontent.com"; // Thay bằng client id thật
+  "4148311475-r0lvc33sk1i36ok7kgimvfqlhejub0p5.apps.googleusercontent.com";
 
 const LoginForm = () => {
   const {
@@ -49,7 +49,6 @@ const LoginForm = () => {
   return (
     <GoogleOAuthProvider clientId={clientId}>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-        {/* Form đăng nhập bình thường */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Tên đăng nhập
@@ -103,7 +102,6 @@ const LoginForm = () => {
           Đăng nhập
         </button>
 
-        {/* Nút đăng nhập bằng Google */}
         <div className="mt-5 text-center">
           <GoogleLogin
             onSuccess={onGoogleSuccess}

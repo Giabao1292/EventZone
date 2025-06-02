@@ -3,6 +3,7 @@ package com.example.backend.controller;
 import com.cloudinary.Cloudinary;
 import com.example.backend.dto.request.UserUpdateRequest;
 import com.example.backend.dto.response.ResponseData;
+import com.example.backend.dto.response.UserDetailResponse;
 import com.example.backend.model.User;
 import com.example.backend.service.JwtService;
 import com.example.backend.service.UserService;
@@ -37,11 +38,20 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseData<User> getProfile(HttpServletRequest request) {
+    public ResponseData<UserDetailResponse> getProfile(HttpServletRequest request) {
         try {
             String username = extractToken(request);
             User user = userService.findByUsername(username);
-            return new ResponseData<>(HttpStatus.OK.value(), "Profile retrieved successfully", user);
+
+            // Chuyển entity sang DTO
+            UserDetailResponse dto = new UserDetailResponse();
+            dto.setFullname(user.getFullname());
+            dto.setEmail(user.getEmail());
+            dto.setUsername(user.getUsername());
+            dto.setPhone(user.getPhone());
+            dto.setDateOfBirth(user.getDateOfBirth());
+
+            return new ResponseData<>(HttpStatus.OK.value(), "Profile retrieved successfully", dto);
         } catch (IllegalArgumentException e) {
             return new ResponseData<>(HttpStatus.BAD_REQUEST.value(), e.getMessage());
         } catch (RuntimeException e) {
@@ -51,16 +61,25 @@ public class UserController {
         }
     }
 
+
     @PutMapping
-    public ResponseData<User> updateProfile(
+    public ResponseData<UserDetailResponse> updateProfile(
             @RequestBody UserUpdateRequest updateRequest,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
         try {
             String username = extractToken(request);
             userService.updateProfileByUsername(username, updateRequest);
             User updatedUser = userService.findByUsername(username);
-            return new ResponseData<>(HttpStatus.OK.value(), "Profile updated successfully", updatedUser);
+
+            // Chuyển sang DTO
+            UserDetailResponse dto = new UserDetailResponse();
+            dto.setFullname(updatedUser.getFullname());
+            dto.setEmail(updatedUser.getEmail());
+            dto.setUsername(updatedUser.getUsername());
+            dto.setPhone(updatedUser.getPhone());
+            dto.setDateOfBirth(updatedUser.getDateOfBirth());
+
+            return new ResponseData<>(HttpStatus.OK.value(), "Profile updated successfully", dto);
         } catch (IllegalArgumentException e) {
             return new ResponseData<>(HttpStatus.BAD_REQUEST.value(), e.getMessage());
         } catch (RuntimeException e) {
@@ -69,6 +88,7 @@ public class UserController {
             return new ResponseData<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error updating profile: " + e.getMessage());
         }
     }
+
 
     @PostMapping("/avatar")
     public ResponseData<String> updateAvatar(
