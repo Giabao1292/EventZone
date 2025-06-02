@@ -13,13 +13,18 @@ export const register = async (userData) => {
   const res = await apiClient.post("auth/register", userData);
   return res.data;
 };
-export const verifyRegisterApi = (data) => {
+export const verifyRegisterApi = async (data) => {
   const { code, ...rest } = data;
-  return apiClient.post("auth/verify-email", rest, {
+
+  const res = await apiClient.post("auth/verify-email", rest, {
     headers: {
       "X-Verify-Token": code,
     },
   });
+  const { accessToken } = res.data.data;
+
+  saveToken(accessToken);
+  return res.data;
 };
 export const resendVerificationCode = async (email) => {
   const res = await apiClient.post("auth/resend-code", { email });

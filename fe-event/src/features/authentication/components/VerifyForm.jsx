@@ -5,6 +5,7 @@ import {
   verifyRegisterApi,
   resendVerificationCode,
 } from "../../../services/authServices";
+import useAuth from "../../../hooks/useAuth";
 
 const VerifyForm = () => {
   const {
@@ -18,7 +19,7 @@ const VerifyForm = () => {
   const [isResending, setIsResending] = useState(false);
 
   const [countdown, setCountdown] = useState(0);
-
+  const { login: updateAuth } = useAuth();
   useEffect(() => {
     let timer = null;
     if (countdown > 0) {
@@ -51,7 +52,7 @@ const VerifyForm = () => {
 
       localStorage.setItem("accessToken", response.data.accessToken);
       localStorage.setItem("refreshToken", response.data.refreshToken);
-
+      updateAuth(response.data);
       navigate("/home");
     } catch (error) {
       setApiError(error.response?.data?.message || "Xác thực thất bại");

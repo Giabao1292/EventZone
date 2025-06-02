@@ -12,7 +12,6 @@ const RegisterForm = () => {
 
   const navigate = useNavigate();
   const [apiError, setApiError] = useState(null);
-  const [successMessage, setSuccessMessage] = useState(null);
 
   const onSubmit = async (data) => {
     try {
@@ -26,10 +25,8 @@ const RegisterForm = () => {
 
       await registerApi(newData);
 
-      // Lưu dữ liệu bước 1 vào sessionStorage để dùng ở trang verify
       sessionStorage.setItem("registerData", JSON.stringify(newData));
 
-      // Chuyển sang trang verify và truyền data tạm qua state (không bắt buộc)
       navigate("/verify-email");
     } catch (error) {
       setApiError(error.response?.data?.message || "Đăng ký thất bại");
