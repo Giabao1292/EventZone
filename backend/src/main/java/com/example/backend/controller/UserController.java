@@ -1,6 +1,7 @@
 package com.example.backend.controller;
 
 import com.cloudinary.Cloudinary;
+import com.example.backend.dto.request.ChangePasswordRequest;
 import com.example.backend.dto.request.UserUpdateRequest;
 import com.example.backend.dto.response.ResponseData;
 import com.example.backend.dto.response.UserDetailResponse;
@@ -107,4 +108,15 @@ public class UserController {
             return new ResponseData<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Failed to upload avatar: " + e.getMessage());
         }
     }
+    @PutMapping("/change-password")
+    public ResponseData<String> changePassword(
+            @RequestBody ChangePasswordRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        String username = extractToken(httpRequest);
+        userService.changePassword(username, request);
+        return new ResponseData<>(HttpStatus.OK.value(), "Password changed successfully");
+    }
+
+
 }
