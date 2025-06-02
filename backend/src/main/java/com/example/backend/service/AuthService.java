@@ -9,4 +9,6 @@ public interface AuthService {
     TokenResponse authenticate(LoginRequest request);
     TokenResponse register(RegisterPassword request);
     void validateRegister(RegisterRequest request);
+
+    TokenResponse refreshToken(String refreshToken);
 }

@@ -23,7 +23,7 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleValidationError(MethodArgumentNotValidException ex, WebRequest request) {
         String message = ex.getBindingResult().getFieldErrors().stream()
-                .map(err -> err.getField() + ": " + err.getDefaultMessage())
+                .map(err -> err.getDefaultMessage())
                 .collect(Collectors.joining(", "));
         return buildErrorResponse(HttpStatus.BAD_REQUEST, "Parameter Invalid", message, request);
     }

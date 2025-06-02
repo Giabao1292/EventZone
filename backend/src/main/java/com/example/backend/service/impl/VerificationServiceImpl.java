@@ -1,5 +1,6 @@
 package com.example.backend.service.impl;
 
+import com.cloudinary.utils.StringUtils;
 import com.example.backend.dto.request.RegisterRequest;
 import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.model.User;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 @Service
@@ -26,14 +28,15 @@ public class VerificationServiceImpl implements VerificationService {
     @Override
     public Boolean validateToken(String token, String email) {
         VerificationToken verificationToken = verificationRepository.findByTokenAndEmail(token, email).orElseThrow(() -> new ResourceNotFoundException("Wrong code"));
-        if(verificationToken.getExpiryDate().isAfter(Instant.now())){
-            throw new ResourceNotFoundException("Code is expired");
+        if(verificationToken.getExpiryDate().isBefore(Instant.now())){
+            verificationRepository.delete(verificationToken);
+            throw new ResourceNotFoundException("Code is expired, please resend mail!");
         }
         return true;
     }
     @Override
-    public void save(RegisterRequest registerRequest, String token){
-        VerificationToken verificationToken = VerificationToken.builder().email(registerRequest.getEmail()).token(token).expiryDate(Instant.now()).build();
+    public void save(String email, String token){
+        VerificationToken verificationToken = VerificationToken.builder().email(email).token(token).expiryDate(Instant.now().plus(5, ChronoUnit.MINUTES)).build();
         verificationRepository.save(verificationToken);
     }
     @Override
@@ -42,11 +45,21 @@ public class VerificationServiceImpl implements VerificationService {
         return String.valueOf(token);
     }
     @Override
-    public String resendToken(String email){
-        VerificationToken verificationToken = verificationRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("Wrong email"));
-        if(verificationToken.getExpiryDate().isAfter(Instant.now())){
-            throw new ResourceNotFoundException("Code is expired");
+    public String resendToken(String email) {
+        if (StringUtils.isBlank(email)) {
+            throw new ResourceNotFoundException("Expired time, please register again!");
         }
-        return verificationToken.getToken();
+        VerificationToken existingToken = verificationRepository.findByEmail(email).orElse(null);
+        if (existingToken != null && validateToken(existingToken.getToken(), existingToken.getEmail())) {
+            return existingToken.getToken();
+        }
+        VerificationToken newToken = VerificationToken.builder()
+                .email(email)
+                .token(generateToken())
+                .expiryDate(Instant.now().plus(5, ChronoUnit.MINUTES))
+                .build();
+        verificationRepository.save(newToken);
+        return newToken.getToken();
     }
+
 }

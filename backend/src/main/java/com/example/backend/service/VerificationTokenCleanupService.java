@@ -16,7 +16,7 @@ public class VerificationTokenCleanupService {
     private final VerificationRepository tokenRepository;
     private final TransactionTemplate transactionTemplate;
 
-    @Scheduled(fixedRate = 5 * 60 * 1000)
+    @Scheduled(fixedRate = 60 * 60 * 1000 * 6)
     public void deleteExpiredTokens() {
         transactionTemplate.execute(status -> {
             tokenRepository.deleteByExpiryDateBefore(Instant.now());

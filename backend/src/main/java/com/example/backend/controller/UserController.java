@@ -6,6 +6,7 @@ import com.example.backend.dto.response.ResponseData;
 import com.example.backend.model.User;
 import com.example.backend.service.JwtService;
 import com.example.backend.service.UserService;
+import com.example.backend.util.TokenType;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -28,7 +29,7 @@ public class UserController {
             throw new IllegalArgumentException("Missing or invalid token format");
         }
         String token = authHeader.substring(7);
-        String username = jwtService.extractUsername(token);
+        String username = jwtService.extractUsername(token, TokenType.ACCESS_TOKEN);
         if (username == null) {
             throw new IllegalArgumentException("Invalid token");
         }

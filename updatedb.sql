@@ -1,10 +1,18 @@
-ALTER TABLE tbl_user ADD COLUMN enabled BOOLEAN DEFAULT FALSE;
+ALTER TABLE user DROP COLUMN enabled;
+
 CREATE TABLE tbl_verification_token (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    token VARCHAR(255) NOT NULL UNIQUE,
-    user_id INT NOT NULL,
-    expiry_date TIMESTAMP NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES tbl_user(user_id) ON DELETE CASCADE
+    token VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    expiry_date DATETIME(6) NOT NULL,
+    INDEX expiry_date_idx (expiry_date)
 );
 
 ALTER TABLE tbl_user ADD COLUMN provider_id VARCHAR(255);
+
+CREATE TABLE tbl_token (
+    token_id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(255) UNIQUE,
+    access_token TEXT,
+    refresh_token TEXT
+);
