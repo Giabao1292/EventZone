@@ -5,10 +5,13 @@ import AppLayout from "./ui/AppLayout";
 import RegisterPage from "./features/authentication/pages/RegisterPage";
 import ProfilePage from "./pages/ProfilePage";
 import VerifyPage from "./features/authentication/pages/VerifyPage";
+import ChangePasswordForm from "./pages/ChangePasswordPage";
+import { ToastContainer } from "react-toastify";
 
 function App() {
   return (
     <BrowserRouter>
+      <ToastContainer position="top-right" autoClose={3000} />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
@@ -21,6 +24,10 @@ function App() {
                 <Route path="/" element={<Navigate to="/home" replace />} />
                 <Route path="/home" element={<Home />} />
                 <Route path="/profile" element={<ProfilePage />} />
+                <Route
+                  path="/change-password"
+                  element={<ChangePasswordForm />}
+                />
               </Routes>
             </AppLayout>
           }

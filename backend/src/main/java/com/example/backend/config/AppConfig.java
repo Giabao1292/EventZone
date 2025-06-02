@@ -2,6 +2,7 @@ package com.example.backend.config;
 
 import com.example.backend.filter.PreFilter;
 import com.example.backend.service.UserService;
+import com.example.backend.service.impl.UserDetailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,7 +30,7 @@ public class AppConfig implements WebMvcConfigurer , WebSecurityCustomizer {
     private String[] WHILE_LIST = {"/api/auth/**", "/api/users/**"};
 
     private final PreFilter preFilter;
-    private final UserService userService;
+    private final UserDetailService userDetailService;
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
@@ -60,7 +61,7 @@ public class AppConfig implements WebMvcConfigurer , WebSecurityCustomizer {
     @Bean
     public AuthenticationProvider provider() {
         DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
-        daoAuthenticationProvider.setUserDetailsService(userService.getUserDetailsService());
+        daoAuthenticationProvider.setUserDetailsService(userDetailService);
         daoAuthenticationProvider.setPasswordEncoder(passwordEncoder());
         return daoAuthenticationProvider;
     }

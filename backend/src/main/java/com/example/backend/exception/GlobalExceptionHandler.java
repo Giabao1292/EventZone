@@ -66,6 +66,11 @@ public class GlobalExceptionHandler {
     public ErrorResponse handleBadCredentials(Exception ex, WebRequest request) {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, "Bad Credentials", "Wrong username or password", request);
     }
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleIllegalArgument(IllegalArgumentException ex, WebRequest request) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Illegal Argument", ex.getMessage(), request);
+    }
 
     @ExceptionHandler(AuthenticationException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)

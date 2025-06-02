@@ -2,6 +2,7 @@ package com.example.backend.filter;
 
 import com.example.backend.service.JwtService;
 import com.example.backend.service.UserService;
+import com.example.backend.service.impl.UserDetailService;
 import com.example.backend.util.TokenType;
 import io.micrometer.common.util.StringUtils;
 import jakarta.servlet.FilterChain;
@@ -24,7 +25,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class PreFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
-    private final UserService userService;
+    private final UserDetailService userDetailService;
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         log.info("-----------PreFilter-------------");
@@ -37,7 +38,7 @@ public class PreFilter extends OncePerRequestFilter {
         final String token = authorization.substring(7);
         final String userName = jwtService.extractUsername(token, TokenType.ACCESS_TOKEN);
         if (StringUtils.isNotEmpty(userName) && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userService.getUserDetailsService().loadUserByUsername(userName);
+            UserDetails userDetails = userDetailService.loadUserByUsername(userName);
             if (userDetails != null) {
                 SecurityContext context = SecurityContextHolder.createEmptyContext();
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());

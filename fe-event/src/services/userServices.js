@@ -24,3 +24,7 @@ export const updateUserAvatar = async (file) => {
     throw new Error("Có lỗi xảy ra khi upload avatar!");
   }
 };
+export const changePassword = async (data) => {
+  const res = await apiClient.put("/users/change-password", data);
+  return res.data;
+};

@@ -2,6 +2,7 @@ package com.example.backend.service.impl;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.example.backend.dto.request.ChangePasswordRequest;
 import com.example.backend.dto.request.UserUpdateRequest;
 import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.model.User;
@@ -10,9 +11,11 @@ import com.example.backend.service.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
@@ -22,13 +25,8 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
-
+    private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
-
-    @Override
-    public UserDetailsService getUserDetailsService() {
-        return username -> userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("Wrong username or password"));
-    }
 
     @Override
     public User findByUsername(String username) {
@@ -64,4 +62,20 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
         return imageUrl;
     }
+    @Override
+    public void changePassword(String username, ChangePasswordRequest request) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("Old password is incorrect");
+        }
+        if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
+            throw new IllegalArgumentException("New password confirmation does not match");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+    }
+
 }
