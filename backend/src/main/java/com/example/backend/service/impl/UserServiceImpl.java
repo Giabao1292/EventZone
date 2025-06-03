@@ -42,7 +42,6 @@ public class UserServiceImpl implements UserService {
         user.setDateOfBirth(request.getDateOfBirth());
         userRepository.save(user);
     }
-
     @Override
     public String updateAvatar(String username, MultipartFile file, Cloudinary cloudinary) throws IOException {
         User user = findByUsername(username);

@@ -10,9 +10,7 @@ import { ToastContainer } from "react-toastify";
 import ForgotPassword from "./features/authentication/pages/ForgotPasswordPage";
 import ResetPasswordPage from "./features/authentication/pages/ResetPasswordPage";
 
-
-
-<Route path="/reset-password" element={<ResetPasswordPage />} />
+<Route path="/reset-password" element={<ResetPasswordPage />} />;
 
 function App() {
   return (
@@ -35,14 +33,8 @@ function App() {
                   element={<ChangePasswordForm />}
                 />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
-                  import ResetPasswordPage from "./features/authentication/pages/ResetPasswordPage";
-
-                  // ...
-
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
-
               </Routes>
-
             </AppLayout>
           }
         />

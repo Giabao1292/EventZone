@@ -68,7 +68,7 @@ const Header = () => {
                     onClick={logout}
                     className="w-full text-left px-4 py-2 text-slate-500 hover:bg-red-50 hover:text-red-600 transition"
                   >
-                    Đăng xuất
+                    <Link to="/">Đăng xuất</Link>
                   </button>
                 </div>
               </div>
