@@ -7,6 +7,12 @@ import ProfilePage from "./pages/ProfilePage";
 import VerifyPage from "./features/authentication/pages/VerifyPage";
 import ChangePasswordForm from "./pages/ChangePasswordPage";
 import { ToastContainer } from "react-toastify";
+import ForgotPassword from "./features/authentication/pages/ForgotPasswordPage";
+import ResetPasswordPage from "./features/authentication/pages/ResetPasswordPage";
+
+
+
+<Route path="/reset-password" element={<ResetPasswordPage />} />
 
 function App() {
   return (
@@ -28,7 +34,15 @@ function App() {
                   path="/change-password"
                   element={<ChangePasswordForm />}
                 />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                  import ResetPasswordPage from "./features/authentication/pages/ResetPasswordPage";
+
+                  // ...
+
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
+
               </Routes>
+
             </AppLayout>
           }
         />

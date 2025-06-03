@@ -39,4 +39,24 @@ public class MailService {
         mailSender.send(messsage);
         log.info("Email has been sent successfully to {}", emailTo);
     }
+
+    public void sendResetPasswordEmail(String toEmail, String token) throws MessagingException {
+        String resetLink = "http://localhost:5173/reset-password?token=" + token;
+        String subject = "Đặt lại mật khẩu tài khoản của bạn";
+        String content = "Xin chào,<br>"
+                + "Bạn nhận được email này vì đã yêu cầu đặt lại mật khẩu.<br>"
+                + "Vui lòng nhấn vào link bên dưới để đặt lại mật khẩu:<br>"
+                + "<a href=\"" + resetLink + "\">Đặt lại mật khẩu</a><br>"
+                + "Nếu bạn không yêu cầu, vui lòng bỏ qua email này.<br>"
+                + "Cảm ơn!";
+
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+        helper.setTo(toEmail);
+        helper.setSubject(subject);
+        helper.setText(content, true);
+
+        mailSender.send(message);
+    }
+
 }

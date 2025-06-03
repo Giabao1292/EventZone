@@ -5,18 +5,14 @@ import com.example.backend.dto.request.RegisterPassword;
 import com.example.backend.dto.request.RegisterRequest;
 import com.example.backend.dto.response.TokenResponse;
 import com.example.backend.exception.ResourceNotFoundException;
-import com.example.backend.model.Role;
-import com.example.backend.model.Token;
-import com.example.backend.model.User;
-import com.example.backend.model.UserRole;
+import com.example.backend.model.*;
 import com.example.backend.repository.RoleRepository;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.repository.VerificationRepository;
-import com.example.backend.service.AuthService;
-import com.example.backend.service.JwtService;
-import com.example.backend.service.TokenService;
-import com.example.backend.service.UserService;
+import com.example.backend.repository.VerificationTokenRepository;
+import com.example.backend.service.*;
 import com.example.backend.util.TokenType;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -25,6 +21,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.example.backend.util.TokenType.REFRESH_TOKEN;
@@ -42,6 +40,8 @@ public class AuthServiceImpl implements AuthService {
     private final VerificationRepository verificationRepository;
     private final RoleRepository roleRepository;
     private final TokenService tokenService;
+    private final VerificationTokenRepository verificationTokenRepository;
+    private final MailService mailService;
 
     @Override
     public TokenResponse authenticate(LoginRequest request) {
@@ -108,4 +108,42 @@ public class AuthServiceImpl implements AuthService {
             throw new ResourceNotFoundException("Email already exists");
         }
     }
+
+    @Override
+    public void handleForgotPassword(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy email"));
+
+        String token = UUID.randomUUID().toString();
+
+        VerificationToken verificationToken = new VerificationToken();
+        verificationToken.setEmail(user.getEmail());
+        verificationToken.setToken(token);
+        verificationToken.setExpiryDate(Instant.now().plusSeconds(15 * 60)); // hết hạn sau 15 phút
+        verificationTokenRepository.save(verificationToken);
+
+        try {
+            mailService.sendResetPasswordEmail(user.getEmail(), token);  // gọi gửi mail reset password
+        } catch (MessagingException e) {
+            throw new RuntimeException("Không thể gửi email đặt lại mật khẩu", e);
+        }
+    }
+
+    @Override
+    public void resetPassword(String token, String newPassword) {
+        VerificationToken verificationToken = verificationTokenRepository.findByToken(token)
+                .orElseThrow(() -> new ResourceNotFoundException("Token không hợp lệ"));
+
+        if (verificationToken.getExpiryDate().isBefore(Instant.now())) { // ✅ Dùng Instant
+            throw new RuntimeException("Token đã hết hạn");
+        }
+
+        User user = userRepository.findByEmail(verificationToken.getEmail())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng tương ứng với token"));
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        verificationTokenRepository.delete(verificationToken);
+    }
+
 }

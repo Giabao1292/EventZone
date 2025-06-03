@@ -90,7 +90,7 @@ const LoginForm = () => {
             <input type="checkbox" className="mr-2 accent-blue-500" />
             Nhớ đăng nhập
           </label>
-          <a href="#" className="text-blue-500 hover:underline">
+          <a href="/forgot-password" className="text-blue-500 hover:underline">
             Quên mật khẩu?
           </a>
         </div>
