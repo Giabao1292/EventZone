@@ -50,6 +50,7 @@ public class UserController {
             dto.setEmail(user.getEmail());
             dto.setUsername(user.getUsername());
             dto.setPhone(user.getPhone());
+            dto.setProfileUrl(user.getProfileUrl());
             dto.setDateOfBirth(user.getDateOfBirth());
 
             return new ResponseData<>(HttpStatus.OK.value(), "Profile retrieved successfully", dto);
@@ -77,6 +78,7 @@ public class UserController {
             dto.setFullname(updatedUser.getFullname());
             dto.setEmail(updatedUser.getEmail());
             dto.setUsername(updatedUser.getUsername());
+            dto.setProfileUrl(updatedUser.getProfileUrl());
             dto.setPhone(updatedUser.getPhone());
             dto.setDateOfBirth(updatedUser.getDateOfBirth());
 
