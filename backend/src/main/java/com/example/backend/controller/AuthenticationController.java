@@ -90,4 +90,19 @@ public class AuthenticationController {
     public ResponseData<TokenResponse> logout(HttpServletRequest request) throws MessagingException {
         return null;
     }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        authService.handleForgotPassword(email);
+        return ResponseEntity.ok("Vui lòng kiểm tra email để đặt lại mật khẩu.");
+    }
+
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestParam String token,
+                                           @RequestParam String newPassword) {
+        authService.resetPassword(token, newPassword);
+        return ResponseEntity.ok("Mật khẩu đã được cập nhật thành công.");
+    }
 }

@@ -11,4 +11,7 @@ public interface AuthService {
     void validateRegister(RegisterRequest request);
 
     TokenResponse refreshToken(String refreshToken);
+    void handleForgotPassword(String email);
+
+    void resetPassword(String token, String newPassword);
 }
