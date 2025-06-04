@@ -10,6 +10,7 @@ import "react-toastify/dist/ReactToastify.css";
 import PropTypes from "prop-types";
 import avatarDefault from "../assets/images/avtDefault.jpg"; // Ảnh mặc định
 import useAuth from "../hooks/useAuth";
+import PageLoader from "../ui/PageLoader";
 
 const ProfilePage = () => {
   const { user: authUser, updateUser } = useAuth();
@@ -106,11 +107,7 @@ const ProfilePage = () => {
   };
 
   if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-600">Đang tải dữ liệu...</p>
-      </div>
-    );
+    return PageLoader;
   }
 
   return (
