@@ -3,10 +3,17 @@ package com.example.backend.service.impl;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.example.backend.dto.request.ChangePasswordRequest;
+import com.example.backend.dto.request.RegisterRequest;
 import com.example.backend.dto.request.UserUpdateRequest;
+import com.example.backend.dto.response.TokenResponse;
 import com.example.backend.exception.ResourceNotFoundException;
+import com.example.backend.model.Role;
 import com.example.backend.model.User;
+import com.example.backend.model.UserRole;
+import com.example.backend.model.UserTemp;
+import com.example.backend.repository.RoleRepository;
 import com.example.backend.repository.UserRepository;
+import com.example.backend.service.JwtService;
 import com.example.backend.service.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -21,22 +28,26 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import java.util.stream.Collectors;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final JwtService jwtService;
 
     @Override
-    public User findByUsername(String username) {
-        return userRepository.findByUsername(username)
+    public User findByUsername(String email) {
+        return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
     @Override
-    public void updateProfileByUsername(String username, UserUpdateRequest request) {
-        User user = findByUsername(username);
+    public void updateProfileByUsername(String email, UserUpdateRequest request) {
+        User user = findByUsername(email);
         user.setFullname(request.getFullname());
         user.setPhone(request.getPhone());
         user.setDateOfBirth(request.getDateOfBirth());
@@ -63,7 +74,7 @@ public class UserServiceImpl implements UserService {
     }
     @Override
     public void changePassword(String username, ChangePasswordRequest request) {
-        User user = userRepository.findByUsername(username)
+        User user = userRepository.findByEmail(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
@@ -77,4 +88,25 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
+    @Override
+    public TokenResponse saveUser(UserTemp userTemp) {
+        User user = new User();
+        user.setFullname(userTemp.getFullName());
+        user.setPhone(userTemp.getPhone());
+        user.setDateOfBirth(userTemp.getDateOfBirth());
+        user.setEmail(userTemp.getEmail());
+        user.setPassword(userTemp.getPassword());
+        Role roleUser = roleRepository.findByRoleName("USER")
+                .orElseThrow(() -> new ResourceNotFoundException("Role not found"));
+        UserRole userRole = new UserRole();
+        userRole.setUser(user);
+        userRole.setRole(roleUser);
+        user.getTblUserRoles().add(userRole);
+        userRepository.save(user);
+        return TokenResponse.builder()
+                .accessToken(jwtService.generateToken(user))
+                .refreshToken(jwtService.generateRefreshToken(user))
+                .roles(user.getTblUserRoles().stream().map(role -> role.getRole().getRoleName()).collect(Collectors.toList()))
+                .build();
+    }
 }

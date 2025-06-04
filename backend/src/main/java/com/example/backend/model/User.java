@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 @Entity
 @DynamicInsert
 @Table(name = "tbl_user", uniqueConstraints = {
-        @UniqueConstraint(name = "username", columnNames = {"username"}),
         @UniqueConstraint(name = "email", columnNames = {"email"})
 })
 public class User implements UserDetails, Serializable {
@@ -34,11 +33,6 @@ public class User implements UserDetails, Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id", nullable = false)
     private Integer id;
-
-    @Size(max = 50)
-    @NotNull
-    @Column(name = "username", nullable = false, length = 50)
-    private String username;
 
     @Size(max = 255)
     @NotNull
@@ -64,7 +58,7 @@ public class User implements UserDetails, Serializable {
     private String phone;
 
     @Size(max = 100)
-    @Column(name = "email", length = 100)
+    @Column(name = "email", length = 100, unique = true)
     private String email;
 
     @ColumnDefault("1")
@@ -111,6 +105,11 @@ public class User implements UserDetails, Serializable {
         return tblUserRoles.stream()
                 .map(userRole -> new SimpleGrantedAuthority(userRole.getRole().getRoleName()))
                 .collect(Collectors.toSet());
+    }
+
+    @Override
+    public String getUsername() {
+        return email;
     }
 
     @Override

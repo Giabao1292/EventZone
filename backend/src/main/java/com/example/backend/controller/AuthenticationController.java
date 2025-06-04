@@ -8,8 +8,10 @@ import com.example.backend.dto.response.TokenResponse;
 import com.example.backend.dto.response.UserResponseDTO;
 import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.model.User;
+import com.example.backend.model.UserTemp;
 import com.example.backend.model.VerificationToken;
 import com.example.backend.repository.UserRepository;
+import com.example.backend.repository.UserTempRepository;
 import com.example.backend.repository.VerificationRepository;
 import com.example.backend.service.*;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
@@ -41,6 +43,7 @@ public class AuthenticationController {
     private final GoogleAuthService googleAuthService;
     private final VerificationService verificationService;
     private final VerificationRepository verificationRepository;
+    private final UserTempRepository userTempRepository;
 
     @PostMapping("/login")
     public ResponseData<TokenResponse> login(@Valid @RequestBody LoginRequest request){
@@ -50,19 +53,14 @@ public class AuthenticationController {
 
     @PostMapping("/register")
     public ResponseData<?> register(@Valid @RequestBody RegisterRequest request) throws MessagingException {
-            authService.validateRegister(request);
-            String token = verificationService.generateToken();
-            verificationService.save(request.getEmail(), token);
-            mailService.sendConfirmEmail(request.getEmail(), token);
-            return new ResponseData<>(HttpStatus.CREATED.value(),"Register successfully. Please check your email to verify account", request);
+            UserTemp userTemp = authService.register(request);
+            mailService.sendConfirmEmail(userTemp);
+            return new ResponseData<>(HttpStatus.CREATED.value(),"Please check your email to verify account");
     }
 
-    @PostMapping("/verify-email")
-    public ResponseData<TokenResponse> verifyEmail(@Valid @RequestBody RegisterPassword userRegister, HttpServletRequest request) throws MessagingException {
-        TokenResponse tokenResponse = new TokenResponse();
-        if(verificationService.validateToken((String)request.getHeader("X-Verify-Token"), userRegister.getEmail())){
-            tokenResponse = authService.register(userRegister);
-        }
+    @GetMapping("/verify-email")
+    public ResponseData<TokenResponse> verifyEmail(@RequestParam(name = "verifyToken") String verifyToken) throws MessagingException {
+        TokenResponse tokenResponse = authService.verifyTokenRegister(verifyToken);
         return new ResponseData<>(HttpStatus.OK.value(),"Verify email successfully", tokenResponse);
     }
 
@@ -79,10 +77,10 @@ public class AuthenticationController {
     }
 
     @PostMapping("/resend-code")
-    public ResponseData<TokenResponse> resendCode(@RequestBody Map<String, Object> request) throws MessagingException {
-        TokenResponse tokenResponse = new TokenResponse();
+    public ResponseData<?> resendCode(@RequestBody Map<String, Object> request) throws MessagingException {
         String email = request.get("email").toString();
-        mailService.sendConfirmEmail(email, verificationService.resendToken(email));
+        UserTemp userTemp = userTempRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("Expired time, please register again!"));
+        mailService.sendConfirmEmail(userTemp);
         return new ResponseData<>(HttpStatus.OK.value(),"Resend email successfully");
     }
 
@@ -97,7 +95,6 @@ public class AuthenticationController {
         authService.handleForgotPassword(email);
         return ResponseEntity.ok("Vui lòng kiểm tra email để đặt lại mật khẩu.");
     }
-
 
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestParam String token,
