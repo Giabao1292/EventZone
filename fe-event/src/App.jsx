@@ -3,17 +3,6 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import { ToastContainer } from "react-toastify";
 import PageLoader from "./ui/PageLoader";
-
-import Home from "./pages/Home";
-import LoginPage from "./features/authentication/pages/LoginPage";
-import AppLayout from "./ui/AppLayout";
-import RegisterPage from "./features/authentication/pages/RegisterPage";
-import ProfilePage from "./pages/ProfilePage";
-
-import ChangePasswordForm from "./pages/ChangePasswordPage";
-import { ToastContainer } from "react-toastify";
-import ForgotPassword from "./features/authentication/pages/ForgotPasswordPage";
-import ResetPasswordPage from "./features/authentication/pages/ResetPasswordPage";
 import VerifyEmail from "./pages/VerifyEmail";
 
 // Lazy load các page và layout
@@ -23,9 +12,6 @@ const LoginPage = lazy(() =>
 );
 const RegisterPage = lazy(() =>
   import("./features/authentication/pages/RegisterPage")
-);
-const VerifyPage = lazy(() =>
-  import("./features/authentication/pages/VerifyPage")
 );
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const ChangePasswordForm = lazy(() => import("./pages/ChangePasswordPage"));
@@ -45,10 +31,9 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          <Route path="/verify-email" element={<VerifyPage />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
-
+          <Route path="/verify-email" element={<VerifyEmail />} />
           <Route
             path="*"
             element={
