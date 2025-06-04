@@ -80,7 +80,7 @@ public class GlobalExceptionHandler {
             case "LockedException" -> "Your account is locked";
             case "AccountExpiredException" -> "Your account has expired";
             case "CredentialsExpiredException" -> "Your credentials have expired";
-            default -> "Authentication failed";
+            default -> "Account not found";
         };
         return buildErrorResponse(HttpStatus.FORBIDDEN, "Authentication Error", message, request);
     }

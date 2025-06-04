@@ -2,6 +2,7 @@ import { createContext, useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { getToken, removeToken } from "../utils/storage";
 import { getUserDetail } from "../services/userServices";
+import PageLoader from "../ui/PageLoader";
 
 const AuthContext = createContext();
 
@@ -29,7 +30,7 @@ export const AuthProvider = ({ children }) => {
             error.response?.status === 401 ||
             error.response?.status === 403
           ) {
-            logout(); // Chỉ đăng xuất nếu lỗi xác thực
+            logout();
           }
         }
       }
@@ -68,7 +69,7 @@ export const AuthProvider = ({ children }) => {
         logout,
       }}
     >
-      {!loading && children}
+      {loading ? <PageLoader /> : children}
     </AuthContext.Provider>
   );
 };
