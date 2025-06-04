@@ -1,5 +1,7 @@
 package com.example.backend.service;
 
+import com.example.backend.dto.request.RegisterRequest;
+import com.example.backend.model.UserTemp;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -24,20 +26,22 @@ public class MailService {
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
     private final MailProperties mailProperties;
-    public void sendConfirmEmail(String emailTo, String verifyToken) throws MessagingException {
-        log.info("Sending confirm email with verify code {}", verifyToken);
+    public void sendConfirmEmail(UserTemp user) throws MessagingException {
+        log.info("Sending confirm email with verify code {}", user.getVerificationToken());
         MimeMessage messsage = mailSender.createMimeMessage();
         MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(messsage, true, "UTF-8");
         Context context = new Context();
         Map<String, Object> properties = new HashMap<>();
-        properties.put("verifyToken", verifyToken);
+        String link = "http://localhost:5173/verify-email?verifyToken=" + user.getVerificationToken();
+        properties.put("linkVerifyToken", link);
+        properties.put("fullName", user.getFullName());
         context.setVariables(properties);
-        mimeMessageHelper.setTo(emailTo);
+        mimeMessageHelper.setTo(user.getEmail());
         mimeMessageHelper.setFrom(emailFrom);
         mimeMessageHelper.setSubject("Verify Your Email");
         mimeMessageHelper.setText(templateEngine.process("confirm-email.html", context), true);
         mailSender.send(messsage);
-        log.info("Email has been sent successfully to {}", emailTo);
+        log.info("Email has been sent successfully to {}", user.getEmail());
     }
 
     public void sendResetPasswordEmail(String toEmail, String token) throws MessagingException {

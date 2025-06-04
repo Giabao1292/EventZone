@@ -11,15 +11,17 @@ import java.util.Date;
 
 @Getter
 public class RegisterRequest {
-    @NotBlank(message = "User must not be blank")
-    private String username;
-
-    @NotBlank(message = "Fullname must not be blank")
-    private String fullName;
 
     @NotBlank(message = "email must not be blank")
     @Email(message = "Invalid email")
     private String email;
+
+    @NotBlank(message = "Password must not be blank")
+    @Size(min = 6, message = "Password must be at least 6 characters")
+    private String password;
+
+    @NotBlank(message = "Fullname must not be blank")
+    private String fullName;
 
     @NotBlank(message = "Phone must not be blank")
     @Phone

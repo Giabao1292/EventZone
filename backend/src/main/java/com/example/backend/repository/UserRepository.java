@@ -8,8 +8,6 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Integer> , UserRepositoryCustom {
-    Optional<User> findByUsername(String username);
     Optional<User> findByEmail(String email);
     Optional<User> findByPhone(String phone);
-
 }

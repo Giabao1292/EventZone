@@ -1,17 +1,12 @@
 package com.example.backend.service.impl;
 
 import com.example.backend.dto.request.LoginRequest;
-import com.example.backend.dto.request.RegisterPassword;
 import com.example.backend.dto.request.RegisterRequest;
 import com.example.backend.dto.response.TokenResponse;
 import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.model.*;
-import com.example.backend.repository.RoleRepository;
-import com.example.backend.repository.UserRepository;
-import com.example.backend.repository.VerificationRepository;
-import com.example.backend.repository.VerificationTokenRepository;
+import com.example.backend.repository.*;
 import com.example.backend.service.*;
-import com.example.backend.util.TokenType;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,12 +37,14 @@ public class AuthServiceImpl implements AuthService {
     private final TokenService tokenService;
     private final VerificationTokenRepository verificationTokenRepository;
     private final MailService mailService;
+    private final UserTempRepository userTempRepository;
+    private final UserTempService userTempService;
 
     @Override
     public TokenResponse authenticate(LoginRequest request) {
         log.info("authenticate");
-        User user =  userRepository.findByUsername(request.getUsername()).orElseThrow(() -> new UsernameNotFoundException(request.getUsername()));
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+        User user =  userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
 
         String accessToken = jwtService.generateToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
@@ -61,38 +58,16 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
     @Override
-    public TokenResponse register(RegisterPassword registerRequest) {
-        User user = new User();
-        user.setUsername(registerRequest.getUsername());
-        user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
-        user.setFullname(registerRequest.getFullName());
-        user.setEmail(registerRequest.getEmail());
-        user.setPhone(registerRequest.getPhone());
-        user.setDateOfBirth(registerRequest.getDateOfBirth());
-        Role roleUser = roleRepository.findByRoleName("USER")
-                .orElseThrow(() -> new ResourceNotFoundException("Role not found"));
-        UserRole userRole = new UserRole();
-        userRole.setUser(user);
-        userRole.setRole(roleUser);
-        user.getTblUserRoles().add(userRole);
-        userRepository.save(user);
-        String token = jwtService.generateToken(user);
-        return TokenResponse.builder()
-                .accessToken(jwtService.generateToken(user))
-                .refreshToken(jwtService.generateRefreshToken(user))
-                .roles(user.getTblUserRoles().stream().map(role -> role.getRole().getRoleName()).collect(Collectors.toList()))
-                .build();
-    }
-
-    @Override
-    public void validateRegister(RegisterRequest request){
-        validateRegisterRequest(request);
+    public UserTemp register(RegisterRequest registerRequest) {
+        validateRegisterRequest(registerRequest);
+        UserTemp user = userTempService.saveUser(registerRequest);
+        return user;
     }
 
     @Override
     public TokenResponse refreshToken(String refreshToken){
         String username = jwtService.extractUsername(refreshToken, REFRESH_TOKEN);
-        User user = userRepository.findByUsername(username).orElseThrow(()-> new ResourceNotFoundException("User not found"));
+        User user = userRepository.findByEmail(username).orElseThrow(()-> new ResourceNotFoundException("User not found"));
         String accessToken = jwtService.generateToken(user);
         return TokenResponse.builder()
                 .accessToken(accessToken)
@@ -100,10 +75,15 @@ public class AuthServiceImpl implements AuthService {
                 .roles(user.getTblUserRoles().stream().map(role -> role.getRole().getRoleName()).collect(Collectors.toList()))
                 .build();
     }
+
+    @Override
+    public TokenResponse verifyTokenRegister(String verifyToken){
+        UserTemp user = userTempRepository.findByVerificationTokenAndTokenExpiryAfter(verifyToken, Instant.now()).orElseThrow(() -> new ResourceNotFoundException("Token đã hết hạn"));
+        TokenResponse tokenResponse = userService.saveUser(user);
+        userTempRepository.delete(user);
+        return tokenResponse;
+    }
     private void validateRegisterRequest(RegisterRequest request) {
-        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
-            throw new ResourceNotFoundException("Username already exists");
-        }
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new ResourceNotFoundException("Email already exists");
         }

@@ -1,7 +1,20 @@
 import { Suspense, lazy } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+
 import { ToastContainer } from "react-toastify";
 import PageLoader from "./ui/PageLoader";
+
+import Home from "./pages/Home";
+import LoginPage from "./features/authentication/pages/LoginPage";
+import AppLayout from "./ui/AppLayout";
+import RegisterPage from "./features/authentication/pages/RegisterPage";
+import ProfilePage from "./pages/ProfilePage";
+
+import ChangePasswordForm from "./pages/ChangePasswordPage";
+import { ToastContainer } from "react-toastify";
+import ForgotPassword from "./features/authentication/pages/ForgotPasswordPage";
+import ResetPasswordPage from "./features/authentication/pages/ResetPasswordPage";
+import VerifyEmail from "./pages/VerifyEmail";
 
 // Lazy load các page và layout
 const Home = lazy(() => import("./pages/Home"));
