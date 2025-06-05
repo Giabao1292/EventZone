@@ -1,9 +1,9 @@
 package com.example.backend.service.impl;
 
+import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.service.JwtService;
 import com.example.backend.util.TokenType;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -56,7 +56,7 @@ public class JwtServiceImpl implements JwtService {
                 .setSubject(userDetails.getUsername())
                 .setExpiration(new Date(System.currentTimeMillis() + 1000L * 60 * 60 * limitTime))
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .signWith(getKey(type))
+                .signWith(getKey(type), SignatureAlgorithm.HS512)
                 .compact();
     }
 
@@ -72,16 +72,24 @@ public class JwtServiceImpl implements JwtService {
     }
 
     private Claims getClaimsFromToken(String token, TokenType type) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getKey(type))
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(getKey(type))
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (Exception e) {
+            return null;
+        }
     }
+
 
     private <T> T extractClaimsFromToken(String token, Function<Claims, T> claimsResolver, TokenType type) {
         final Claims claims = getClaimsFromToken(token, type);
-        return claimsResolver.apply(claims);
+        if(claims != null){
+            return claimsResolver.apply(claims);
+        }
+        return null;
     }
 
 }

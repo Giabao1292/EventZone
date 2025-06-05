@@ -4,7 +4,9 @@ import com.example.backend.dto.request.LoginRequest;
 import com.example.backend.dto.request.RegisterRequest;
 import com.example.backend.dto.response.TokenResponse;
 import com.example.backend.exception.ResourceNotFoundException;
-import com.example.backend.model.*;
+import com.example.backend.model.User;
+import com.example.backend.model.UserTemp;
+import com.example.backend.model.VerificationToken;
 import com.example.backend.repository.*;
 import com.example.backend.service.*;
 import jakarta.mail.MessagingException;
@@ -34,7 +36,6 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final VerificationRepository verificationRepository;
     private final RoleRepository roleRepository;
-    private final TokenService tokenService;
     private final VerificationTokenRepository verificationTokenRepository;
     private final MailService mailService;
     private final UserTempRepository userTempRepository;
@@ -43,20 +44,17 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public TokenResponse authenticate(LoginRequest request) {
         log.info("authenticate");
-        User user =  userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        User user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new UsernameNotFoundException("User not found"));
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
-
         String accessToken = jwtService.generateToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
-
-        tokenService.save(Token.builder().accessToken(accessToken).refreshToken(refreshToken).username(user.getUsername()).build());
-
         return TokenResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .roles(user.getTblUserRoles().stream().map(userRole -> userRole.getRole().getRoleName()).collect(Collectors.toList()))
                 .build();
     }
+
     @Override
     public UserTemp register(RegisterRequest registerRequest) {
         validateRegisterRequest(registerRequest);
@@ -65,9 +63,9 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public TokenResponse refreshToken(String refreshToken){
+    public TokenResponse refreshToken(String refreshToken) {
         String username = jwtService.extractUsername(refreshToken, REFRESH_TOKEN);
-        User user = userRepository.findByEmail(username).orElseThrow(()-> new ResourceNotFoundException("User not found"));
+        User user = userRepository.findByEmail(username).orElseThrow(() -> new ResourceNotFoundException("User not found"));
         String accessToken = jwtService.generateToken(user);
         return TokenResponse.builder()
                 .accessToken(accessToken)
@@ -77,12 +75,13 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public TokenResponse verifyTokenRegister(String verifyToken){
+    public TokenResponse verifyTokenRegister(String verifyToken) {
         UserTemp user = userTempRepository.findByVerificationTokenAndTokenExpiryAfter(verifyToken, Instant.now()).orElseThrow(() -> new ResourceNotFoundException("Token đã hết hạn"));
         TokenResponse tokenResponse = userService.saveUser(user);
         userTempRepository.delete(user);
         return tokenResponse;
     }
+
     private void validateRegisterRequest(RegisterRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new ResourceNotFoundException("Email already exists");

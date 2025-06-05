@@ -3,6 +3,7 @@ package com.example.backend.exception;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.AuthenticationException;
@@ -83,6 +84,12 @@ public class GlobalExceptionHandler {
             default -> "Account not found";
         };
         return buildErrorResponse(HttpStatus.FORBIDDEN, "Authentication Error", message, request);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ErrorResponse handleAccessDenied(AccessDeniedException ex, WebRequest request) {
+        return buildErrorResponse(HttpStatus.FORBIDDEN, "Access denied", "You don't have permission to access this data", request);
     }
 
     @ExceptionHandler(Exception.class)

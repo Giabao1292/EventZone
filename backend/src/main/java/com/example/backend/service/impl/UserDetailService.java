@@ -17,5 +17,4 @@ public class UserDetailService implements UserDetailsService {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Wrong username or password"));
     }
-
 }

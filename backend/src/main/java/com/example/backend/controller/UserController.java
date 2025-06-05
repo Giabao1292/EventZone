@@ -12,6 +12,8 @@ import com.example.backend.util.TokenType;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -40,10 +42,10 @@ public class UserController {
 
     @GetMapping
     public ResponseData<UserDetailResponse> getProfile(HttpServletRequest request) {
+        System.out.println(SecurityContextHolder.getContext().getAuthentication().getAuthorities());
         try {
             String username = extractToken(request);
             User user = userService.findByUsername(username);
-
             // Chuyển entity sang DTO
             UserDetailResponse dto = new UserDetailResponse();
             dto.setFullname(user.getFullname());
