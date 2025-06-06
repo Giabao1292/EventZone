@@ -51,19 +51,21 @@ const LoginForm = () => {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Tên đăng nhập
+            Email
           </label>
           <input
-            type="text"
-            {...formField("username", {
-              required: "Vui lòng nhập tên đăng nhập",
+            type="email"
+            {...formField("email", {
+              required: "Vui lòng nhập email",
+              pattern: {
+                value: /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/,
+                message: "Email không hợp lệ",
+              },
             })}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
-          {errors.username && (
-            <p className="text-sm text-red-500 mt-1">
-              {errors.username.message}
-            </p>
+          {errors.email && (
+            <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>
           )}
         </div>
 

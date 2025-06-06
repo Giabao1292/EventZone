@@ -36,7 +36,6 @@ public class GoogleAuthService {
             User newUser = new User();
             newUser.setEmail(email);
             newUser.setFullname(name);
-            newUser.setUsername(email); // Username tạm thời là email
             newUser.setProfileUrl(pictureUrl);
             newUser.setProviderId(payload.getSubject()); // Google user ID
             newUser.setPassword("GOOGLE"); // placeholder password
