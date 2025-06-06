@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import PageLoader from "./ui/PageLoader";
 import VerifyEmail from "./pages/VerifyEmail";
+import OrganizerRegistration from "./features/organizer/pages/OrganizerRegistration";
 
 // Lazy load các page và layout
 const Home = lazy(() => import("./pages/Home"));
@@ -42,6 +43,10 @@ function App() {
                   <Route path="/" element={<Navigate to="/home" replace />} />
                   <Route path="/home" element={<Home />} />
                   <Route path="/profile" element={<ProfilePage />} />
+                  <Route
+                    path="/organizer"
+                    element={<OrganizerRegistration />}
+                  />
                   <Route
                     path="/change-password"
                     element={<ChangePasswordForm />}

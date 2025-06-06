@@ -58,17 +58,40 @@ const Header = () => {
         {/* Menu */}
         <div className="flex items-center space-x-4">
           <Link
-            to="/create-event"
+            to="/organizer"
             className="border border-white text-white px-6 py-2 rounded-full hover:bg-white hover:text-[#2eb866] transition font-medium cursor-pointer no-underline"
           >
-            Tạo sự kiện
+            Trở thành nhà tổ chức
           </Link>
 
           <Link
             to="/home"
             className="flex items-center text-white hover:text-green-300 transition cursor-pointer no-underline"
           >
-            <MdConfirmationNumber className="mr-2 text-lg" />
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              class="text-white mr-2"
+              fill="none" // Thêm class mr-2 vào đây
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M19.758 12a2.91 2.91 0 011.928-2.74c.52-.186.98-.617.98-1.17V5.243a1 1 0 00-1-1H2.334a1 1 0 00-1 1v2.849c0 .552.461.983.981 1.17a2.91 2.91 0 010 5.478c-.52.187-.98.618-.98 1.17v2.848a1 1 0 001 1h19.333a1 1 0 001-1V15.91c0-.552-.461-.983-.981-1.17A2.91 2.91 0 0119.758 12z"
+                stroke="#FFFFFF"
+                stroke-width="2"
+                stroke-miterlimit="10"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              ></path>
+              <path
+                d="M8.121 10.06h7.758M8.121 13.94h7.758"
+                stroke="#FFFFFF"
+                stroke-miterlimit="10"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              ></path>
+            </svg>
             Vé đã mua
           </Link>
 

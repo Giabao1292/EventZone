@@ -42,7 +42,7 @@ function Home() {
   }, [notification]);
 
   return (
-    <div className="relative min-h-screen bg-gray-50 flex flex-col items-center justify-center">
+    <div className="relative min-h-screen flex flex-col items-center justify-center">
       {notification && (
         <div
           className={`fixed top-8 left-1/2 transform -translate-x-1/2 px-6 py-4 rounded-xl shadow-lg text-white z-50 transition-all duration-300 ${

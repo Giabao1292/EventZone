@@ -1,37 +1,28 @@
 package com.example.backend.controller;
 
-import com.cloudinary.utils.StringUtils;
-import com.example.backend.component.GoogleTokenVerifier;
-import com.example.backend.dto.request.*;
+import com.example.backend.dto.request.GoogleLoginRequest;
+import com.example.backend.dto.request.LoginRequest;
+import com.example.backend.dto.request.RegisterRequest;
 import com.example.backend.dto.response.ResponseData;
 import com.example.backend.dto.response.TokenResponse;
-import com.example.backend.dto.response.UserResponseDTO;
 import com.example.backend.exception.ResourceNotFoundException;
-import com.example.backend.model.User;
 import com.example.backend.model.UserTemp;
-import com.example.backend.model.VerificationToken;
-import com.example.backend.repository.UserRepository;
 import com.example.backend.repository.UserTempRepository;
 import com.example.backend.repository.VerificationRepository;
-import com.example.backend.service.*;
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.example.backend.service.AuthService;
+import com.example.backend.service.GoogleAuthService;
+import com.example.backend.service.MailService;
+import com.example.backend.service.VerificationService;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -41,8 +32,6 @@ public class AuthenticationController {
     private final MailService mailService;
     private final AuthService authService;
     private final GoogleAuthService googleAuthService;
-    private final VerificationService verificationService;
-    private final VerificationRepository verificationRepository;
     private final UserTempRepository userTempRepository;
 
     @PostMapping("/login")

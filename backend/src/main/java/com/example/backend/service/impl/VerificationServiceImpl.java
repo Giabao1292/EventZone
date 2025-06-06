@@ -1,9 +1,7 @@
 package com.example.backend.service.impl;
 
 import com.cloudinary.utils.StringUtils;
-import com.example.backend.dto.request.RegisterRequest;
 import com.example.backend.exception.ResourceNotFoundException;
-import com.example.backend.model.User;
 import com.example.backend.model.VerificationToken;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.repository.VerificationRepository;
@@ -14,16 +12,13 @@ import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.Optional;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class VerificationServiceImpl implements VerificationService {
     private final VerificationRepository verificationRepository;
-    private final UserRepository userRepository;
     private final SecureRandom random = new SecureRandom();
     @Override
     public Boolean validateToken(String token, String email) {

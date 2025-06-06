@@ -4,9 +4,11 @@ import PropTypes from "prop-types";
 
 const AppLayout = ({ children }) => {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-[#0A0A0A]">
       <Header />
-      <main className="flex-grow bg-gradient-to-br from-slate-100 to-slate-200">
+      <main className="flex-grow from-slate-100 to-slate-200">
+        {" "}
+        {/* Giữ nguyên hoặc thay đổi tùy ý */}
         {children}
       </main>
       <Footer />
