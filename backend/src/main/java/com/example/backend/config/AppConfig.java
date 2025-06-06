@@ -27,7 +27,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 @RequiredArgsConstructor
 public class AppConfig implements WebMvcConfigurer , WebSecurityCustomizer {
-    private String[] WHILE_LIST = {"/api/auth/**", "/api/users/**"};
+    private String[] WHILE_LIST = {"/api/auth/**", "/api/users/**", "/api/events/**"};
 
     private final PreFilter preFilter;
     private final UserDetailService userDetailService;

@@ -65,8 +65,12 @@ const Header = () => {
                     Đổi mật khẩu
                   </Link>
                   <button
-                    onClick={logout}
-                    className="w-full text-left px-4 py-2 text-slate-500 hover:bg-red-50 hover:text-red-600 transition"
+                      onClick={() => {
+                        logout();            // Gọi hàm logout từ hook
+                        navigate("/home");   // Chuyển hướng về trang Home.jsx
+                      }}
+
+                      className="w-full text-left px-4 py-2 text-slate-500 hover:bg-red-50 hover:text-red-600 transition"
                   >
                     Đăng xuất
                   </button>

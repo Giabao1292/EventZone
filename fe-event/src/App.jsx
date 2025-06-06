@@ -9,6 +9,7 @@ import ChangePasswordForm from "./pages/ChangePasswordPage";
 import { ToastContainer } from "react-toastify";
 import ForgotPassword from "./features/authentication/pages/ForgotPasswordPage";
 import ResetPasswordPage from "./features/authentication/pages/ResetPasswordPage";
+import EventList from "./pages/EventList";
 
 
 
@@ -40,6 +41,8 @@ function App() {
                   // ...
 
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
+                <Route path="/events" element={<EventList />} />
+
 
               </Routes>
 
