@@ -88,13 +88,7 @@ public class Event {
     private String modifiedBy;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "event")
-    private Set<com.example.backend.model.EventPayment> tblEventPayments = new LinkedHashSet<>();
-
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "event")
     private Set<com.example.backend.model.EventVoucher> tblEventVouchers = new LinkedHashSet<>();
-
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "event")
-    private Set<com.example.backend.model.FeaturedEvent> tblFeaturedEvents = new LinkedHashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "event")
     private Set<com.example.backend.model.Review> tblReviews = new LinkedHashSet<>();

@@ -14,8 +14,9 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
-@Table(name = "tbl_organizer", indexes = {
-        @Index(name = "user_id", columnList = "user_id")
+@Table(name = "tbl_organizer", uniqueConstraints = {
+        @UniqueConstraint(name = "unique_email", columnNames = {"email"}),
+        @UniqueConstraint(name = "user_id", columnNames = {"user_id"})
 })
 public class Organizer {
     @Id
@@ -23,19 +24,73 @@ public class Organizer {
     @Column(name = "organizer_id", nullable = false)
     private Integer id;
 
-    @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-
     @Size(max = 100)
     @NotNull
-    @Column(name = "organization_name", nullable = false, length = 100)
-    private String organizationName;
+    @Column(name = "full_name", nullable = false, length = 100)
+    private String fullName;
 
-    @ColumnDefault("1")
+    @Size(max = 120)
+    @NotNull
+    @Column(name = "email", nullable = false, length = 120)
+    private String email;
+
+    @Size(max = 20)
+    @NotNull
+    @Column(name = "phone", nullable = false, length = 20)
+    private String phone;
+
+    @Size(max = 200)
+    @Column(name = "org_name", length = 200)
+    private String orgName;
+
+    @Size(max = 50)
+    @Column(name = "org_type", length = 50)
+    private String orgType;
+
+    @Size(max = 50)
+    @Column(name = "tax_code", length = 50)
+    private String taxCode;
+
+    @Size(max = 255)
+    @Column(name = "org_address")
+    private String orgAddress;
+
+    @Size(max = 255)
+    @Column(name = "website")
+    private String website;
+
+    @Size(max = 100)
+    @Column(name = "business_field", length = 100)
+    private String businessField;
+
+    @Lob
+    @Column(name = "org_info")
+    private String orgInfo;
+
+    @Size(max = 255)
+    @Column(name = "org_logo_url")
+    private String orgLogoUrl;
+
+    @Size(max = 255)
+    @Column(name = "id_card_front_url")
+    private String idCardFrontUrl;
+
+    @Size(max = 255)
+    @Column(name = "id_card_back_url")
+    private String idCardBackUrl;
+
+    @Size(max = 255)
+    @Column(name = "business_license_url")
+    private String businessLicenseUrl;
+
+    @Lob
+    @Column(name = "experience")
+    private String experience;
+
+    @ColumnDefault("'pending'")
+    @Lob
     @Column(name = "status")
-    private Integer status;
+    private String status;
 
     @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "created_at")
@@ -45,18 +100,11 @@ public class Organizer {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
-    @Size(max = 50)
-    @Column(name = "created_by", length = 50)
-    private String createdBy;
-
-    @Size(max = 50)
-    @Column(name = "modified_by", length = 50)
-    private String modifiedBy;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @OneToMany(mappedBy = "organizer")
     private Set<Event> tblEvents = new LinkedHashSet<>();
-
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "organizer")
-    private Set<EventPayment> tblEventPayments = new LinkedHashSet<>();
 
 }
