@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { saveToken } from "../utils/storage";
+import EventList from "../pages/EventList";
+import HeroSlider from "../pages/HeroSlider";
+import CategoryNav from "../ui/CategoryNav";
+
 
 function getQueryParam(name, search) {
   const params = new URLSearchParams(search);
@@ -61,7 +65,11 @@ function Home() {
         </div>
       )}
 
-      <h1 className="text-3xl font-bold">Welcome to Home</h1>
+      {/*<h1 className="text-3xl font-bold">Welcome to Home</h1>*/}
+      <CategoryNav />
+      <HeroSlider />
+      <EventList />
+
     </div>
   );
 }

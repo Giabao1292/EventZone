@@ -2,8 +2,6 @@ import { Suspense, lazy } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import { ToastContainer } from "react-toastify";
-import ForgotPassword from "./features/authentication/pages/ForgotPasswordPage";
-import ResetPasswordPage from "./features/authentication/pages/ResetPasswordPage";
 import EventList from "./pages/EventList";
 import PageLoader from "./ui/PageLoader";
 import VerifyEmail from "./pages/VerifyEmail";

@@ -87,6 +87,9 @@ public class Event {
     @Column(name = "modified_by", length = 50)
     private String modifiedBy;
 
+    @Column(name = "is_featured")
+    private Boolean isFeatured;
+
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "event")
     private Set<com.example.backend.model.EventPayment> tblEventPayments = new LinkedHashSet<>();
 

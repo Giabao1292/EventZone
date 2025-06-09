@@ -5,10 +5,9 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-@Getter
-@Setter
-public class EventResponse {
-    private int eventId;
-    private String posterImageUrl;
+public class
+EventResponse {
+    private int id;
+    private String posterImage;
 
 }
