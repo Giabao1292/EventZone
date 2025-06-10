@@ -41,7 +41,6 @@ public class UserController {
 
     @GetMapping
     public ResponseData<UserDetailResponse> getProfile(HttpServletRequest request) {
-        System.out.println(SecurityContextHolder.getContext().getAuthentication().getAuthorities());
         try {
             String username = extractToken(request);
             User user = userService.findByUsername(username);

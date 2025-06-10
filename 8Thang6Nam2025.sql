@@ -238,9 +238,6 @@ DROP TABLE IF EXISTS `tbl_organizer`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `tbl_organizer` (
   `organizer_id` int NOT NULL AUTO_INCREMENT,
-  `full_name` varchar(100) NOT NULL,
-  `email` varchar(120) NOT NULL,
-  `phone` varchar(20) NOT NULL,
   `org_name` varchar(200) DEFAULT NULL,
   `org_type` varchar(50) DEFAULT NULL,
   `tax_code` varchar(50) DEFAULT NULL,

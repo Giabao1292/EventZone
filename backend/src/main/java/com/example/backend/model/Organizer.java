@@ -3,8 +3,7 @@ package com.example.backend.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.time.Instant;
@@ -13,6 +12,9 @@ import java.util.Set;
 
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "tbl_organizer", uniqueConstraints = {
         @UniqueConstraint(name = "unique_email", columnNames = {"email"}),
@@ -23,21 +25,6 @@ public class Organizer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "organizer_id", nullable = false)
     private Integer id;
-
-    @Size(max = 100)
-    @NotNull
-    @Column(name = "full_name", nullable = false, length = 100)
-    private String fullName;
-
-    @Size(max = 120)
-    @NotNull
-    @Column(name = "email", nullable = false, length = 120)
-    private String email;
-
-    @Size(max = 20)
-    @NotNull
-    @Column(name = "phone", nullable = false, length = 20)
-    private String phone;
 
     @Size(max = 200)
     @Column(name = "org_name", length = 200)

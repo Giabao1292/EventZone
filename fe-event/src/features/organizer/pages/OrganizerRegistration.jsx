@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from "react";
+"use client";
+
+import { useState, useEffect } from "react";
+import { register } from "../../../services/organizerService";
 
 // --- Sub Components ---
 
 const FormSection = ({ title, children }) => (
-  <div className="bg-darkSection p-6 rounded-lg mb-6">
+  <div className="bg-gray-800 p-6 rounded-lg mb-6">
     {title && <h3 className="text-white text-xl font-bold mb-5">{title}</h3>}
     {children}
   </div>
@@ -22,6 +25,7 @@ const InputGroup = ({
   children,
   fileName,
   filePreviewUrl,
+  accept,
 }) => {
   const isTextLike =
     type === "text" ||
@@ -34,9 +38,9 @@ const InputGroup = ({
     <div className="mb-4">
       <label
         htmlFor={id}
-        className={`block text-grayText text-sm font-normal mb-2 ${
+        className={`block text-gray-300 text-sm font-normal mb-2 ${
           required
-            ? 'relative before:content-["*"] before:text-requiredRed before:absolute before:-left-3'
+            ? 'relative before:content-["*"] before:text-red-500 before:absolute before:-left-3'
             : ""
         }`}
       >
@@ -51,7 +55,7 @@ const InputGroup = ({
             maxLength={maxLength}
             value={value}
             onChange={onChange}
-            className="w-full p-3 border border-inputBorder rounded-md bg-inputWhite text-grayDark text-base focus:border-focusPurple focus:ring-1 focus:ring-focusPurple outline-none resize-y min-h-[100px]"
+            className="w-full p-3 border border-gray-600 rounded-md bg-white text-gray-900 text-base focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none resize-y min-h-[100px]"
             required={required}
           ></textarea>
         ) : type === "select" ? (
@@ -60,7 +64,7 @@ const InputGroup = ({
             name={name}
             value={value}
             onChange={onChange}
-            className="w-full p-3 border border-inputBorder rounded-md bg-inputWhite text-grayDark text-base focus:border-focusPurple focus:ring-1 focus:ring-focusPurple outline-none"
+            className="w-full p-3 border border-gray-600 rounded-md bg-white text-gray-900 text-base focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
             required={required}
           >
             {children}
@@ -71,20 +75,21 @@ const InputGroup = ({
               id={id}
               name={name}
               type="file"
+              accept={accept}
               onChange={onChange}
               className="block w-full text-sm text-gray-500
                         file:mr-4 file:py-2 file:px-4
                         file:rounded-full file:border-0
                         file:text-sm file:font-semibold
-                        file:bg-checkedGreen/10 file:text-checkedGreen
-                        hover:file:bg-checkedGreen/20"
+                        file:bg-green-100 file:text-green-700
+                        hover:file:bg-green-200"
               required={required}
             />
             {filePreviewUrl && (
               <div className="mt-2">
                 {filePreviewUrl.match(/image/) ? (
                   <img
-                    src={filePreviewUrl}
+                    src={filePreviewUrl || "/placeholder.svg"}
                     alt="Preview"
                     className="h-20 object-contain rounded"
                   />
@@ -105,7 +110,7 @@ const InputGroup = ({
             maxLength={maxLength}
             value={value}
             onChange={onChange}
-            className="w-full p-3 border border-inputBorder rounded-md bg-inputWhite text-grayDark text-base focus:border-focusPurple focus:ring-1 focus:ring-focusPurple outline-none"
+            className="w-full p-3 border border-gray-600 rounded-md bg-white text-gray-900 text-base focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
             required={required}
           />
         )}
@@ -115,7 +120,7 @@ const InputGroup = ({
               type === "textarea"
                 ? "bottom-2 right-3"
                 : "top-1/2 -translate-y-1/2 right-3"
-            } bg-inputWhite px-1`}
+            } bg-white px-1`}
           >
             {value ? value.length : 0} / {maxLength}
           </span>
@@ -128,15 +133,15 @@ const InputGroup = ({
 // --- Main Component ---
 const RegisterOrganizerForm = () => {
   const [formData, setFormData] = useState({
-    orgName: "",
-    orgType: "",
+    name: "",
+    organizationType: "",
     taxCode: "",
-    orgAddress: "",
+    address: "",
     website: "",
-    businessField: "",
-    orgInfo: "",
-    orgLogo: null,
-    orgLogoPreview: null,
+    businessSector: "",
+    description: "",
+    logo: null,
+    logoPreview: null,
     idCardFront: null,
     idCardFrontPreview: null,
     idCardBack: null,
@@ -145,58 +150,9 @@ const RegisterOrganizerForm = () => {
     businessLicensePreview: null,
   });
 
-  const [provinces, setProvinces] = useState([]);
-  const [districts, setDistricts] = useState([]);
-  const [wards, setWards] = useState([]);
-
-  // Mock data cho dropdown (thực tế nên fetch từ API)
-  useEffect(() => {
-    setProvinces([
-      { value: "", label: "Chọn Tỉnh/Thành" },
-      { value: "hcm", label: "TP. Hồ Chí Minh" },
-      { value: "hn", label: "Hà Nội" },
-    ]);
-  }, []);
-
-  useEffect(() => {
-    if (formData.province === "hcm") {
-      setDistricts([
-        { value: "", label: "Chọn Quận/Huyện" },
-        { value: "q1", label: "Quận 1" },
-        { value: "bt", label: "Bình Thạnh" },
-      ]);
-    } else if (formData.province === "hn") {
-      setDistricts([
-        { value: "", label: "Chọn Quận/Huyện" },
-        { value: "hk", label: "Hoàn Kiếm" },
-        { value: "cg", label: "Cầu Giấy" },
-      ]);
-    } else {
-      setDistricts([{ value: "", label: "Chọn Quận/Huyện" }]);
-    }
-    setFormData((prev) => ({ ...prev, district: "", ward: "" }));
-    // eslint-disable-next-line
-  }, [formData.province]);
-
-  useEffect(() => {
-    if (formData.district === "q1") {
-      setWards([
-        { value: "", label: "Chọn Phường/Xã" },
-        { value: "btp", label: "Bến Thành" },
-        { value: "cnn", label: "Cầu Ông Lãnh" },
-      ]);
-    } else if (formData.district === "hk") {
-      setWards([
-        { value: "", label: "Chọn Phường/Xã" },
-        { value: "td", label: "Tràng Tiền" },
-        { value: "hc", label: "Hàng Gai" },
-      ]);
-    } else {
-      setWards([{ value: "", label: "Chọn Phường/Xã" }]);
-    }
-    setFormData((prev) => ({ ...prev, ward: "" }));
-    // eslint-disable-next-line
-  }, [formData.district]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const handleChange = (e) => {
     const { name, value, type, files } = e.target;
@@ -204,11 +160,27 @@ const RegisterOrganizerForm = () => {
     if (type === "file") {
       const file = files[0];
       if (file) {
+        // Validate file size (5MB limit)
+        if (file.size > 5 * 1024 * 1024) {
+          setError("File size must be less than 5MB");
+          return;
+        }
+
+        // Validate file type
+        const allowedTypes = ["image/jpeg", "image/png", "application/pdf"];
+        if (!allowedTypes.includes(file.type)) {
+          setError("Only JPG, PNG, and PDF files are allowed");
+          return;
+        }
+
         setFormData((prev) => ({
           ...prev,
           [name]: file,
-          [`${name}Preview`]: URL.createObjectURL(file),
+          [`${name}Preview`]: file.type.startsWith("image/")
+            ? URL.createObjectURL(file)
+            : null,
         }));
+        setError("");
       } else {
         setFormData((prev) => ({
           ...prev,
@@ -221,19 +193,72 @@ const RegisterOrganizerForm = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const createFormData = () => {
+    const data = new FormData();
+
+    // Add text fields
+    data.append("name", formData.name);
+    data.append("organizationType", formData.organizationType);
+    data.append("taxCode", formData.taxCode);
+    data.append("address", formData.address);
+    data.append("website", formData.website);
+    data.append("businessSector", formData.businessSector);
+    data.append("description", formData.description);
+
+    // Add files
+    if (formData.logo) data.append("logo", formData.logo);
+    if (formData.idCardFront) data.append("idCardFront", formData.idCardFront);
+    if (formData.idCardBack) data.append("idCardBack", formData.idCardBack);
+    if (formData.businessLicense)
+      data.append("businessLicense", formData.businessLicense);
+
+    return data;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert("Đăng ký thành công! (Xem dữ liệu trong console)");
-    // console.log(formData); // Bật nếu muốn debug dữ liệu gửi đi
+    setLoading(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const formDataToSend = createFormData();
+      const result = await register(formDataToSend); // Dùng service
+
+      setSuccess(
+        "Đăng ký thành công! Chúng tôi sẽ xem xét và phản hồi trong vòng 24-48 giờ."
+      );
+      setFormData({
+        name: "",
+        organizationType: "",
+        taxCode: "",
+        address: "",
+        website: "",
+        businessSector: "",
+        description: "",
+        logo: null,
+        logoPreview: null,
+        idCardFront: null,
+        idCardFrontPreview: null,
+        idCardBack: null,
+        idCardBackPreview: null,
+        businessLicense: null,
+        businessLicensePreview: null,
+      });
+    } catch (err) {
+      setError(err.message || "Có lỗi xảy ra khi đăng ký. Vui lòng thử lại.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-darkBg py-10 flex justify-center items-start">
-      <div className="form-container w-full max-w-4xl bg-darkContainer p-8 rounded-xl shadow-lg text-grayLight">
+    <div className="min-h-screen bg-gray-900 py-10 flex justify-center items-start">
+      <div className="form-container w-full max-w-4xl bg-gray-800 p-8 rounded-xl shadow-lg text-gray-300">
         <h2 className="text-white text-3xl font-bold mb-6 text-center">
           Đăng Ký Trở Thành Nhà Tổ Chức
         </h2>
-        <p className="text-grayText mb-8 text-center">
+        <p className="text-gray-400 mb-8 text-center">
           Vui lòng điền đầy đủ thông tin để trở thành nhà tổ chức trên nền tảng
           của chúng tôi.
         </p>
@@ -243,19 +268,19 @@ const RegisterOrganizerForm = () => {
           <FormSection title="Thông tin Tổ chức/Doanh nghiệp">
             <InputGroup
               label="Tên tổ chức/doanh nghiệp:"
-              id="orgName"
-              name="orgName"
+              id="name"
+              name="name"
               required
-              value={formData.orgName}
+              value={formData.name}
               onChange={handleChange}
             />
             <InputGroup
               label="Loại hình tổ chức:"
-              id="orgType"
-              name="orgType"
+              id="organizationType"
+              name="organizationType"
               type="select"
               required
-              value={formData.orgType}
+              value={formData.organizationType}
               onChange={handleChange}
             >
               <option value="">Chọn loại hình</option>
@@ -275,9 +300,10 @@ const RegisterOrganizerForm = () => {
             />
             <InputGroup
               label="Địa chỉ trụ sở chính:"
-              id="orgAddress"
-              name="orgAddress"
-              value={formData.orgAddress}
+              id="address"
+              name="address"
+              value={formData.address}
+              required
               onChange={handleChange}
             />
             <InputGroup
@@ -290,43 +316,47 @@ const RegisterOrganizerForm = () => {
             />
             <InputGroup
               label="Lĩnh vực hoạt động chính:"
-              id="businessField"
-              name="businessField"
-              value={formData.businessField}
+              id="businessSector"
+              name="businessSector"
+              required
+              value={formData.businessSector}
               onChange={handleChange}
             />
           </FormSection>
-          <FormSection title="Thông tin Tổ chức/Doanh nghiệp">
+
+          <FormSection title="Thông tin chi tiết">
             <div className="flex flex-col md:flex-row gap-5 items-start mt-6">
               <InputGroup
                 label="Thêm logo ban tổ chức (275x275):"
-                id="orgLogo"
-                name="orgLogo"
+                id="logo"
+                name="logo"
                 type="file"
-                fileName={formData.orgLogo ? formData.orgLogo.name : ""}
-                filePreviewUrl={formData.orgLogoPreview}
+                accept="image/jpeg,image/png"
+                fileName={formData.logo ? formData.logo.name : ""}
+                filePreviewUrl={formData.logoPreview}
                 onChange={handleChange}
               />
               <div className="flex-grow w-full">
                 <InputGroup
                   label="Thông tin chi tiết về tổ chức:"
-                  id="orgInfo"
-                  name="orgInfo"
+                  id="description"
+                  name="description"
                   type="textarea"
                   required
                   placeholder="Mô tả về lịch sử, sứ mệnh, hoặc các hoạt động chính của tổ chức..."
                   maxLength={2000}
-                  value={formData.orgInfo}
+                  value={formData.description}
                   onChange={handleChange}
                 />
               </div>
             </div>
           </FormSection>
+
           {/* Giấy tờ xác minh */}
           <FormSection title="Giấy tờ xác minh">
-            <p className="text-grayText text-sm mb-4">
+            <p className="text-gray-400 text-sm mb-4">
               Vui lòng tải lên ảnh CMND/CCCD hoặc Giấy phép kinh doanh để xác
-              minh tài khoản của bạn. (Chấp nhận: JPG, PNG, PDF)
+              minh tài khoản của bạn. (Chấp nhận: JPG, PNG, PDF - Tối đa 5MB)
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <InputGroup
@@ -334,6 +364,7 @@ const RegisterOrganizerForm = () => {
                 id="idCardFront"
                 name="idCardFront"
                 type="file"
+                accept="image/jpeg,image/png,application/pdf"
                 required
                 fileName={formData.idCardFront ? formData.idCardFront.name : ""}
                 filePreviewUrl={formData.idCardFrontPreview}
@@ -344,6 +375,7 @@ const RegisterOrganizerForm = () => {
                 id="idCardBack"
                 name="idCardBack"
                 type="file"
+                accept="image/jpeg,image/png,application/pdf"
                 required
                 fileName={formData.idCardBack ? formData.idCardBack.name : ""}
                 filePreviewUrl={formData.idCardBackPreview}
@@ -356,6 +388,7 @@ const RegisterOrganizerForm = () => {
               name="businessLicense"
               required
               type="file"
+              accept="image/jpeg,image/png,application/pdf"
               fileName={
                 formData.businessLicense ? formData.businessLicense.name : ""
               }
@@ -365,12 +398,25 @@ const RegisterOrganizerForm = () => {
           </FormSection>
 
           {/* Nút gửi form */}
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+              {success}
+            </div>
+          )}
+
           <div className="text-center mt-8">
             <button
               type="submit"
-              className="bg-checkedGreen text-white py-3 px-8 rounded-lg font-bold text-lg transition-colors duration-300 hover:bg-green-600"
+              disabled={loading}
+              className="bg-green-600 text-white py-3 px-8 rounded-lg font-bold text-lg transition-colors duration-300 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed"
             >
-              Đăng Ký Nhà Tổ Chức
+              {loading ? "Đang xử lý..." : "Đăng Ký Nhà Tổ Chức"}
             </button>
           </div>
         </form>
