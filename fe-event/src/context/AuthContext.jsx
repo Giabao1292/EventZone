@@ -16,24 +16,29 @@ export const AuthProvider = ({ children }) => {
     const loadUser = async () => {
       if (token) {
         try {
+          // Gọi API /me để lấy thông tin người dùng
           const userData = await getUserDetail();
-          if (userData) {
-            setUser(userData);
-            setIsAuthenticated(true);
-          } else {
-            console.error("Không nhận được dữ liệu người dùng hợp lệ");
-            logout();
+          // Lấy roles từ localStorage nếu có
+          const storedRoles = localStorage.getItem("userRoles");
+          let finalRoles = [];
+
+          if (storedRoles && storedRoles !== "undefined") {
+            finalRoles = JSON.parse(storedRoles);
           }
+
+          const finalUserData = {
+            ...userData,
+            roles: finalRoles,
+          };
+
+          setUser(finalUserData);
+          setIsAuthenticated(true);
         } catch (error) {
           console.error("Lỗi khi tải thông tin người dùng:", error.message);
-          if (
-            error.response?.status === 401 ||
-            error.response?.status === 403
-          ) {
-            logout();
-          }
+          logout();
         }
       }
+
       setLoading(false);
     };
 
@@ -42,7 +47,12 @@ export const AuthProvider = ({ children }) => {
 
   const login = (data) => {
     setToken(data.accessToken);
-    setUser(data.user);
+    console.log("Login asd:", data.roles);
+    localStorage.setItem("userRoles", JSON.stringify(data.roles));
+    setUser({
+      ...data,
+      roles: data.roles || [],
+    });
     setIsAuthenticated(true);
   };
 
@@ -51,6 +61,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    localStorage.clear();
     removeToken();
     setToken(null);
     setUser(null);

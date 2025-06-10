@@ -11,9 +11,7 @@ const Header = () => {
   const avatarUrl = user?.profileUrl || avatarDefault;
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
-  const timeoutRef = useRef(null); // Thêm timeout ref để delay việc đóng dropdown
-
-  // Hàm xử lý hover để mở dropdown
+  const timeoutRef = useRef(null);
   const handleMouseEnter = () => {
     // Clear timeout nếu có
     if (timeoutRef.current) {
@@ -23,7 +21,6 @@ const Header = () => {
     setDropdownOpen(true);
   };
 
-  // Hàm xử lý khi chuột rời khỏi vùng dropdown với delay
   const handleMouseLeave = () => {
     // Thêm delay 150ms trước khi đóng dropdown
     timeoutRef.current = setTimeout(() => {
@@ -75,7 +72,7 @@ const Header = () => {
         {/* Menu */}
         <div className="flex items-center space-x-4">
           <Link
-            to="/organizer"
+            to="/register-organizer"
             className="border border-white text-white px-6 py-2 rounded-full hover:bg-white hover:text-[#2eb866] transition font-medium cursor-pointer no-underline"
           >
             Trở thành nhà tổ chức

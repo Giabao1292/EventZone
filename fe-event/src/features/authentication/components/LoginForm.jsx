@@ -23,7 +23,15 @@ const LoginForm = () => {
     try {
       const result = await login(data);
       updateAuth(result);
-      navigate("/");
+      const roles = result?.roles || [];
+      console.log("roles result:", roles.includes("ORGANIZER"));
+      if (roles.includes("ADMIN")) {
+        navigate("/admin");
+      } else if (roles.includes("ORGANIZER")) {
+        navigate("/organizer");
+      } else {
+        navigate("/"); // Mặc định là user
+      }
     } catch (error) {
       setApiError(error.response?.data?.message || "Đăng nhập thất bại");
     }
@@ -34,7 +42,18 @@ const LoginForm = () => {
       const idToken = credentialResponse.credential;
       const result = await loginWithGoogle({ idToken });
       updateAuth(result);
-      navigate("/");
+
+      // Lấy danh sách roles từ API response
+      const roles = result?.roles || [];
+
+      // Điều hướng dựa trên vai trò
+      if (roles.includes("ADMIN")) {
+        navigate("/admin");
+      } else if (roles.includes("ORGANIZER")) {
+        navigate("/organizer");
+      } else {
+        navigate("/"); // Mặc định là user
+      }
     } catch (error) {
       setApiError(
         error.response?.data?.message || "Đăng nhập bằng Google thất bại"
