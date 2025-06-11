@@ -4,12 +4,11 @@ import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.example.backend.dto.request.ChangePasswordRequest;
 import com.example.backend.dto.request.UserUpdateRequest;
+import com.example.backend.dto.response.EventSummaryDTO;
 import com.example.backend.dto.response.TokenResponse;
 import com.example.backend.exception.ResourceNotFoundException;
-import com.example.backend.model.Role;
-import com.example.backend.model.User;
-import com.example.backend.model.UserRole;
-import com.example.backend.model.UserTemp;
+import com.example.backend.model.*;
+import com.example.backend.repository.EventRepository;
 import com.example.backend.repository.RoleRepository;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.service.JwtService;
@@ -19,10 +18,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Set;
+import java.util.LinkedHashSet;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -104,4 +106,46 @@ public class UserServiceImpl implements UserService {
                 .roles(user.getTblUserRoles().stream().map(role -> role.getRole().getRoleName()).collect(Collectors.toList()))
                 .build();
     }
+
+    @Autowired
+    private EventRepository eventRepository;
+
+    @Override
+    public void addToWishlist(String username, Long eventId) {
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
+
+        if (user.getWishlist().add(event)) {
+            userRepository.save(user);
+        }
+    }
+
+    @Override
+    public void removeFromWishlist(String username, Long eventId) {
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
+
+        if (user.getWishlist().remove(event)) {
+            userRepository.save(user);
+        }
+    }
+
+    @Override
+    public Set<EventSummaryDTO> getWishlist(String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return user.getWishlist()
+                .stream()
+                .map(EventSummaryDTO::new)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+
 }

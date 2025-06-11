@@ -11,6 +11,8 @@ import java.time.Instant;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Getter
 @Setter
 @Entity
@@ -95,5 +97,9 @@ public class Event {
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "event")
     private Set<com.example.backend.model.ShowingTime> tblShowingTimes = new LinkedHashSet<>();
+
+    @ManyToMany(mappedBy = "wishlist", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private Set<User> wishlistedUsers = new LinkedHashSet<>();
 
 }
