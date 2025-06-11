@@ -6,6 +6,7 @@ import com.example.backend.dto.request.UserUpdateRequest;
 import com.example.backend.dto.response.EventSummaryDTO;
 import com.example.backend.dto.response.ResponseData;
 import com.example.backend.dto.response.UserDetailResponse;
+import com.example.backend.dto.response.UserResponseDTO;
 import com.example.backend.model.Event;
 import com.example.backend.model.User;
 import com.example.backend.service.JwtService;
@@ -14,6 +15,7 @@ import com.example.backend.util.TokenType;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -178,5 +180,21 @@ public class UserController {
         }
     }
 
-
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping
+    public ResponseData<?> getListUser() {
+        return null;
+    }
+    @PostMapping
+    public ResponseData<?> createUser(){
+        return null;
+    }
+    @PutMapping("/{id}")
+    public ResponseData<?> updateUser(@PathVariable Long id, @RequestBody UserUpdateRequest updateRequest){
+        return null;
+    }
+    @DeleteMapping("/{id}")
+    public ResponseData<?> deleteUser(@PathVariable Long id){
+        return null;
+    }
 }

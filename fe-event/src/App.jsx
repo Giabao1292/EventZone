@@ -7,6 +7,9 @@ import PrivateRoute from "./ui/PrivateRoute";
 import RegisterOrganizerForm from "./features/organizer/pages/OrganizerRegistration";
 import OrganizerLayout from "./ui/OrganizerLayout";
 import EventCreationForm from "./features/organizer/components/EventCreationForm";
+import CreateEvent from "./features/organizer/pages/CreateEvent";
+import AdminLayout from "./layouts/admin/AdminLayout";
+import Dashboard from "./pages/admin/Dashboard";
 
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() =>
@@ -69,10 +72,11 @@ function App() {
           </Route>
 
           {/* Protected Routes for Admins */}
-          <Route element={<PrivateRoute allowedRoles={["ADMIN"]} />}>
-            {/* <Route element={<AdminLayout />}>
-              <Route path="/admin/*" element={<AdminRoutes />} />
-            </Route> */}
+          {/* allowedRoles={["ADMIN"]}  */}
+          <Route element={<PrivateRoute />}>
+            <Route element={<AdminLayout />}>
+              <Route path="/admin/dashboard" element={<Dashboard />} />
+            </Route>
           </Route>
         </Routes>
       </Suspense>
