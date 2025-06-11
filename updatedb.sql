@@ -36,3 +36,15 @@ CREATE TABLE tbl_user_temp (
 ALTER TABLE tbl_user
 DROP COLUMN username;
 
+-- Them bang wishlist
+
+CREATE TABLE `tbl_user_wishlist` (
+  `user_id` int NOT NULL,
+  `event_id` int NOT NULL,
+  PRIMARY KEY (`user_id`,`event_id`),
+  KEY `FKekp8yqv38s0f307ql006b08my` (`event_id`),
+  CONSTRAINT `FKchv6n745okhnvsagoylel0j6m` FOREIGN KEY (`user_id`) REFERENCES `tbl_user` (`user_id`),
+  CONSTRAINT `FKekp8yqv38s0f307ql006b08my` FOREIGN KEY (`event_id`) REFERENCES `tbl_event` (`event_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+INSERT INTO `tbl_user_wishlist` VALUES (3,3),(5,3),(3,5),(5,5);
+
