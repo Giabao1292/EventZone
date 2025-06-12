@@ -111,7 +111,7 @@ public class User implements UserDetails, Serializable {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return tblUserRoles.stream()
-                .map(userRole -> new SimpleGrantedAuthority(userRole.getRole().getRoleName()))
+                .map(userRole -> new SimpleGrantedAuthority("ROLE_" + userRole.getRole().getRoleName()))
                 .collect(Collectors.toSet());
     }
 

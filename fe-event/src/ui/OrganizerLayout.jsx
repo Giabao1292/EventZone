@@ -1,3 +1,4 @@
+import { Outlet } from "react-router-dom";
 import HeaderOrganizer from "./HeaderOrganizer";
 import OrganizerSidebar from "./OrganizerSidebar";
 import PropTypes from "prop-types";
@@ -17,7 +18,10 @@ const OrganizerLayout = ({ children }) => {
 
         <main className="p-6 overflow-auto bg-gradient-to-br from-gray-900/50 via-black/50 to-gray-900/50 flex-1 relative">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-900/5 via-transparent to-purple-900/5 pointer-events-none"></div>
-          <div className="relative z-10 text-white">{children}</div>
+          <div className="relative z-10 text-white">
+            {" "}
+            {children ? children : <Outlet />}
+          </div>
         </main>
       </div>
 

@@ -56,7 +56,7 @@ public class UserController {
             dto.setPhone(user.getPhone());
             dto.setProfileUrl(user.getProfileUrl());
             dto.setDateOfBirth(user.getDateOfBirth());
-
+            dto.setId(user.getId());
             return new ResponseData<>(HttpStatus.OK.value(), "Profile retrieved successfully", dto);
         } catch (IllegalArgumentException e) {
             return new ResponseData<>(HttpStatus.BAD_REQUEST.value(), e.getMessage());

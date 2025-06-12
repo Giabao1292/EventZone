@@ -54,6 +54,7 @@ public class JwtServiceImpl implements JwtService {
     public String generateToken(Map<String, Object> claims, UserDetails userDetails, Integer limitTime, TokenType type) {
         return Jwts.builder()
                 .setClaims(claims)
+                .claim("roles", userDetails.getAuthorities())
                 .setSubject(userDetails.getUsername())
                 .setExpiration(new Date(System.currentTimeMillis() + 1000L * 60 * 60 * limitTime))
                 .setIssuedAt(new Date(System.currentTimeMillis()))

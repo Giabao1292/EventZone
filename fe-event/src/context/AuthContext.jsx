@@ -1,8 +1,9 @@
 import { createContext, useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { getToken, removeToken } from "../utils/storage";
+import { getToken, removeToken, setToken as saveToken } from "../utils/storage";
 import { getUserDetail } from "../services/userServices";
 import PageLoader from "../ui/PageLoader";
+import { getOrganizerByUserId } from "../services/organizerService";
 
 const AuthContext = createContext();
 
@@ -12,54 +13,61 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const loadUser = async () => {
-      if (token) {
-        try {
-          // Gọi API /me để lấy thông tin người dùng
-          const userData = await getUserDetail();
-          // Lấy roles từ localStorage nếu có
-          const storedRoles = localStorage.getItem("userRoles");
-          let finalRoles = [];
+  // Hàm tải thông tin người dùng
+  const loadUser = async () => {
+    if (!token) {
+      finishLoading();
+      return;
+    }
 
-          if (storedRoles && storedRoles !== "undefined") {
-            finalRoles = JSON.parse(storedRoles);
-          }
+    try {
+      const userData = await getUserDetail();
+      const storedRoles = localStorage.getItem("userRoles");
+      const roles = storedRoles ? JSON.parse(storedRoles) : [];
 
-          const finalUserData = {
-            ...userData,
-            roles: finalRoles,
-          };
-
-          setUser(finalUserData);
-          setIsAuthenticated(true);
-        } catch (error) {
-          console.error("Lỗi khi tải thông tin người dùng:", error.message);
-          logout();
-        }
+      let organizerData = null;
+      if (roles.includes("ORGANIZER")) {
+        organizerData = await getOrganizerByUserId(userData.id);
       }
 
-      setLoading(false);
-    };
+      const finalUserData = {
+        ...userData,
+        roles,
+        organizer: organizerData || null,
+      };
 
-    loadUser();
-  }, [token]);
+      setUser(finalUserData);
+      setIsAuthenticated(true);
+    } catch (error) {
+      // ...
+    } finally {
+      finishLoading();
+    }
+  };
+  const finishLoading = () => {
+    setLoading(false);
+  };
 
+  // Đăng nhập
   const login = (data) => {
-    setToken(data.accessToken);
-    console.log("Login asd:", data.roles);
-    localStorage.setItem("userRoles", JSON.stringify(data.roles));
-    setUser({
-      ...data,
-      roles: data.roles || [],
-    });
+    const { accessToken, ...userData } = data;
+
+    saveToken(accessToken);
+    setToken(accessToken);
+
+    const roles = userData.roles || [];
+    localStorage.setItem("userRoles", JSON.stringify(roles));
+
+    setUser(userData);
     setIsAuthenticated(true);
   };
 
+  // Cập nhật thông tin người dùng
   const updateUser = (updatedUser) => {
     setUser(updatedUser);
   };
 
+  // Đăng xuất
   const logout = () => {
     localStorage.clear();
     removeToken();
@@ -68,18 +76,22 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(false);
   };
 
+  useEffect(() => {
+    loadUser();
+  }, [token]);
+
+  const authValue = {
+    token,
+    user,
+    isAuthenticated,
+    loading,
+    login,
+    updateUser,
+    logout,
+  };
+
   return (
-    <AuthContext.Provider
-      value={{
-        token,
-        user,
-        isAuthenticated,
-        loading,
-        login,
-        updateUser,
-        logout,
-      }}
-    >
+    <AuthContext.Provider value={authValue}>
       {loading ? <PageLoader /> : children}
     </AuthContext.Provider>
   );

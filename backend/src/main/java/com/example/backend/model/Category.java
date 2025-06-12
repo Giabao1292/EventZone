@@ -3,6 +3,7 @@ package com.example.backend.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,6 +13,7 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
+@Data
 @Table(name = "tbl_category", uniqueConstraints = {
         @UniqueConstraint(name = "category_name", columnNames = {"category_name"})
 })
