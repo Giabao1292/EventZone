@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import axios from "axios";
 import { saveToken } from "../utils/storage";
 import CategoryNav from "../ui/CategoryNav";
 import EventCard from "../ui/EventCard";
+import {
+  getCategories,
+  getEventsByCategory,
+} from "../services/categoryService";
 
 const getQueryParam = (name, search) => {
   const params = new URLSearchParams(search);
@@ -17,29 +20,28 @@ function Home() {
   const [eventsByCategory, setEventsByCategory] = useState({});
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
 
-  // Xử lý trạng thái xác thực email từ query param
+  // Xử lý trạng thái xác thực từ URL
   useEffect(() => {
     const verifyStatus = getQueryParam("verifyStatus", location.search);
 
     if (verifyStatus === "success") {
       const accessToken = localStorage.getItem("accessToken");
       if (accessToken) saveToken(accessToken);
-      showNotification(
-        "success",
-        "✅ Email xác thực thành công! Bạn đã được đăng nhập."
-      );
+      setNotification({
+        type: "success",
+        message: "✅ Email xác thực thành công! Bạn đã được đăng nhập.",
+      });
     } else if (verifyStatus === "failed") {
-      showNotification(
-        "error",
-        "❌ Xác thực email thất bại hoặc token hết hạn."
-      );
+      setNotification({
+        type: "error",
+        message: "❌ Xác thực email thất bại hoặc token hết hạn.",
+      });
     }
 
-    // Làm sạch URL sau khi xử lý xong
     window.history.replaceState({}, document.title, "/home");
   }, [location.search]);
 
-  // Tự động ẩn thông báo sau 5 giây
+  // Tự động ẩn thông báo sau 5s
   useEffect(() => {
     if (notification) {
       const timer = setTimeout(() => setNotification(null), 5000);
@@ -47,52 +49,23 @@ function Home() {
     }
   }, [notification]);
 
-  // Lấy dữ liệu categories và poster-images cho từng category
+  // Lấy tất cả categories và poster-images cho từng category
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const catRes = await axios.get("http://localhost:8080/api/categories");
-        const categoriesData = Array.isArray(catRes.data.data)
-          ? catRes.data.data
-          : [];
-        setCategories(categoriesData);
+    const fetchData = async () => {
+      const cats = await getCategories();
+      setCategories(cats);
 
-        const eventsMap = {};
-        const eventPromises = categoriesData.map(
-          fetchEventsForCategory(eventsMap)
-        );
-
-        await Promise.all(eventPromises);
-        setEventsByCategory(eventsMap);
-      } catch (err) {
-        console.error("Lỗi khi gọi API categories:", err);
+      const eventsMap = {};
+      for (const cat of cats) {
+        const events = await getEventsByCategory(cat.categoryId);
+        eventsMap[cat.categoryId] = events;
       }
-    }
+
+      setEventsByCategory(eventsMap);
+    };
 
     fetchData();
   }, []);
-
-  // Helper functions
-  const fetchEventsForCategory = (eventsMap) => async (category) => {
-    try {
-      const res = await axios.get(
-        `http://localhost:8080/api/categories/${category.categoryId}/poster-images`
-      );
-      eventsMap[category.categoryId] = Array.isArray(res.data.data)
-        ? res.data.data
-        : [];
-    } catch (err) {
-      console.error(
-        `Lỗi khi lấy poster-images cho category ${category.categoryId}:`,
-        err
-      );
-      eventsMap[category.categoryId] = [];
-    }
-  };
-
-  const showNotification = (type, message) => {
-    setNotification({ type, message });
-  };
 
   return (
     <div className="relative min-h-screen bg-gray-200 bg-opacity-30 backdrop-blur-md text-black flex flex-col items-center justify-start">

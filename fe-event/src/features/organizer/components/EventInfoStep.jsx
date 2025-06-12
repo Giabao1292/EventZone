@@ -109,8 +109,8 @@ const EventInfoStep = ({
           >
             <option value="">Chọn danh mục</option>
             {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name}
+              <option key={cat.categoryId} value={cat.categoryId}>
+                {cat.categoryName}
               </option>
             ))}
           </select>

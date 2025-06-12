@@ -102,6 +102,7 @@ const EventCreationForm = () => {
     const fetchCategories = async () => {
       try {
         const data = await getCategories();
+        console.log("Categories loaded:", data);
         setCategories(data);
       } catch (err) {
         console.error("Fallback to mock categories");
