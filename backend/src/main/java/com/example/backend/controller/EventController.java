@@ -27,24 +27,5 @@
         @Autowired
         private CategoryRepository categoryRepository;
 
-        @GetMapping("/categories/{categoryId}/poster-images")
-        public ResponseEntity<List<EventResponse>> getPosterImagesByCategory(@PathVariable int categoryId) {
-            List<EventResponse> result = eventService.getPosterImagesByCategory(categoryId);
-            return ResponseEntity.ok(result);
-        }
-
-        @GetMapping("/categories")
-        public ResponseEntity<List<CategoryResponse>> getAllCategories() {
-            List<CategoryResponse> list = categoryRepository.findAll(Sort.by("categoryId"))
-                    .stream()
-                    .map(c -> new CategoryResponse(c.getCategoryId(), c.getCategoryName()))
-                    .collect(Collectors.toList());
-
-            return ResponseEntity.ok(list);
-        }
-
-
-
-
 
     }

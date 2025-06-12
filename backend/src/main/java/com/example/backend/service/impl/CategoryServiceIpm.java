@@ -19,7 +19,7 @@ public class CategoryServiceIpm implements CategoryService {
     @Override
     public List<CategoryResponse> getAllCategories() {
         return categoryRepository.findAll().stream()
-                .map(category -> new CategoryResponse(category.getId(), category.getCategoryName()))
+                .map(category -> new CategoryResponse(category.getCategoryId(), category.getCategoryName()))
                 .collect(Collectors.toList());
     }
 }

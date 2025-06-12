@@ -30,12 +30,12 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class
-UserServiceImpl implements UserService {
+public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final JwtService jwtService;
+    private final EventRepository eventRepository;
 
     @Override
     public User findByUsername(String email) {
@@ -108,11 +108,9 @@ UserServiceImpl implements UserService {
                 .build();
     }
 
-    @Autowired
-    private EventRepository eventRepository;
 
     @Override
-    public void addToWishlist(String username, Long eventId) {
+    public void addToWishlist(String username, Integer eventId) {
         User user = userRepository.findByEmail(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
@@ -125,7 +123,7 @@ UserServiceImpl implements UserService {
     }
 
     @Override
-    public void removeFromWishlist(String username, Long eventId) {
+    public void removeFromWishlist(String username, Integer eventId) {
         User user = userRepository.findByEmail(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
