@@ -1,5 +1,6 @@
 package com.example.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -8,6 +9,7 @@ import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -31,10 +33,11 @@ public class Event {
     @JoinColumn(name = "organizer_id", nullable = false)
     private com.example.backend.model.Organizer organizer;
 
-    @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
+    @JsonBackReference
     private Category category;
+
 
     @Size(max = 200)
     @NotNull
@@ -51,11 +54,11 @@ public class Event {
 
     @NotNull
     @Column(name = "start_time", nullable = false)
-    private Instant startTime;
+    private LocalDateTime startTime;
 
     @NotNull
     @Column(name = "end_time", nullable = false)
-    private Instant endTime;
+    private LocalDateTime endTime;
 
     @Lob
     @Column(name = "description")
@@ -88,6 +91,7 @@ public class Event {
     @Size(max = 50)
     @Column(name = "modified_by", length = 50)
     private String modifiedBy;
+
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "event")
     private Set<com.example.backend.model.EventVoucher> tblEventVouchers = new LinkedHashSet<>();

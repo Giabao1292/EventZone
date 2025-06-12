@@ -43,7 +43,7 @@ public class UserController {
         return username;
     }
 
-    @GetMapping
+    @GetMapping("/profile")
     public ResponseData<UserDetailResponse> getProfile(HttpServletRequest request) {
         try {
             String username = extractToken(request);
@@ -68,7 +68,7 @@ public class UserController {
     }
 
 
-    @PutMapping
+    @PutMapping("/profile")
     public ResponseData<UserDetailResponse> updateProfile(
             @RequestBody UserUpdateRequest updateRequest,
             HttpServletRequest request) {

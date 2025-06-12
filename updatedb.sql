@@ -36,7 +36,15 @@ CREATE TABLE tbl_user_temp (
 ALTER TABLE tbl_user
 DROP COLUMN username;
 
--- Them bang wishlist
+
+-- chèn dữ liệu vào tbl_category
+INSERT INTO tbl_category (category_name) VALUES
+('Âm nhạc'),
+('Thể thao'),
+('Khác');
+
+
+
 
 CREATE TABLE `tbl_user_wishlist` (
   `user_id` int NOT NULL,
@@ -47,4 +55,5 @@ CREATE TABLE `tbl_user_wishlist` (
   CONSTRAINT `FKekp8yqv38s0f307ql006b08my` FOREIGN KEY (`event_id`) REFERENCES `tbl_event` (`event_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 INSERT INTO `tbl_user_wishlist` VALUES (3,3),(5,3),(3,5),(5,5);
+
 

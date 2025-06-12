@@ -29,13 +29,16 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class AppConfig implements WebMvcConfigurer , WebSecurityCustomizer {
-    private String[] WHILE_LIST = {"/api/auth/**", "/api/users/**","/api/category/categories"};
+
+
+    private String[] WHILE_LIST = {"/api/auth/**", "/api/users/**", "/api/events/**", "/api/categories","/api/categories/**"};
+
     private final PreFilter preFilter;
     private final UserDetailService userDetailService;
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:5173")
+                .allowedOriginPatterns("http://localhost:5173")
                 .allowCredentials(true)
                 .allowedHeaders("*")
                 .allowedMethods("*")
