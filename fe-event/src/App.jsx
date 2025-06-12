@@ -6,7 +6,7 @@ import VerifyEmail from "./pages/VerifyEmail";
 import PrivateRoute from "./ui/PrivateRoute";
 import RegisterOrganizerForm from "./features/organizer/pages/OrganizerRegistration";
 import OrganizerLayout from "./ui/OrganizerLayout";
-import CreateEvent from "./features/organizer/pages/CreateEvent";
+import EventCreationForm from "./features/organizer/components/EventCreationForm";
 
 
 const Home = lazy(() => import("./pages/Home"));
@@ -77,8 +77,11 @@ function App() {
 
           {/* Protected Routes for Organizers */}
           <Route element={<PrivateRoute allowedRoles={["ORGANIZER"]} />}>
-            <Route element={<OrganizerLayout />}>
-              <Route path="/organizer" element={<CreateEvent />} />
+            <Route path="/organizer" element={<OrganizerLayout />}>
+              <Route
+                path="/organizer/create-event"
+                element={<EventCreationForm />}
+              />
             </Route>
           </Route>
 

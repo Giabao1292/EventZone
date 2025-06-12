@@ -1,4 +1,5 @@
-    package com.example.backend.controller;
+
+  package com.example.backend.controller;
 
     import com.example.backend.dto.response.CategoryResponse;
     import com.example.backend.dto.response.EventResponse;

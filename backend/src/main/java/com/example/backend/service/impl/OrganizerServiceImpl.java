@@ -3,6 +3,7 @@ package com.example.backend.service.impl;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.example.backend.dto.request.OrganizerRequest;
+import com.example.backend.dto.response.OrganizerResponse;
 import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.model.Organizer;
 import com.example.backend.model.User;
@@ -17,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -72,5 +74,26 @@ public class OrganizerServiceImpl implements OrganizerService {
                 .businessLicenseUrl(businessUrl)
                 .build();
         organizerRepository.save(organizer);
+    }
+    public OrganizerResponse getOrganizerByUserId(int userId) {
+        try {
+            // 1. Tìm Organizer theo userId
+            Optional<Organizer> organizerOpt = organizerRepository.findByUserId(userId);
+
+            if (organizerOpt.isEmpty()) {
+                throw new ResourceNotFoundException("Không tìm thấy thông tin nhà tổ chức");
+            }
+
+            Organizer organizer = organizerOpt.get();
+
+            // 2. Mapping thủ công từ entity sang DTO
+            OrganizerResponse response = new OrganizerResponse();
+            response.setId(organizer.getId());
+
+            return response;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi hệ thống: " + e.getMessage(), e);
+        }
     }
 }
