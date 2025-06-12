@@ -36,3 +36,12 @@ CREATE TABLE tbl_user_temp (
 ALTER TABLE tbl_user
 DROP COLUMN username;
 
+-- chèn dữ liệu vào tbl_category
+INSERT INTO tbl_category (category_name) VALUES
+('Âm nhạc'),
+('Thể thao'),
+('Khác');
+
+
+
+

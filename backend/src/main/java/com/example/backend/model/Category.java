@@ -1,5 +1,6 @@
 package com.example.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -19,14 +20,16 @@ public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "category_id", nullable = false)
-    private Integer id;
+    private Integer categoryId;
 
     @Size(max = 100)
     @NotNull
     @Column(name = "category_name", nullable = false, length = 100)
     private String categoryName;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "category")
-    private Set<com.example.backend.model.Event> tblEvents = new LinkedHashSet<>();
+    @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
+    @JsonManagedReference
+    private Set<Event> tblEvents = new LinkedHashSet<>();
+
 
 }
