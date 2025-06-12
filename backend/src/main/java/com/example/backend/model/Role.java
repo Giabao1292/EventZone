@@ -26,6 +26,8 @@ public class Role {
     @Column(name = "role_name", nullable = false, length = 50)
     private String roleName;
 
+
+
     @OneToMany(mappedBy = "role",cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<UserRole> tblUserRoles = new LinkedHashSet<>();
 

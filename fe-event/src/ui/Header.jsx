@@ -191,9 +191,9 @@ const Header = () => {
                     Đổi mật khẩu
                   </Link>
                   <button
+
                     onClick={handleLogoutClick}
-                    className="w-full text-left px-4 py-2 text-slate-500 hover:bg-red-100 hover:text-red-600 transition font-medium rounded-b-lg"
-                  >
+                    className="w-full text-left px-4 py-2 text-slate-500 hover:bg-red-100 hover:text-red-600 transition font-medium rounded-b-lg"     >
                     Đăng xuất
                   </button>
                 </div>
