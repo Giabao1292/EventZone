@@ -3,8 +3,7 @@ package com.example.backend.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
 import org.springframework.security.core.GrantedAuthority;
@@ -22,6 +21,9 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 @Entity
 @DynamicInsert
 @Table(name = "tbl_user", uniqueConstraints = {
@@ -45,6 +47,7 @@ public class User implements UserDetails, Serializable {
     @Size(max = 255)
     @Column(name = "profile_url")
     private String profileUrl;
+
     @Size(max = 255)
     @Column(name = "provider_id")
     private String providerId;

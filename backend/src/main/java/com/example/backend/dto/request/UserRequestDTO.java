@@ -1,24 +1,20 @@
-package com.example.backend.dto.response;
+package com.example.backend.dto.request;
 
 import com.example.backend.model.Role;
-import lombok.*;
-import org.springframework.cglib.core.Local;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.util.Set;
 
-@Getter
 @Setter
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-public class UserResponseDTO {
-    private Integer id;
+@Getter
+public class UserRequestDTO {
     private String fullName;
+    private String password;
     private String phone;
     private LocalDate dateOfBirth;
     private String email;
-    private Integer score;
     private Integer status;
     private Set<String> roles;
 }

@@ -3,18 +3,24 @@ package com.example.backend.service.impl;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.example.backend.dto.request.ChangePasswordRequest;
+import com.example.backend.dto.request.UserRequestDTO;
 import com.example.backend.dto.request.UserUpdateRequest;
 import com.example.backend.dto.response.EventSummaryDTO;
+import com.example.backend.dto.response.PageResponse;
 import com.example.backend.dto.response.TokenResponse;
+import com.example.backend.dto.response.UserResponseDTO;
 import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.model.*;
 import com.example.backend.repository.EventRepository;
 import com.example.backend.repository.RoleRepository;
+import com.example.backend.repository.SearchCriteriaRepository;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.service.JwtService;
 import com.example.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,9 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
-import java.util.Set;
-import java.util.LinkedHashSet;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -36,7 +40,7 @@ public class UserServiceImpl implements UserService {
     private final RoleRepository roleRepository;
     private final JwtService jwtService;
     private final EventRepository eventRepository;
-
+    private final SearchCriteriaRepository searchCriteriaRepository;
     @Override
     public User findByUsername(String email) {
         return userRepository.findByEmail(email)
@@ -137,7 +141,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Set<EventSummaryDTO> getWishlist(String email) {
-
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -146,5 +149,88 @@ public class UserServiceImpl implements UserService {
                 .map(EventSummaryDTO::new)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
     }
+    @Override
+    public PageResponse<UserResponseDTO> getListUser(Pageable pageable, String... search){
+        Page<User> users;
+        if(search == null || search.length == 0){
+            users = userRepository.findAll(pageable);
+        }
+        else{
+            users = searchCriteriaRepository.searchUsers(pageable, search);
+        }
+        List<UserResponseDTO> userResponse = users.getContent().stream().map(user ->{
+            UserResponseDTO userDTO = UserResponseDTO.builder()
+                    .id(user.getId())
+                    .fullName(user.getFullname())
+                    .phone(user.getPhone())
+                    .dateOfBirth(user.getDateOfBirth())
+                    .email(user.getEmail())
+                    .score(user.getScore())
+                    .status(user.getStatus())
+                    .roles(user.getTblUserRoles().stream().map(userRole-> userRole.getRole().getRoleName()).collect(Collectors.toSet()))
+                    .build();
+            return userDTO;
+        }).collect(Collectors.toList());
+        return PageResponse.<UserResponseDTO>builder()
+                .content(userResponse)
+                .size(users.getSize())
+                .number(users.getNumber())
+                .totalPages(users.getTotalPages())
+                .totalElements((int)users.getTotalElements())
+                .build();
+    }
+    @Override
+    public void createUser(UserRequestDTO userRequestDTO){
+        User user = User.builder()
+                .email(userRequestDTO.getEmail())
+                .phone(userRequestDTO.getPhone())
+                .password(passwordEncoder.encode(userRequestDTO.getPassword()))
+                .dateOfBirth(userRequestDTO.getDateOfBirth())
+                .fullname(userRequestDTO.getFullName())
+                .status(userRequestDTO.getStatus())
+                .build();
+        //Luu De lay id
+        userRepository.save(user);
 
+        Set<UserRole> userRoles = new HashSet<>();
+        for(String role: userRequestDTO.getRoles()){
+            Role roleEntity = roleRepository.findByRoleName(role).orElseThrow(() -> new RuntimeException("Role not found"));
+            UserRole userRole = new UserRole();
+            userRole.setUser(user);
+            userRole.setRole(roleEntity);
+            userRoles.add(userRole);
+        }
+        user.setTblUserRoles(userRoles);
+        userRepository.save(user);
+    }
+    @Override
+    public void updateUser(Integer id, UserRequestDTO userRequestDTO){
+        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        if(userRequestDTO.getPhone() != null){
+            user.setPhone(userRequestDTO.getPhone());
+        }
+        if(userRequestDTO.getFullName() != null){
+            user.setFullname(userRequestDTO.getFullName());
+        }
+        if(userRequestDTO.getStatus() != null){
+            user.setStatus(userRequestDTO.getStatus());
+        }
+        if(userRequestDTO.getRoles() != null){
+            user.getTblUserRoles().clear();
+            Set<UserRole> userRoles = new HashSet<>();
+            for (String roleName : userRequestDTO.getRoles()) {
+                Role role = roleRepository.findByRoleName(roleName)
+                        .orElseThrow(() -> new RuntimeException("Role not found: " + roleName));
+                UserRole userRole = new UserRole();
+                userRole.setUser(user);
+                userRole.setRole(role);
+                userRoles.add(userRole);
+            }
+            user.setTblUserRoles(userRoles);
+        }
+    }
+    @Override
+    public void deleteUser(Integer id){
+        userRepository.deleteById(id);
+    }
 }
