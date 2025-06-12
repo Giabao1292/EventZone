@@ -7,7 +7,6 @@ import PrivateRoute from "./ui/PrivateRoute";
 import RegisterOrganizerForm from "./features/organizer/pages/OrganizerRegistration";
 import OrganizerLayout from "./ui/OrganizerLayout";
 import EventCreationForm from "./features/organizer/components/EventCreationForm";
-import CreateEvent from "./features/organizer/pages/CreateEvent";
 import AdminLayout from "./layouts/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 
