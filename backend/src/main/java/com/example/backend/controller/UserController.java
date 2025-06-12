@@ -126,7 +126,7 @@ public class UserController {
 
     @PostMapping("/wishlist/{eventId}")
     public ResponseData<String> addToWishlist(
-            @PathVariable Long eventId) {
+            @PathVariable Integer eventId) {
         try {
             String username = SecurityContextHolder.getContext().getAuthentication().getName();
             userService.addToWishlist(username, eventId);
@@ -141,7 +141,7 @@ public class UserController {
 
     @DeleteMapping("/wishlist/{eventId}")
     public ResponseData<String> removeFromWishlist(
-            @PathVariable Long eventId, HttpServletRequest request) {
+            @PathVariable Integer eventId, HttpServletRequest request) {
         // giống add nhưng gọi removeToWishlist
         try {
             String username = SecurityContextHolder.getContext().getAuthentication().getName();

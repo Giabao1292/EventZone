@@ -19,7 +19,7 @@ public interface UserService {
     String updateAvatar(String username, MultipartFile file, Cloudinary cloudinary) throws IOException;
     void changePassword(String username, ChangePasswordRequest request);
     TokenResponse saveUser(UserTemp user);
-    void addToWishlist(String username, Long eventId);
-    void removeFromWishlist(String username, Long eventId);
+    void addToWishlist(String username, Integer eventId);
+    void removeFromWishlist(String username, Integer eventId);
     Set<EventSummaryDTO> getWishlist(String email);
 }

@@ -24,8 +24,8 @@ public class EventSummaryDTO {
         this.imageUrl = event.getPosterImage(); // dùng 1 trong 3 ảnh bạn có
     }
 
-    private String formatDate(java.time.Instant instant) {
-        return instant.atZone(ZoneId.of("Asia/Ho_Chi_Minh"))
+    private String formatDate(java.time.LocalDateTime localDateTime) {
+        return localDateTime.atZone(ZoneId.of("Asia/Ho_Chi_Minh"))
                 .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
     }
 }

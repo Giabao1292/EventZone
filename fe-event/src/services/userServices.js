@@ -1,11 +1,11 @@
 import apiClient from "../api/axios";
 
 export const getUserDetail = async () => {
-  const res = await apiClient.get("/users");
+  const res = await apiClient.get("/users/profile");
   return res.data.data;
 };
 export const updateUserDetail = async (userData) => {
-  const res = await apiClient.put("/users", userData);
+  const res = await apiClient.put("/users/update", userData);
   return res.data.data;
 };
 export const updateUserAvatar = async (file) => {
