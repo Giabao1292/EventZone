@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
 import { saveToken } from "../utils/storage";
@@ -91,6 +91,25 @@ function Home() {
                 selectedCategoryId={selectedCategoryId}
                 onSelectCategory={(id) => setSelectedCategoryId(id)}
             />
+  return (
+    <div className="relative min-h-screen flex flex-col items-center justify-center">
+      {notification && (
+        <div
+          className={`fixed top-8 left-1/2 transform -translate-x-1/2 px-6 py-4 rounded-xl shadow-lg text-white z-50 transition-all duration-300 ${
+            notification.type === "success" ? "bg-green-500" : "bg-red-500"
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-xl">{notification.message}</span>
+            <button
+              onClick={() => setNotification(null)}
+              className="text-white hover:text-gray-200 text-2xl font-bold leading-none"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
 
             {/* Danh sách sự kiện */}
             <div className="w-full max-w-7xl mx-auto px-6 py-10">

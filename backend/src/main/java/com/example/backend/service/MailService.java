@@ -1,6 +1,5 @@
 package com.example.backend.service;
 
-import com.example.backend.dto.request.RegisterRequest;
 import com.example.backend.model.UserTemp;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -25,7 +24,6 @@ public class MailService {
     private String emailFrom;
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
-    private final MailProperties mailProperties;
     public void sendConfirmEmail(UserTemp user) throws MessagingException {
         log.info("Sending confirm email with verify code {}", user.getVerificationToken());
         MimeMessage messsage = mailSender.createMimeMessage();

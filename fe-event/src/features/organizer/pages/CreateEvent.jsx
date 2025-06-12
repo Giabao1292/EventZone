@@ -1,19 +1,9 @@
-import Lottie from "lottie-react";
-import notFoundAnimation from "../assets/lottie/notfound.json";
 import { useNavigate } from "react-router-dom";
 
-const PageNotFound = () => {
+const CreateEvent = () => {
   const navigate = useNavigate();
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-4 py-12 bg-white">
-      <div className="w-full max-w-md mx-auto">
-        <Lottie
-          animationData={notFoundAnimation}
-          loop={true}
-          className="w-full h-64 md:h-80"
-        />
-      </div>
-
       <h1 className="mt-6 text-3xl font-bold text-center text-gray-900 md:text-4xl">
         Không tìm thấy trang
       </h1>
@@ -34,4 +24,4 @@ const PageNotFound = () => {
   );
 };
 
-export default PageNotFound;
+export default CreateEvent;

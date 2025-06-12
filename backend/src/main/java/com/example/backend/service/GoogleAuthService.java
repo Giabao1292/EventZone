@@ -1,14 +1,18 @@
 package com.example.backend.service;
 
 import com.example.backend.dto.response.TokenResponse;
+import com.example.backend.exception.ResourceNotFoundException;
+import com.example.backend.model.Role;
 import com.example.backend.model.User;
+import com.example.backend.model.UserRole;
+import com.example.backend.repository.RoleRepository;
 import com.example.backend.repository.UserRepository;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
-import org.springframework.beans.factory.annotation.Value;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,7 +24,7 @@ public class GoogleAuthService {
 
     private final UserRepository userRepository;
     private final JwtService jwtService;
-
+    private final RoleRepository roleRepository;
     @Value("${spring.security.oauth2.client.registration.google.client-id}")
     private String googleClientId;
 
@@ -40,7 +44,12 @@ public class GoogleAuthService {
             newUser.setProviderId(payload.getSubject()); // Google user ID
             newUser.setPassword("GOOGLE"); // placeholder password
             // Gán role default nếu cần, ví dụ role USER
-            // newUser.addRole(roleRepository.findByName("ROLE_USER"));
+            Role roleUser = roleRepository.findByRoleName("USER")
+                    .orElseThrow(() -> new ResourceNotFoundException("Role not found"));
+            UserRole userRole = new UserRole();
+            userRole.setUser(newUser);
+            userRole.setRole(roleUser);
+            newUser.getTblUserRoles().add(userRole);
             return userRepository.save(newUser);
         });
 

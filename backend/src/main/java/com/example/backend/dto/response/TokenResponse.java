@@ -1,6 +1,5 @@
 package com.example.backend.dto.response;
 
-import com.example.backend.model.Role;
 import lombok.*;
 
 import java.util.List;

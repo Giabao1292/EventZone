@@ -12,6 +12,7 @@ const AppLayout = () => {
             <Footer />
         </div>
     );
-};
+
+
 
 export default AppLayout;

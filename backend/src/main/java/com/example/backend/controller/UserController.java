@@ -3,8 +3,10 @@ package com.example.backend.controller;
 import com.cloudinary.Cloudinary;
 import com.example.backend.dto.request.ChangePasswordRequest;
 import com.example.backend.dto.request.UserUpdateRequest;
+import com.example.backend.dto.response.EventSummaryDTO;
 import com.example.backend.dto.response.ResponseData;
 import com.example.backend.dto.response.UserDetailResponse;
+import com.example.backend.model.Event;
 import com.example.backend.model.User;
 import com.example.backend.service.JwtService;
 import com.example.backend.service.UserService;
@@ -12,10 +14,11 @@ import com.example.backend.util.TokenType;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/users")
@@ -40,9 +43,8 @@ public class UserController {
         return username;
     }
 
-    @GetMapping
+    @GetMapping("/profile")
     public ResponseData<UserDetailResponse> getProfile(HttpServletRequest request) {
-        System.out.println(SecurityContextHolder.getContext().getAuthentication().getAuthorities());
         try {
             String username = extractToken(request);
             User user = userService.findByUsername(username);
@@ -66,7 +68,7 @@ public class UserController {
     }
 
 
-    @PutMapping
+    @PutMapping("/profile")
     public ResponseData<UserDetailResponse> updateProfile(
             @RequestBody UserUpdateRequest updateRequest,
             HttpServletRequest request) {
@@ -120,6 +122,60 @@ public class UserController {
         String username = extractToken(httpRequest);
         userService.changePassword(username, request);
         return new ResponseData<>(HttpStatus.OK.value(), "Password changed successfully");
+    }
+
+    @PostMapping("/wishlist/{eventId}")
+    public ResponseData<String> addToWishlist(
+            @PathVariable Long eventId) {
+        try {
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
+            userService.addToWishlist(username, eventId);
+            return new ResponseData<>(HttpStatus.OK.value(), "Added to wishlist");
+        } catch (RuntimeException e) {
+            return new ResponseData<>(HttpStatus.NOT_FOUND.value(), e.getMessage());
+        } catch (Exception e) {
+            return new ResponseData<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "Failed: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/wishlist/{eventId}")
+    public ResponseData<String> removeFromWishlist(
+            @PathVariable Long eventId, HttpServletRequest request) {
+        // giống add nhưng gọi removeToWishlist
+        try {
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
+            userService.removeFromWishlist(username, eventId);
+            return new ResponseData<>(HttpStatus.OK.value(), "Removed from wishlist");
+        } catch (RuntimeException e) {
+            return new ResponseData<>(HttpStatus.NOT_FOUND.value(), e.getMessage());
+        } catch (Exception e) {
+            return new ResponseData<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "Failed: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/wishlist")
+    public ResponseData<Set<EventSummaryDTO>> getWishlist() {
+        try {
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();      // đã hard-code hoặc lấy từ JWT
+            Set<EventSummaryDTO> wishlist = userService.getWishlist(username);
+
+            return new ResponseData<>(
+                    HttpStatus.OK.value(),
+                    "Wishlist fetched",
+                    wishlist
+            );
+
+        } catch (RuntimeException e) {
+            return new ResponseData<>(HttpStatus.NOT_FOUND.value(), e.getMessage());
+
+        } catch (Exception e) {
+            return new ResponseData<>(
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "Failed: " + e.getMessage()
+            );
+        }
     }
 
 

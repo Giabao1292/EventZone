@@ -3,11 +3,11 @@ import { removeToken, saveToken } from "../utils/storage";
 
 export const login = async (credentials) => {
   const res = await apiClient.post("auth/login", credentials);
-  const { accessToken, user } = res.data.data;
+  const { accessToken, roles } = res.data.data;
 
   saveToken(accessToken);
 
-  return { accessToken, user };
+  return { accessToken, roles };
 };
 export const register = async (userData) => {
   const res = await apiClient.post("auth/register", userData);

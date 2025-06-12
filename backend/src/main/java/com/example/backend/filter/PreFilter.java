@@ -1,7 +1,6 @@
 package com.example.backend.filter;
 
 import com.example.backend.service.JwtService;
-import com.example.backend.service.UserService;
 import com.example.backend.service.impl.UserDetailService;
 import com.example.backend.util.TokenType;
 import io.micrometer.common.util.StringUtils;

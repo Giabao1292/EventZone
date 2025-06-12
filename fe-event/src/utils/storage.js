@@ -12,3 +12,6 @@ export const removeToken = () => {
 export const saveUser = (user) => {
   localStorage.setItem("user", JSON.stringify(user));
 };
+export const setToken = (token) => {
+  localStorage.setItem("token", token);
+};
