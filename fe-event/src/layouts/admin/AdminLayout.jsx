@@ -1,75 +1,44 @@
-import React, { useState, useEffect } from "react";
-import { Outlet, useLocation } from "react-router-dom";
-import Navbar from "./Navbar";
+// src/layouts/AdminLayout.jsx
+import React, { useState } from "react";
 import Sidebar from "./Sidebar";
-import SettingsPanel from "./SettingsPanel";
-import Footer from "./Footer";
-import Spinner from "./Spinner";
+import Header from "./Header"; // Đảm bảo bạn đã import Header
+import Footer from "./Footer"; // Đảm bảo bạn đã import Footer
+import { Outlet } from "react-router-dom";
+import AppTopStrip from "./AppTopStrip"; // Import AppTopStrip nếu cần
+const AdminLayout = ({ children }) => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true); // Mặc định sidebar mở
 
-const AdminLayout = () => {
-  const [loading, setLoading] = useState(true);
-  const [isFullPageLayout, setIsFullPageLayout] = useState(false);
-  const location = useLocation();
-
-  const onRouteChanged = () => {
-    const fullPageLayoutRoutes = [
-      "/user-pages/login-1",
-      "/user-pages/register-1",
-      "/error-pages/error-404",
-      "/error-pages/error-500",
-    ];
-
-    let isFullPage = false;
-    for (let i = 0; i < fullPageLayoutRoutes.length; i++) {
-      if (location.pathname.includes(fullPageLayoutRoutes[i])) {
-        isFullPage = true;
-        break;
-      }
-    }
-
-    setIsFullPageLayout(isFullPage);
-    const pageBodyWrapper = document.querySelector(".page-body-wrapper");
-    if (pageBodyWrapper) {
-      if (isFullPage) {
-        pageBodyWrapper.classList.add("full-page-wrapper");
-      } else {
-        pageBodyWrapper.classList.remove("full-page-wrapper");
-      }
-    }
+  // Hàm để toggle trạng thái của sidebar
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
   };
 
-  useEffect(() => {
-    // Initial route check and loading simulation
-    onRouteChanged();
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 500); // Hide spinner after 0.5 seconds
-
-    // Cleanup timer on unmount
-    return () => clearTimeout(timer);
-  }, []); // Empty dependency array for componentDidMount equivalent
-
-  useEffect(() => {
-    onRouteChanged();
-  }, [location]); // Run onRouteChanged when location changes
-
-  if (loading) {
-    return <Spinner />;
-  }
-
   return (
-    <div className="container-scroller">
-      {!isFullPageLayout && <Navbar />}
-      <div className="container-fluid page-body-wrapper">
-        {!isFullPageLayout && <SettingsPanel />}
-        {!isFullPageLayout && <Sidebar />}
-        <div className="main-panel">
-          <div className="content-wrapper">
-            <Outlet />
-          </div>
-          {!isFullPageLayout && <Footer />}
+    <div className="bg-surface">
+      <main>
+        <div className="app-topstrip z-40 sticky top-0 py-[15px] px-6 bg-[linear-gradient(90deg,_#0f0533_0%,_#1b0a5c_100%)]">
+          <AppTopStrip />
         </div>
-      </div>
+        <div id="main-wrapper" className="flex p-5 xl:pr-0">
+          <aside
+            id="application-sidebar-brand"
+            className="hs-overlay hs-overlay-open:translate-x-0 -translate-x-full transform hidden xl:block xl:translate-x-0 xl:end-auto xl:bottom-0 fixed xl:top-[90px] xl:left-auto top-0 left-0 with-vertical h-screen z-[999] shrink-0 w-[270px] shadow-md xl:rounded-md rounded-none bg-white left-sidebar transition-all duration-300"
+          >
+            <Sidebar />
+          </aside>
+          <div className="w-full page-wrapper xl:px-6 px-0">
+            <main className="h-full max-w-full">
+              <div className="container full-container p-0 flex flex-col gap-6">
+                <header className="bg-white shadow-md rounded-md w-full text-sm py-4 px-6">
+                  <Header />
+                </header>
+                <Outlet />
+                <Footer />
+              </div>
+            </main>
+          </div>
+        </div>
+      </main>
     </div>
   );
 };

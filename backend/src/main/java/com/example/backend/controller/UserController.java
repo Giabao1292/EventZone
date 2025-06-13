@@ -11,11 +11,13 @@ import com.example.backend.service.JwtService;
 import com.example.backend.service.UserService;
 import com.example.backend.util.TokenType;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,6 +26,7 @@ import java.util.Set;
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
+@Validated
 public class UserController {
 
     private final UserService userService;
@@ -51,7 +54,7 @@ public class UserController {
             User user = userService.findByUsername(username);
             // Chuyển entity sang DTO
             UserDetailResponse dto = new UserDetailResponse();
-            dto.setFullname(user.getFullname());
+            dto.setFullname(user.getFullName());
             dto.setEmail(user.getEmail());
             dto.setUsername(user.getUsername());
             dto.setPhone(user.getPhone());
@@ -80,7 +83,7 @@ public class UserController {
 
             // Chuyển sang DTO
             UserDetailResponse dto = new UserDetailResponse();
-            dto.setFullname(updatedUser.getFullname());
+            dto.setFullname(updatedUser.getFullName());
             dto.setEmail(updatedUser.getEmail());
             dto.setUsername(updatedUser.getUsername());
             dto.setProfileUrl(updatedUser.getProfileUrl());
@@ -179,25 +182,25 @@ public class UserController {
         }
     }
 
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseData<?> getListUser(Pageable pageable, @RequestParam(name = "search", required = false) String... search) {
         PageResponse<UserResponseDTO> userList = userService.getListUser(pageable, search);
         return new ResponseData<>(HttpStatus.OK.value(), "Get list user succesfully!", userList);
     }
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    public ResponseData<?> createUser(@RequestBody UserRequestDTO userRequestDTO) {
+    public ResponseData<?> createUser(@Valid @RequestBody UserRequestDTO userRequestDTO) {
         userService.createUser(userRequestDTO);
         return new ResponseData<>(HttpStatus.OK.value(), "User created successfully");
     }
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
-    public ResponseData<?> updateUser(@PathVariable Integer id, @RequestBody UserRequestDTO userRequestDTO){
+    public ResponseData<?> updateUser(@PathVariable Integer id,@Valid @RequestBody UserRequestDTO userRequestDTO){
         userService.updateUser(id, userRequestDTO);
         return new ResponseData<>(HttpStatus.OK.value(), "User updated successfully");
     }
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseData<?> deleteUser(@PathVariable Integer id){
         userService.deleteUser(id);

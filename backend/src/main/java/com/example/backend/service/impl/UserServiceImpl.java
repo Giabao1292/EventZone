@@ -24,7 +24,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,6 +40,7 @@ public class UserServiceImpl implements UserService {
     private final JwtService jwtService;
     private final EventRepository eventRepository;
     private final SearchCriteriaRepository searchCriteriaRepository;
+
     @Override
     public User findByUsername(String email) {
         return userRepository.findByEmail(email)
@@ -50,11 +50,12 @@ public class UserServiceImpl implements UserService {
     @Override
     public void updateProfileByUsername(String email, UserUpdateRequest request) {
         User user = findByUsername(email);
-        user.setFullname(request.getFullname());
+        user.setFullName(request.getFullname());
         user.setPhone(request.getPhone());
         user.setDateOfBirth(request.getDateOfBirth());
         userRepository.save(user);
     }
+
     @Override
     public String updateAvatar(String username, MultipartFile file, Cloudinary cloudinary) throws IOException {
         User user = findByUsername(username);
@@ -74,6 +75,7 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
         return imageUrl;
     }
+
     @Override
     public void changePassword(String username, ChangePasswordRequest request) {
         User user = userRepository.findByEmail(username)
@@ -93,7 +95,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public TokenResponse saveUser(UserTemp userTemp) {
         User user = new User();
-        user.setFullname(userTemp.getFullName());
+        user.setFullName(userTemp.getFullName());
         user.setPhone(userTemp.getPhone());
         user.setDateOfBirth(userTemp.getDateOfBirth());
         user.setEmail(userTemp.getEmail());
@@ -149,25 +151,25 @@ public class UserServiceImpl implements UserService {
                 .map(EventSummaryDTO::new)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
     }
+
     @Override
-    public PageResponse<UserResponseDTO> getListUser(Pageable pageable, String... search){
+    public PageResponse<UserResponseDTO> getListUser(Pageable pageable, String... search) {
         Page<User> users;
-        if(search == null || search.length == 0){
+        if (search == null || search.length == 0) {
             users = userRepository.findAll(pageable);
-        }
-        else{
+        } else {
             users = searchCriteriaRepository.searchUsers(pageable, search);
         }
-        List<UserResponseDTO> userResponse = users.getContent().stream().map(user ->{
+        List<UserResponseDTO> userResponse = users.getContent().stream().map(user -> {
             UserResponseDTO userDTO = UserResponseDTO.builder()
                     .id(user.getId())
-                    .fullName(user.getFullname())
+                    .fullName(user.getFullName())
                     .phone(user.getPhone())
                     .dateOfBirth(user.getDateOfBirth())
                     .email(user.getEmail())
                     .score(user.getScore())
                     .status(user.getStatus())
-                    .roles(user.getTblUserRoles().stream().map(userRole-> userRole.getRole().getRoleName()).collect(Collectors.toSet()))
+                    .roles(user.getTblUserRoles().stream().map(userRole -> userRole.getRole().getRoleName()).collect(Collectors.toSet()))
                     .build();
             return userDTO;
         }).collect(Collectors.toList());
@@ -176,24 +178,25 @@ public class UserServiceImpl implements UserService {
                 .size(users.getSize())
                 .number(users.getNumber())
                 .totalPages(users.getTotalPages())
-                .totalElements((int)users.getTotalElements())
+                .totalElements((int) users.getTotalElements())
                 .build();
     }
+
     @Override
-    public void createUser(UserRequestDTO userRequestDTO){
+    public void createUser(UserRequestDTO userRequestDTO) {
         User user = User.builder()
                 .email(userRequestDTO.getEmail())
                 .phone(userRequestDTO.getPhone())
                 .password(passwordEncoder.encode(userRequestDTO.getPassword()))
                 .dateOfBirth(userRequestDTO.getDateOfBirth())
-                .fullname(userRequestDTO.getFullName())
+                .fullName(userRequestDTO.getFullName())
                 .status(userRequestDTO.getStatus())
                 .build();
         //Luu De lay id
         userRepository.save(user);
 
         Set<UserRole> userRoles = new HashSet<>();
-        for(String role: userRequestDTO.getRoles()){
+        for (String role : userRequestDTO.getRoles()) {
             Role roleEntity = roleRepository.findByRoleName(role).orElseThrow(() -> new RuntimeException("Role not found"));
             UserRole userRole = new UserRole();
             userRole.setUser(user);
@@ -203,34 +206,32 @@ public class UserServiceImpl implements UserService {
         user.setTblUserRoles(userRoles);
         userRepository.save(user);
     }
+
     @Override
-    public void updateUser(Integer id, UserRequestDTO userRequestDTO){
+    public void updateUser(Integer id, UserRequestDTO userRequestDTO) {
         User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
-        if(userRequestDTO.getPhone() != null){
-            user.setPhone(userRequestDTO.getPhone());
+        user.setPhone(userRequestDTO.getPhone());
+        user.setFullName(userRequestDTO.getFullName());
+        user.setDateOfBirth(userRequestDTO.getDateOfBirth());
+        user.setEmail(userRequestDTO.getEmail());
+        user.setStatus(userRequestDTO.getStatus());
+        user.getTblUserRoles().clear();
+        Set<UserRole> userRoles = new HashSet<>();
+        for (String roleName : userRequestDTO.getRoles()) {
+            Role role = roleRepository.findByRoleName(roleName)
+                    .orElseThrow(() -> new RuntimeException("Role not found: " + roleName));
+            UserRole userRole = new UserRole();
+            userRole.setUser(user);
+            userRole.setRole(role);
+            userRoles.add(userRole);
         }
-        if(userRequestDTO.getFullName() != null){
-            user.setFullname(userRequestDTO.getFullName());
-        }
-        if(userRequestDTO.getStatus() != null){
-            user.setStatus(userRequestDTO.getStatus());
-        }
-        if(userRequestDTO.getRoles() != null){
-            user.getTblUserRoles().clear();
-            Set<UserRole> userRoles = new HashSet<>();
-            for (String roleName : userRequestDTO.getRoles()) {
-                Role role = roleRepository.findByRoleName(roleName)
-                        .orElseThrow(() -> new RuntimeException("Role not found: " + roleName));
-                UserRole userRole = new UserRole();
-                userRole.setUser(user);
-                userRole.setRole(role);
-                userRoles.add(userRole);
-            }
-            user.setTblUserRoles(userRoles);
-        }
+        user.setTblUserRoles(userRoles);
+        userRepository.save(user);
     }
     @Override
-    public void deleteUser(Integer id){
-        userRepository.deleteById(id);
+    public void deleteUser(Integer id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        user.setStatus(0);
+        userRepository.save(user);
     }
 }

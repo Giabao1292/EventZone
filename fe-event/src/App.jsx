@@ -8,7 +8,8 @@ import RegisterOrganizerForm from "./features/organizer/pages/OrganizerRegistrat
 import OrganizerLayout from "./ui/OrganizerLayout";
 import EventCreationForm from "./features/organizer/components/EventCreationForm";
 import AdminLayout from "./layouts/admin/AdminLayout";
-import Dashboard from "./pages/admin/Dashboard";
+import DashboardPage from "./pages/admin/DashboardPage";
+import UserManagementPage from "./pages/admin/UserManagementPage";
 
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() =>
@@ -71,10 +72,14 @@ function App() {
           </Route>
 
           {/* Protected Routes for Admins */}
-          {/* allowedRoles={["ADMIN"]}  */}
-          <Route element={<PrivateRoute />}>
+          <Route element={<PrivateRoute allowedRoles={["ADMIN"]} />}>
             <Route element={<AdminLayout />}>
-              <Route path="/admin/dashboard" element={<Dashboard />} />
+              <Route
+                path="/admin"
+                element={<Navigate to="/admin/dashboard" replace />}
+              />
+              <Route path="/admin/dashboard" element={<DashboardPage />} />
+              <Route path="/admin/users" element={<UserManagementPage />} />
             </Route>
           </Route>
         </Routes>

@@ -42,7 +42,7 @@ public class User implements UserDetails, Serializable {
 
     @Size(max = 100)
     @Column(name = "fullname", length = 100)
-    private String fullname;
+    private String fullName;
 
     @Size(max = 255)
     @Column(name = "profile_url")
