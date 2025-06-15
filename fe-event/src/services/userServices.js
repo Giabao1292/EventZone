@@ -70,3 +70,13 @@ export const deleteUser = async (id) => {
   const res = await apiClient.delete(`/users/${id}`);
   return res.data;
 };
+export const getRoles = async () => {
+  const res = await apiClient.get("/users/roles");
+  return res.data;
+};
+export const createRole = async (roleName) => {
+  const res = await apiClient.post("/users/roles", {
+    role: roleName,
+  });
+  return res.data;
+};

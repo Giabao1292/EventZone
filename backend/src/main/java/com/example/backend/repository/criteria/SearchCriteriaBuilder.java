@@ -1,14 +1,15 @@
 package com.example.backend.repository.criteria;
 
-import com.example.backend.model.User;
+import com.example.backend.exception.ResourceNotFoundException;
 import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.From;
+import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
 import lombok.*;
 
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.function.Consumer;
 
 @Getter
@@ -16,41 +17,64 @@ import java.util.function.Consumer;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SearchCriteriaBuilder implements Consumer<SearchCriteria> {
+public class SearchCriteriaBuilder<T> implements Consumer<SearchCriteria> {
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private CriteriaBuilder criteriaBuilder;
     private Predicate predicate;
-    private Root<User> root;
-    @Override
-    public void accept(SearchCriteria searchCriteria) {
-        String key = searchCriteria.getKey();
-        Object value = searchCriteria.getValue();
-        String operator = searchCriteria.getOperation();
-        Class<?> fieldType = root.get(key).getJavaType();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private List<From<?, ?>> joinList;
 
-        if (operator.equals("<")) {
-            if (fieldType.equals(LocalDate.class)) {
-                LocalDate dateValue = LocalDate.parse(value.toString().trim(), formatter);
-                predicate = criteriaBuilder.and(predicate, criteriaBuilder.lessThan(root.get(key), dateValue));
-            } else {
-                predicate = criteriaBuilder.and(predicate, criteriaBuilder.lessThan(root.get(key), value.toString()));
-            }
-        } else if (operator.equals(">")) {
-            if (fieldType.equals(LocalDate.class)) {
-                LocalDate dateValue = LocalDate.parse(value.toString().trim(), formatter);
-                predicate = criteriaBuilder.and(predicate, criteriaBuilder.greaterThan(root.get(key), dateValue));
-            } else {
-                predicate = criteriaBuilder.and(predicate, criteriaBuilder.greaterThan(root.get(key), value.toString()));
-            }
+    @Override
+    public void accept(SearchCriteria criteria) {
+        String key = criteria.getKey();
+        Object value = criteria.getValue();
+        String op = criteria.getOperation();
+
+        Path<?> path = getField(key);
+        Class<?> type = path.getJavaType();
+
+        if ("<".equals(op)) {
+            predicate = criteriaBuilder.and(predicate, buildLessThan(path, type, value));
+        } else if (">".equals(op)) {
+            predicate = criteriaBuilder.and(predicate, buildGreaterThan(path, type, value));
         } else {
-            if (fieldType.equals(String.class)) {
-                predicate = criteriaBuilder.and(predicate, criteriaBuilder.like(root.get(key), "%" + value.toString() + "%"));
-            } else if (fieldType.equals(LocalDate.class)) {
-                LocalDate dateValue = LocalDate.parse(value.toString(), formatter);
-                predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get(key), dateValue));
-            } else {
-                predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get(key), value));
+            predicate = criteriaBuilder.and(predicate, buildEqualsOrLike(path, type, value));
+        }
+    }
+
+    private Predicate buildLessThan(Path<?> path, Class<?> type, Object value) {
+        if (type.equals(LocalDate.class)) {
+            return criteriaBuilder.lessThan(cast(path), LocalDate.parse(value.toString().trim(), DATE_FORMATTER));
+        }
+        return criteriaBuilder.lessThan(cast(path), value.toString());
+    }
+
+    private Predicate buildGreaterThan(Path<?> path, Class<?> type, Object value) {
+        if (type.equals(LocalDate.class)) {
+            return criteriaBuilder.greaterThan(cast(path), LocalDate.parse(value.toString().trim(), DATE_FORMATTER));
+        }
+        return criteriaBuilder.greaterThan(cast(path), value.toString());
+    }
+
+    private Predicate buildEqualsOrLike(Path<?> path, Class<?> type, Object value) {
+        if (type.equals(String.class)) {
+            return criteriaBuilder.like(cast(path), "%" + value + "%");
+        } else if (type.equals(LocalDate.class)) {
+            return criteriaBuilder.equal(cast(path), LocalDate.parse(value.toString(), DATE_FORMATTER));
+        }
+        return criteriaBuilder.equal(path, value);
+    }
+
+    private <Y> Path<Y> cast(Path<?> path) {
+        return (Path<Y>) path;
+    }
+
+    public Path<?> getField(String key) {
+        for (From<?, ?> join : joinList) {
+            try {
+                return join.get(key);
+            } catch (IllegalArgumentException ignored) {
             }
         }
+        throw new ResourceNotFoundException("Field '" + key + "' not found");
     }
 }

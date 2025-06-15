@@ -6,12 +6,15 @@ import {
   createUser,
   updateUser,
   deleteUser,
+  getRoles,
+  createRole,
 } from "../../services/userServices";
 
-const ROLES_OPTIONS = ["USER", "ADMIN", "MODERATOR"];
-const PAGE_SIZE_OPTIONS = [5, 10, 15, 20, 25];
-
 export default function UserManagement() {
+  // Replace the hardcoded ROLES_OPTIONS with dynamic state
+  const [rolesOptions, setRolesOptions] = useState([]);
+  const PAGE_SIZE_OPTIONS = [5, 10, 15, 20, 25];
+
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({
@@ -52,9 +55,21 @@ export default function UserManagement() {
     roles: [],
   });
 
+  // Role creation states
+  const [isCreateRoleModalOpen, setIsCreateRoleModalOpen] = useState(false);
+  const [roleFormData, setRoleFormData] = useState({
+    role: "",
+  });
+  const [roleFormError, setRoleFormError] = useState(null);
+
   useEffect(() => {
     fetchUsers();
   }, [pagination.number, pagination.size, sortBy, sortDirection]);
+
+  // Add useEffect to fetch roles on component mount
+  useEffect(() => {
+    fetchRoles();
+  }, []);
 
   useEffect(() => {
     if (notification) {
@@ -94,6 +109,23 @@ export default function UserManagement() {
     }
   };
 
+  // Add function to fetch roles from API
+  const fetchRoles = async () => {
+    try {
+      const response = await getRoles();
+      // Assuming the API returns an array of role objects with 'name' property
+      // Adjust this based on your actual API response structure
+      const roleNames = response.data.map(
+        (role) => role.name || role.roleName || role
+      );
+      setRolesOptions(roleNames);
+    } catch (error) {
+      console.error("Failed to fetch roles:", error);
+      // Fallback to default roles if API fails
+      setRolesOptions(["USER", "ADMIN", "ORGANIZER"]);
+    }
+  };
+
   const buildSearchParams = () => {
     const searchTerms = [];
 
@@ -110,7 +142,7 @@ export default function UserManagement() {
       searchTerms.push(`status:${searchFilters.status}`);
     }
     if (searchFilters.roles && searchFilters.roles !== "all") {
-      searchTerms.push(`roles:${searchFilters.roles}`);
+      searchTerms.push(`roleName:${searchFilters.roles}`);
     }
     if (searchFilters.scoreFrom) {
       searchTerms.push(`score>${searchFilters.scoreFrom}`);
@@ -369,6 +401,51 @@ export default function UserManagement() {
     return "";
   };
 
+  // Role creation handlers
+  const handleCreateRole = async () => {
+    setRoleFormError(null);
+
+    // Validate role name
+    if (!roleFormData.role.trim()) {
+      setRoleFormError("Role name is required");
+      return;
+    }
+
+    try {
+      await createRole(roleFormData.role.trim());
+      showNotification("Role created successfully");
+      setIsCreateRoleModalOpen(false);
+      resetRoleForm();
+      fetchRoles(); // Refresh roles list
+    } catch (error) {
+      console.error("Create role error:", error);
+
+      let errorMessage = "Failed to create role";
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.data?.errors) {
+        const errors = error.response.data.errors;
+        if (Array.isArray(errors)) {
+          errorMessage = errors.join(", ");
+        } else if (typeof errors === "object") {
+          errorMessage = Object.values(errors).flat().join(", ");
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      setRoleFormError(errorMessage);
+      showNotification("Failed to create role", "error");
+    }
+  };
+
+  const resetRoleForm = () => {
+    setRoleFormData({
+      role: "",
+    });
+    setRoleFormError(null);
+  };
+
   return (
     <div className="space-y-6 p-6">
       {/* Notification */}
@@ -387,28 +464,52 @@ export default function UserManagement() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
-        <button
-          onClick={() => {
-            resetForm();
-            setIsCreateModalOpen(true);
-          }}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+        <div className="flex gap-3">
+          <button
+            onClick={() => {
+              resetRoleForm();
+              setIsCreateRoleModalOpen(true);
+            }}
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
-          Add User
-        </button>
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            Add Role
+          </button>
+          <button
+            onClick={() => {
+              resetForm();
+              setIsCreateModalOpen(true);
+            }}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            Add User
+          </button>
+        </div>
       </div>
 
       {/* Search Filters */}
@@ -495,7 +596,7 @@ export default function UserManagement() {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">All</option>
-              {ROLES_OPTIONS.map((role) => (
+              {rolesOptions.map((role) => (
                 <option key={role} value={role}>
                   {role}
                 </option>
@@ -830,7 +931,7 @@ export default function UserManagement() {
         )}
       </div>
 
-      {/* Create Modal */}
+      {/* Create User Modal */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -849,7 +950,7 @@ export default function UserManagement() {
         </div>
       )}
 
-      {/* Edit Modal */}
+      {/* Edit User Modal */}
       {isEditModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -864,6 +965,82 @@ export default function UserManagement() {
               formError={formError}
               isEdit={true}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Create Role Modal */}
+      {isCreateRoleModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4 text-gray-900">
+              Create New Role
+            </h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Role Name *
+                </label>
+                <input
+                  type="text"
+                  value={roleFormData.role}
+                  onChange={(e) =>
+                    setRoleFormData({ role: e.target.value.toUpperCase() })
+                  }
+                  placeholder="Enter role name (e.g., MANAGER)"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Role name will be automatically converted to uppercase
+                </p>
+              </div>
+
+              {/* Error Message Display */}
+              {roleFormError && (
+                <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg
+                        className="h-5 w-5 text-red-400"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-red-800">
+                        Error occurred
+                      </h3>
+                      <div className="mt-1 text-sm text-red-700">
+                        <p>{roleFormError}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setIsCreateRoleModalOpen(false)}
+                  className="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCreateRole}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                >
+                  Create Role
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -882,6 +1059,25 @@ function UserForm({
   formError,
   isEdit,
 }) {
+  const [rolesOptions, setRolesOptions] = useState([]);
+
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const response = await getRoles();
+        const roleNames = response.data.map(
+          (role) => role.name || role.roleName || role
+        );
+        setRolesOptions(roleNames);
+      } catch (error) {
+        console.error("Failed to fetch roles:", error);
+        setRolesOptions(["USER", "ADMIN", "ORGANIZER"]);
+      }
+    };
+
+    fetchRoles();
+  }, []);
+
   const handleRoleChange = (role, checked) => {
     if (checked) {
       setFormData({ ...formData, roles: [...formData.roles, role] });
@@ -1047,7 +1243,7 @@ function UserForm({
           Roles *
         </label>
         <div className="flex flex-wrap gap-4">
-          {ROLES_OPTIONS.map((role) => (
+          {rolesOptions.map((role) => (
             <label key={role} className="flex items-center space-x-2">
               <input
                 type="checkbox"

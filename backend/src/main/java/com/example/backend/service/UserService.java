@@ -4,13 +4,11 @@ import com.cloudinary.Cloudinary;
 import com.example.backend.dto.request.ChangePasswordRequest;
 import com.example.backend.dto.request.UserRequestDTO;
 import com.example.backend.dto.request.UserUpdateRequest;
-import com.example.backend.dto.response.EventSummaryDTO;
-import com.example.backend.dto.response.PageResponse;
-import com.example.backend.dto.response.TokenResponse;
-import com.example.backend.dto.response.UserResponseDTO;
+import com.example.backend.dto.response.*;
 import com.example.backend.model.Event;
 import com.example.backend.model.User;
 import com.example.backend.model.UserTemp;
+import com.example.backend.util.RoleName;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -35,4 +33,8 @@ public interface UserService {
     void updateUser(Integer id, UserRequestDTO userRequestDTO);
 
     void deleteUser(Integer id);
+
+    void createRole(String role);
+
+    List<RoleResponseDTO> getListRole();
 }

@@ -9,6 +9,7 @@ import com.example.backend.model.UserTemp;
 import com.example.backend.model.VerificationToken;
 import com.example.backend.repository.*;
 import com.example.backend.service.*;
+import com.example.backend.validation.UserValidator;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +39,7 @@ public class AuthServiceImpl implements AuthService {
     private final MailService mailService;
     private final UserTempRepository userTempRepository;
     private final UserTempService userTempService;
-
+    private final UserValidator userValidator;
     @Override
     public TokenResponse authenticate(LoginRequest request) {
         log.info("authenticate");
@@ -55,7 +56,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public UserTemp register(RegisterRequest registerRequest) {
-        validateRegisterRequest(registerRequest);
+        userValidator.validateEmail(registerRequest.getEmail());
         UserTemp user = userTempService.saveUser(registerRequest);
         return user;
     }
@@ -78,12 +79,6 @@ public class AuthServiceImpl implements AuthService {
         TokenResponse tokenResponse = userService.saveUser(user);
         userTempRepository.delete(user);
         return tokenResponse;
-    }
-
-    private void validateRegisterRequest(RegisterRequest request) {
-        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new ResourceNotFoundException("Email already exists");
-        }
     }
 
     @Override
@@ -123,5 +118,4 @@ public class AuthServiceImpl implements AuthService {
         userRepository.save(user);
         verificationTokenRepository.delete(verificationToken);
     }
-
 }
