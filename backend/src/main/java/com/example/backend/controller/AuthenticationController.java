@@ -72,7 +72,6 @@ public class AuthenticationController {
         mailService.sendConfirmEmail(userTemp);
         return new ResponseData<>(HttpStatus.OK.value(),"Resend email successfully");
     }
-
     @PostMapping("/logout")
     public ResponseData<TokenResponse> logout(HttpServletRequest request) throws MessagingException {
         return null;

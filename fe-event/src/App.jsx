@@ -8,7 +8,6 @@ import RegisterOrganizerForm from "./features/organizer/pages/OrganizerRegistrat
 import OrganizerLayout from "./ui/OrganizerLayout";
 import EventCreationForm from "./features/organizer/components/EventCreationForm";
 import LayoutDesigner from "./features/organizer/components/LayoutDesigner";
-import { EventProvider } from "./context/EventContext"; // đường dẫn đúng của mày
 import AdminLayout from "./layouts/admin/AdminLayout";
 import DashboardPage from "./pages/admin/DashboardPage";
 import UserManagementPage from "./pages/admin/UserManagementPage";
