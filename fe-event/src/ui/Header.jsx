@@ -109,7 +109,7 @@ const Header = () => {
         {/* Desktop Menu - Hidden on small screens, shown on md and larger */}
         <div className="hidden md:flex items-center space-x-4">
           <Link
-            to="/organizer"
+            to="/register-organizer"
             className="border border-white text-white px-6 py-2 rounded-full hover:bg-white hover:text-[#2eb866] transition font-medium cursor-pointer no-underline"
           >
             {isOrganizer ? "Nhà tổ chức" : "Trở thành nhà tổ chức"}
@@ -258,7 +258,7 @@ const Header = () => {
               </div>
 
               <Link
-                to="/organizer"
+                to="/register-organizer"
                 className="w-11/12 text-center border border-white text-white px-6 py-2 rounded-full hover:bg-white hover:text-[#2eb866] transition font-medium cursor-pointer no-underline"
                 onClick={() => setMobileMenuOpen(false)}
               >
