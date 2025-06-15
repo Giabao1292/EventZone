@@ -1,8 +1,12 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-
+import { Link } from "react-router-dom";
+import useAuth from "../../../hooks/useAuth";
+import avatarDefault from "/assets/images/profile/user-1.jpg";
 const DDProfile = () => {
+  const { user, logout } = useAuth();
+  const avatarUrl = user?.profileUrl || avatarDefault;
   const [isOpen, setIsOpen] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
   const dropdownRef = useRef(null);
@@ -18,6 +22,11 @@ const DDProfile = () => {
     }, 50);
   };
 
+  const handleLogoutClick = () => {
+    logout();
+    setIsOpen(false); // Đóng dropdown khi đăng xuất
+  };
+
   const handleMouseLeave = () => {
     clearTimeout(timerRef.current);
     setIsOpen(false);
@@ -26,7 +35,6 @@ const DDProfile = () => {
       setShouldRender(false);
     }, 300); // Thời gian bằng với thời gian transition
   };
-
   // Dọn dẹp timeout khi component unmount
   useEffect(() => {
     return () => {
@@ -45,7 +53,7 @@ const DDProfile = () => {
       <a className="relative cursor-pointer align-middle rounded-full">
         <img
           className="object-cover w-9 h-9 rounded-full"
-          src="/assets/images/profile/user-1.jpg"
+          src={avatarUrl || "/assets/images/profile/user-1.jpg"}
           alt="User profile"
           aria-hidden="true"
         />
@@ -60,13 +68,14 @@ const DDProfile = () => {
           style={{ minWidth: "200px" }}
         >
           <div className="p-0 py-2">
-            <a
-              href="#"
+            <Link
+              to="/profile"
               className="flex gap-2 items-center font-medium px-4 py-1.5 hover:bg-gray-200 text-gray-400"
+              onClick={() => setIsOpen(false)}
             >
               <i className="ti ti-user text-xl"></i>
               <p className="text-sm">My Profile</p>
-            </a>
+            </Link>
             <a
               href="#"
               className="flex gap-2 items-center font-medium px-4 py-1.5 hover:bg-gray-200 text-gray-400"
@@ -82,12 +91,12 @@ const DDProfile = () => {
               <p className="text-sm">My Task</p>
             </a>
             <div className="px-4 mt-[7px] grid">
-              <a
-                href="/pages/authentication-login.html"
+              <button
+                onClick={handleLogoutClick}
                 className="btn-outline-primary font-medium text-[15px] w-full hover:bg-blue-600 hover:text-white"
               >
                 Logout
-              </a>
+              </button>
             </div>
           </div>
         </div>

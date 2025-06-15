@@ -33,7 +33,6 @@ const AdminLayout = ({ children }) => {
                   <Header />
                 </header>
                 <Outlet />
-                <Footer />
               </div>
             </main>
           </div>

@@ -87,7 +87,7 @@ const Header = () => {
             <input
               type="text"
               placeholder="Bạn tìm gì hôm nay?"
-              className="flex-1 outline-none text-gray-600 bg-transparent placeholder:text-gray-400"
+              className="flex-1 outline-none border-none text-gray-600 bg-transparent placeholder:text-gray-400"
             />
             <span className="mx-2 text-gray-300">|</span>
             <button className="text-gray-600 font-medium hover:text-green-600">

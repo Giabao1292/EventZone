@@ -11,7 +11,6 @@ import com.example.backend.model.*;
 import com.example.backend.repository.*;
 import com.example.backend.service.JwtService;
 import com.example.backend.service.UserService;
-import com.example.backend.util.RoleName;
 import com.example.backend.validation.UserValidator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -153,10 +152,9 @@ public class UserServiceImpl implements UserService {
         User user = User.builder().email(userRequestDTO.getEmail()).phone(userRequestDTO.getPhone()).password(passwordEncoder.encode(userRequestDTO.getPassword())).dateOfBirth(userRequestDTO.getDateOfBirth()).fullName(userRequestDTO.getFullName()).status(userRequestDTO.getStatus()).build();
         //Luu De lay id
         userRepository.save(user);
-
         Set<UserRole> userRoles = new HashSet<>();
-        for (RoleName role : userRequestDTO.getRoles()) {
-            Role roleEntity = roleRepository.findByRoleName(role.name()).orElseThrow(() -> new RuntimeException("Role not found"));
+        for (String role : userRequestDTO.getRoles()) {
+            Role roleEntity = roleRepository.findByRoleName(role).orElseThrow(() -> new RuntimeException("Role not found"));
             UserRole userRole = new UserRole();
             userRole.setUser(user);
             userRole.setRole(roleEntity);
@@ -179,20 +177,20 @@ public class UserServiceImpl implements UserService {
         user.setEmail(userRequestDTO.getEmail());
         user.setStatus(userRequestDTO.getStatus());
         Set<UserRole> currentUserRoles = user.getTblUserRoles();
-        Set<RoleName> currentRoleName = currentUserRoles.stream().map(userRole -> RoleName.valueOf(userRole.getRole().getRoleName())).collect(Collectors.toSet());
-        Set<RoleName> requestRoleName = userRequestDTO.getRoles();
-        Set<RoleName> roleToAdd = new HashSet<>(requestRoleName);
-        Set<RoleName> roleToRemove = new HashSet<>(currentRoleName);
+        Set<String> currentRoleName = currentUserRoles.stream().map(userRole -> userRole.getRole().getRoleName()).collect(Collectors.toSet());
+        Set<String> requestRoleName = new HashSet<>(userRequestDTO.getRoles());
+        Set<String> roleToAdd = new HashSet<>(requestRoleName);
+        Set<String> roleToRemove = new HashSet<>(currentRoleName);
         roleToAdd.removeAll(currentRoleName);
         roleToRemove.removeAll(requestRoleName);
         roleToAdd.forEach(roleName ->{
             UserRole userRole = new UserRole();
-            Role role = roleRepository.findByRoleName(roleName.name()).get();
+            Role role = roleRepository.findByRoleName(roleName).get();
             userRole.setUser(user);
             userRole.setRole(role);
             userRoleRepository.save(userRole);
         });
-        Set<UserRole> userRoleToRemove = currentUserRoles.stream().filter(userRole -> roleToRemove.contains(RoleName.valueOf(userRole.getRole().getRoleName()))).collect(Collectors.toSet());
+        Set<UserRole> userRoleToRemove = currentUserRoles.stream().filter(userRole -> roleToRemove.contains(userRole.getRole().getRoleName())).collect(Collectors.toSet());
         userRoleToRemove.forEach(roleName ->{
             userRoleRepository.deleteUserRoleByUserIdAndRoleId(roleName.getUser().getId(), roleName.getRole().getId());
         });

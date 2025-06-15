@@ -1,7 +1,6 @@
 package com.example.backend.dto.request;
 
 import com.example.backend.util.Phone;
-import com.example.backend.util.RoleName;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
@@ -9,6 +8,7 @@ import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 
 
@@ -43,5 +43,5 @@ public class UserRequestDTO {
 
     @NotNull(message = "Roles cannot be null")
     @NotEmpty(message = "Roles must be have at least one role")
-    private Set<RoleName> roles;
+    private List<String> roles;
 }
