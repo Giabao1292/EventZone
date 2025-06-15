@@ -1,6 +1,7 @@
 package com.example.backend.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -31,6 +32,7 @@ public class Event {
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "organizer_id", nullable = false)
+    @JsonBackReference
     private com.example.backend.model.Organizer organizer;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -100,6 +102,7 @@ public class Event {
     private Set<com.example.backend.model.Review> tblReviews = new LinkedHashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "event")
+    @JsonManagedReference
     private Set<com.example.backend.model.ShowingTime> tblShowingTimes = new LinkedHashSet<>();
 
     @ManyToMany(mappedBy = "wishlist", fetch = FetchType.LAZY)

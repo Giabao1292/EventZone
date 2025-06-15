@@ -18,7 +18,6 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class OrganizerController {
     private final OrganizerService organizerService;
-
     @PostMapping("/organizers")
     public ResponseData<?> addOrganizer(@ModelAttribute OrganizerRequest organizer) {
         organizerService.createOrganizer(organizer);

@@ -1,13 +1,24 @@
 import { useState, useEffect } from "react";
 import { ChevronRight, Check, Loader2 } from "lucide-react";
+import PropTypes from "prop-types";
 import EventInfoStep from "./EventInfoStep";
 import TimeTicketStep from "./TimeTicketStep";
 import SettingsStep from "./SettingsStep";
+import useAuth from "../../../hooks/useAuth";
 import { getCategories } from "../../../services/categoryService";
+import { createShowingTime } from "../../../services/showingTime";
+import apiClient from "../../../api/axios";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { useLocation, useNavigate } from "react-router-dom";
 
-import PropTypes from "prop-types";
+const steps = [
+  { id: 1, title: "Thông tin sự kiện" },
+  { id: 2, title: "Địa chỉ & Thời gian" },
+  { id: 3, title: "Thiết kế vé Và chỗ ngồi" },
+  { id: 4, title: "Thông tin thanh toán" },
+];
 
-// ProgressSteps Component
 const ProgressSteps = ({ steps, currentStep }) => (
   <div className="mb-8">
     <div className="flex items-center justify-between">
@@ -41,7 +52,6 @@ const ProgressSteps = ({ steps, currentStep }) => (
                 {step.title}
               </p>
             </div>
-
             {index < steps.length - 1 && (
               <div
                 className={`w-16 h-0.5 mx-4 ${
@@ -57,24 +67,22 @@ const ProgressSteps = ({ steps, currentStep }) => (
 );
 
 ProgressSteps.propTypes = {
-  steps: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.number.isRequired,
-      title: PropTypes.string.isRequired,
-    })
-  ).isRequired,
+  steps: PropTypes.array.isRequired,
   currentStep: PropTypes.number.isRequired,
 };
 
-// Main Component
 const EventCreationForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
   const [eventId, setEventId] = useState(null);
+  const { user } = useAuth();
+  const location = useLocation();
+  const organizerId = user?.organizer.id;
+  const navigate = useNavigate();
+
   const [eventData, setEventData] = useState({
     event_title: "",
-    organizer_id: 1,
     category_id: "",
     description: "",
     age_rating: "",
@@ -84,119 +92,39 @@ const EventCreationForm = () => {
     start_time: "",
     end_time: "",
     location: "",
-    seating_layout: "general",
-    ticket_price: "",
+    city: "",
+    hasDesignedLayout: false,
+    venueName: "",
     max_capacity: "",
     status_id: 1,
+    showingTimes: [],
   });
-
-  const steps = [
-    { id: 1, title: "Thông tin sự kiện" },
-    { id: 2, title: "Thời gian & Loại vé" },
-    { id: 3, title: "Cài đặt" },
-    { id: 4, title: "Thông tin thanh toán" },
-  ];
-
-  // Load categories on mount
+  useEffect(() => {
+    // Handle when returning from layout designer with state
+    if (location.state?.eventData) {
+      console.log("Received eventData from state:", location.state.eventData);
+      setEventData(location.state.eventData);
+    }
+    if (location.state?.returnStep) {
+      setCurrentStep(location.state.returnStep);
+    }
+  }, [location.state]);
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const data = await getCategories();
-        console.log("Categories loaded:", data);
         setCategories(data);
-      } catch (err) {
-        console.error("Fallback to mock categories");
+      } catch {
+        toast.error("Không thể tải danh mục. Sử dụng danh mục mặc định.");
         setCategories([
           { id: 1, name: "Âm nhạc" },
           { id: 2, name: "Thể thao" },
           { id: 3, name: "Công nghệ" },
-          { id: 4, name: "Giáo dục" },
-          { id: 5, name: "Nghệ thuật" },
         ]);
       }
     };
     fetchCategories();
   }, []);
-
-  // Save step data to backend
-  const saveStepData = async () => {
-    if (!isStepValid()) return;
-
-    setLoading(true);
-    try {
-      let updateData = {};
-
-      switch (currentStep) {
-        case 1:
-          updateData = {
-            event_title: eventData.event_title,
-            organizer_id: eventData.organizer_id,
-            category_id: parseInt(eventData.category_id),
-            description: eventData.description,
-            age_rating: eventData.age_rating,
-            banner_text: eventData.banner_text,
-            header_image: eventData.header_image?.name || null,
-            poster_image: eventData.poster_image?.name || null,
-            status_id: eventData.status_id,
-            created_at: new Date().toISOString(),
-          };
-          // Call createEvent here if needed
-          // const created = await createEvent(updateData);
-          // setEventId(created.event_id || created.id);
-          break;
-
-        case 2:
-          updateData = {
-            start_time: eventData.start_time,
-            end_time: eventData.end_time,
-            max_capacity: parseInt(eventData.max_capacity),
-            updated_at: new Date().toISOString(),
-          };
-          // await updateEvent(eventId, updateData);
-          break;
-
-        case 3:
-          updateData = {
-            location: eventData.location,
-            seating_layout: eventData.seating_layout,
-            updated_at: new Date().toISOString(),
-          };
-          // await updateEvent(eventId, updateData);
-          break;
-
-        case 4:
-          updateData = {
-            ticket_price: parseFloat(eventData.ticket_price),
-            status_id: 2, // Published
-            updated_at: new Date().toISOString(),
-          };
-          // await updateEvent(eventId, updateData);
-          alert("🎉 Tạo sự kiện thành công!");
-          break;
-
-        default:
-          break;
-      }
-
-      // Simulate success for now
-      if (currentStep === 1 && !eventId) {
-        setEventId("EV12345"); // fake ID
-      }
-    } catch (err) {
-      console.error("❌ Lỗi khi lưu dữ liệu:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleNextStep = async () => {
-    await saveStepData();
-    if (currentStep < 4) setCurrentStep((prev) => prev + 1);
-  };
-
-  const handlePrevStep = () => {
-    if (currentStep > 1) setCurrentStep((prev) => prev - 1);
-  };
 
   const handleInputChange = (field, value) => {
     setEventData((prev) => ({ ...prev, [field]: value }));
@@ -207,25 +135,114 @@ const EventCreationForm = () => {
       case 1:
         return !!eventData.event_title && !!eventData.category_id;
       case 2:
-        return !!eventData.start_time && !!eventData.end_time;
+        return (
+          !!eventData.venueName &&
+          !!eventData.location &&
+          !!eventData.city &&
+          eventData.showingTimes.length > 0
+        );
       case 3:
-        return !!eventData.location;
+        return eventData.hasDesignedLayout;
       case 4:
-        return !!eventData.ticket_price;
+        return true;
       default:
         return false;
     }
   };
 
+  const handleNextStep = async () => {
+    if (!isStepValid()) return;
+
+    setLoading(true);
+    try {
+      if (currentStep === 1 && !eventId) {
+        const payload = {
+          organizerId,
+          eventTitle: eventData.event_title,
+          description: eventData.description,
+          startTime: eventData.start_time,
+          endTime: eventData.end_time,
+          categoryId: parseInt(eventData.category_id),
+          ageRating: eventData.age_rating,
+          bannerText: eventData.banner_text,
+          headerImage: eventData.header_image,
+          posterImage: eventData.poster_image,
+        };
+
+        const res = await apiClient.post("/events/create", payload);
+        const createdId = res.data.data.eventId;
+        setEventId(createdId);
+        toast.success("Tạo bản nháp sự kiện thành công!");
+      }
+
+      if (currentStep === 2 && eventId) {
+        const payload = {
+          eventId,
+          venueName: eventData.venueName,
+          location: eventData.location,
+          city: eventData.city,
+          showingTimes: eventData.showingTimes,
+        };
+
+        const res = await createShowingTime(payload);
+        console.log("Showing times created:", res.data.data);
+        const showingTimes = res.data;
+
+        if (Array.isArray(showingTimes) && showingTimes.length > 0) {
+          setEventData((prev) => ({
+            ...prev,
+            showingTimes, // đã là camelCase → gán thẳng
+          }));
+          toast.success("Lưu địa điểm & thời gian thành công!");
+        } else {
+          toast.error("Không nhận được dữ liệu showing time.");
+        }
+      }
+      if (currentStep === 4) {
+        // Final submission
+        try {
+          const res = await apiClient.post(`/events/save/${eventData.id}`);
+          toast.success("Sự kiện đã được gửi để phê duyệt!", {
+            autoClose: 2000, // Show for 2 seconds
+            onClose: () => navigate("/organizer"), // Navigate after toast closes
+          });
+        } catch (error) {
+          toast.error("Lỗi khi gửi sự kiện!");
+          console.error(error);
+        }
+        return;
+      }
+
+      if (currentStep < steps.length) {
+        setCurrentStep((prev) => prev + 1);
+      }
+    } catch (err) {
+      console.error("Lỗi:", err);
+      const message =
+        err?.message || "Lỗi khi lưu dữ liệu. Vui lòng kiểm tra lại.";
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  };
   const renderStepContent = () => {
-    const props = { eventData, handleInputChange, loading };
+    const stepProps = {
+      eventData,
+      handleInputChange,
+      categories,
+      loading,
+      eventId,
+    };
+
     switch (currentStep) {
       case 1:
-        return <EventInfoStep {...props} categories={categories} />;
+        return <EventInfoStep {...stepProps} onNextStep={handleNextStep} />;
       case 2:
-        return <TimeTicketStep {...props} />;
+        return <TimeTicketStep {...stepProps} />;
       case 3:
-        return <SettingsStep {...props} />;
+        return <SettingsStep {...stepProps} />;
+      case 4:
+        return <div>Thông tin thanh toán chưa làm bấm hoàn tất đi</div>;
       default:
         return null;
     }
@@ -235,24 +252,11 @@ const EventCreationForm = () => {
     <div className="min-h-screen bg-gray-900 text-white">
       <div className="max-w-4xl mx-auto p-6">
         <ProgressSteps steps={steps} currentStep={currentStep} />
-
         <div className="bg-gray-800 rounded-lg p-6 min-h-96 border border-gray-700">
           {renderStepContent()}
         </div>
 
-        <div className="flex justify-between mt-6">
-          <button
-            onClick={handlePrevStep}
-            disabled={currentStep === 1}
-            className={`px-6 py-2 rounded-md ${
-              currentStep === 1
-                ? "bg-gray-700 text-gray-500 cursor-not-allowed"
-                : "bg-gray-700 text-gray-300 hover:bg-gray-600 border border-gray-600"
-            }`}
-          >
-            Quay lại
-          </button>
-
+        <div className="flex justify-end mt-6">
           <button
             onClick={handleNextStep}
             disabled={!isStepValid() || loading}
@@ -265,20 +269,27 @@ const EventCreationForm = () => {
             {loading && <Loader2 className="animate-spin" size={16} />}
             <span>
               {loading
-                ? "Đang lưu..."
+                ? "Đang xử lý..."
                 : currentStep === 4
-                ? "Hoàn thành"
-                : "Lưu & Tiếp tục"}
+                ? "Hoàn tất"
+                : "Tiếp tục"}
             </span>
             {currentStep < 4 && !loading && <ChevronRight size={16} />}
           </button>
         </div>
 
-        {eventId && (
-          <div className="mt-4 text-center text-sm text-green-400">
-            ✅ Event ID: {eventId}
-          </div>
-        )}
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="dark"
+        />
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 package com.example.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -34,10 +35,8 @@ public class Address {
     @Column(name = "city", nullable = false, length = 100)
     private String city;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "address")
-    private Set<com.example.backend.model.Seat> tblSeats = new LinkedHashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "address")
+    @JsonManagedReference
     private Set<com.example.backend.model.ShowingTime> tblShowingTimes = new LinkedHashSet<>();
-
 }
