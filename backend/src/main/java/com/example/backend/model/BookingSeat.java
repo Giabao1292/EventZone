@@ -1,5 +1,6 @@
 package com.example.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -18,27 +19,29 @@ import java.math.BigDecimal;
 public class BookingSeat {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "booking_seat_id", nullable = false)
+    @Column(name = "booking_seat_id")
     private Integer id;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "booking_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "booking_id")
+    @JsonBackReference
     private Booking booking;
 
-    @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "seat_id", nullable = false)
-    private com.example.backend.model.Seat seat;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "seat_id")
+    @JsonBackReference
+    private Seat seat;
 
-    @NotNull
-    @ColumnDefault("'pending'")
-    @Lob
-    @Column(name = "status", nullable = false)
-    private String status;
-
-    @NotNull
-    @Column(name = "price", nullable = false, precision = 10, scale = 2)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "zone_id")
+    @JsonBackReference
+    private Zone zone;
+    @Column(name = "quantity", nullable = false, length = 100)
+    private Integer quantity = 1;
+    @Column(name = "price", nullable = false, length = 100)
     private BigDecimal price;
+    @Column(name = "status", nullable = false, length = 100)
+    private String status ;
 
 }

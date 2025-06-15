@@ -15,7 +15,7 @@ const OrganizerSidebar = () => {
 
         <nav className="space-y-3">
           <Link
-            to="/organizer/events"
+            to="/organizer"
             className="group block py-3 px-4 rounded-lg transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-600/20 hover:to-purple-600/20 hover:shadow-lg hover:shadow-blue-500/25 hover:translate-x-2 border border-transparent hover:border-blue-500/30 backdrop-blur-sm"
           >
             <span className="flex items-center space-x-2">

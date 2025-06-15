@@ -1,5 +1,6 @@
 package com.example.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -30,10 +31,6 @@ public class Booking {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "time_detail_id", nullable = false)
-    private com.example.backend.model.TimeDetail timeDetail;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "voucher_id")
@@ -75,5 +72,9 @@ public class Booking {
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "booking")
     private Set<com.example.backend.model.BookingSeat> tblBookingSeats = new LinkedHashSet<>();
-
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "showing_time_id", nullable = false)
+    @JsonBackReference
+    private ShowingTime showingTime;
 }

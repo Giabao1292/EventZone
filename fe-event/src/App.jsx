@@ -7,7 +7,8 @@ import PrivateRoute from "./ui/PrivateRoute";
 import RegisterOrganizerForm from "./features/organizer/pages/OrganizerRegistration";
 import OrganizerLayout from "./ui/OrganizerLayout";
 import EventCreationForm from "./features/organizer/components/EventCreationForm";
-
+import LayoutDesigner from "./features/organizer/components/LayoutDesigner";
+import { EventProvider } from "./context/EventContext"; // đường dẫn đúng của mày
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() =>
   import("./features/authentication/pages/LoginPage")
@@ -61,6 +62,10 @@ function App() {
           {/* Protected Routes for Organizers */}
           <Route element={<PrivateRoute allowedRoles={["ORGANIZER"]} />}>
             <Route path="/organizer" element={<OrganizerLayout />}>
+              <Route
+                path="layout-designer/:showingTimeId"
+                element={<LayoutDesigner />}
+              />
               <Route
                 path="/organizer/create-event"
                 element={<EventCreationForm />}

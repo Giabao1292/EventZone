@@ -31,8 +31,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class AppConfig implements WebMvcConfigurer , WebSecurityCustomizer {
 
 
-    private String[] WHILE_LIST = {"/api/auth/**", "/api/users/**", "/api/events/**", "/api/categories","/api/categories/**"};
-
+    private String[] WHILE_LIST = {"/api/image","/api/auth/**", "/api/users/**",  "/api/categories","/api/categories/**"};
+    private String[] ORGANIZER_LIST = {"/api/organizer/**","/api/events/**"};
     private final PreFilter preFilter;
     private final UserDetailService userDetailService;
     @Override
@@ -56,7 +56,7 @@ public class AppConfig implements WebMvcConfigurer , WebSecurityCustomizer {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
                         .requestMatchers(WHILE_LIST).permitAll()
-                        .requestMatchers("/api/organizer/**").hasAnyRole("ORGANIZER")
+                        .requestMatchers(ORGANIZER_LIST).hasAnyRole("ORGANIZER")
                         .anyRequest().authenticated())
                 .authenticationProvider(provider()).addFilterBefore(preFilter, UsernamePasswordAuthenticationFilter.class)
                 .sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

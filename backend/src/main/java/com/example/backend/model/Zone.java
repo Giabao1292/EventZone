@@ -8,22 +8,24 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
+
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "tbl_seat")
-@Getter @Setter
-public class Seat {
+@Table(name = "tbl_zone")
+@Getter
+@Setter
+public class Zone {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "seat_id")
+    @Column(name = "zone_id")
     private Integer id;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "showing_time_id")
+    @JoinColumn(name = "showing_time_id", nullable = false)
     @JsonBackReference
     private ShowingTime showingTime;
 
@@ -32,14 +34,26 @@ public class Seat {
     @Column(name = "price")
     private int price;
 
-    @Column(name = "seat_label", length = 10)
-    private String seatLabel;
-    @Column(name = "x", length = 10)
+    @Column(name = "zone_name", length = 100)
+    private String zoneName;
+
+    @Column(name = "x")
     private Integer x;
-    @Column(name = "y", length = 10)
+
+    @Column(name = "y")
     private Integer y;
 
-    @OneToMany(mappedBy = "seat", cascade = CascadeType.ALL)
+    @Column(name = "width")
+    private Integer width;
+
+    @Column(name = "height")
+    private Integer height;
+
+    @NotNull
+    @Column(name = "capacity", nullable = false)
+    private Integer capacity;
+
+    @OneToMany(mappedBy = "zone", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private Set<BookingSeat> bookingSeats = new HashSet<>();
 }
