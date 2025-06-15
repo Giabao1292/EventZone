@@ -2,32 +2,45 @@ package com.example.backend.controller;
 
 import com.cloudinary.Cloudinary;
 import com.example.backend.dto.request.ChangePasswordRequest;
+import com.example.backend.dto.request.OnCreate;
+import com.example.backend.dto.request.UserRequestDTO;
 import com.example.backend.dto.request.UserUpdateRequest;
-import com.example.backend.dto.response.EventSummaryDTO;
-import com.example.backend.dto.response.ResponseData;
-import com.example.backend.dto.response.UserDetailResponse;
+import com.example.backend.dto.response.*;
 import com.example.backend.model.Event;
 import com.example.backend.model.User;
+import com.example.backend.repository.RoleRepository;
+import com.example.backend.repository.UserRoleRepository;
 import com.example.backend.service.JwtService;
 import com.example.backend.service.UserService;
+import com.example.backend.util.RoleName;
 import com.example.backend.util.TokenType;
+import jakarta.persistence.criteria.Path;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Map;
 import java.util.Set;
 
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
+@Validated
 public class UserController {
 
     private final UserService userService;
     private final JwtService jwtService;
     private final Cloudinary cloudinary;
+    private final RoleRepository roleRepository;
+    private final UserRoleRepository userRoleRepository;
 
     // Helper method to extract and validate token
     private String extractToken(HttpServletRequest request) {
@@ -50,7 +63,7 @@ public class UserController {
             User user = userService.findByUsername(username);
             // Chuyển entity sang DTO
             UserDetailResponse dto = new UserDetailResponse();
-            dto.setFullname(user.getFullname());
+            dto.setFullname(user.getFullName());
             dto.setEmail(user.getEmail());
             dto.setUsername(user.getUsername());
             dto.setPhone(user.getPhone());
@@ -79,7 +92,7 @@ public class UserController {
 
             // Chuyển sang DTO
             UserDetailResponse dto = new UserDetailResponse();
-            dto.setFullname(updatedUser.getFullname());
+            dto.setFullname(updatedUser.getFullName());
             dto.setEmail(updatedUser.getEmail());
             dto.setUsername(updatedUser.getUsername());
             dto.setProfileUrl(updatedUser.getProfileUrl());
@@ -178,5 +191,39 @@ public class UserController {
         }
     }
 
-
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping
+    public ResponseData<?> getListUser(Pageable pageable, @RequestParam(name = "search", required = false) String... search) {
+        PageResponse<UserResponseDTO> userList = userService.getListUser(pageable, search);
+        return new ResponseData<>(HttpStatus.OK.value(), "Get list user succesfully!", userList);
+    }
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping
+    public ResponseData<?> createUser(@Validated(OnCreate.class) @Valid @RequestBody UserRequestDTO userRequestDTO) {
+        userService.createUser(userRequestDTO);
+        return new ResponseData<>(HttpStatus.OK.value(), "User created successfully");
+    }
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}")
+    public ResponseData<?> updateUser(@PathVariable Integer id, @Valid @RequestBody UserRequestDTO userRequestDTO){
+        userService.updateUser(id, userRequestDTO);
+        return new ResponseData<>(HttpStatus.OK.value(), "User updated successfully");
+    }
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{id}")
+    public ResponseData<?> deleteUser(@PathVariable Integer id){
+        userService.deleteUser(id);
+        return new ResponseData<>(HttpStatus.OK.value(), "User deleted successfully");
+    }
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/roles")
+    public ResponseData<?> getRoleName() {
+        return new ResponseData<>(HttpStatus.OK.value(), "Get list user succesfully!", userService.getListRole());
+    }
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/roles")
+    public ResponseData<?> addRole(@RequestBody Map<String, Object> role){
+        userService.createRole(role.get("role").toString());
+        return new ResponseData<>(HttpStatus.OK.value(), "Role created successfully");
+    }
 }

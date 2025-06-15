@@ -1,5 +1,6 @@
 package com.example.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -26,9 +27,7 @@ public class Role {
     @Column(name = "role_name", nullable = false, length = 50)
     private String roleName;
 
-
-
+    @JsonIgnore
     @OneToMany(mappedBy = "role",cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<UserRole> tblUserRoles = new LinkedHashSet<>();
-
 }

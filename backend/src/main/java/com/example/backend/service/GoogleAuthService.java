@@ -39,7 +39,7 @@ public class GoogleAuthService {
         User user = optionalUser.orElseGet(() -> {
             User newUser = new User();
             newUser.setEmail(email);
-            newUser.setFullname(name);
+            newUser.setFullName(name);
             newUser.setProfileUrl(pictureUrl);
             newUser.setProviderId(payload.getSubject()); // Google user ID
             newUser.setPassword("GOOGLE"); // placeholder password

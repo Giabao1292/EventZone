@@ -9,6 +9,10 @@ import OrganizerLayout from "./ui/OrganizerLayout";
 import EventCreationForm from "./features/organizer/components/EventCreationForm";
 import LayoutDesigner from "./features/organizer/components/LayoutDesigner";
 import { EventProvider } from "./context/EventContext"; // đường dẫn đúng của mày
+import AdminLayout from "./layouts/admin/AdminLayout";
+import DashboardPage from "./pages/admin/DashboardPage";
+import UserManagementPage from "./pages/admin/UserManagementPage";
+
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() =>
   import("./features/authentication/pages/LoginPage")
@@ -75,9 +79,14 @@ function App() {
 
           {/* Protected Routes for Admins */}
           <Route element={<PrivateRoute allowedRoles={["ADMIN"]} />}>
-            {/* <Route element={<AdminLayout />}>
-              <Route path="/admin/*" element={<AdminRoutes />} />
-            </Route> */}
+            <Route element={<AdminLayout />}>
+              <Route
+                path="/admin"
+                element={<Navigate to="/admin/dashboard" replace />}
+              />
+              <Route path="/admin/dashboard" element={<DashboardPage />} />
+              <Route path="/admin/users" element={<UserManagementPage />} />
+            </Route>
           </Route>
         </Routes>
       </Suspense>
