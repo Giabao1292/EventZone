@@ -32,12 +32,12 @@ const ChangePasswordForm = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto py-12 px-6">
+    <div className="max-w-2xl mx-auto px-6 py-12">
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="bg-white shadow-lg rounded-2xl p-8 space-y-6 border border-gray-100"
+        className="bg-[#1D1F29] border border-[#2A2B33] shadow-lg rounded-2xl p-8 space-y-6"
       >
-        <h2 className="text-4xl font-bold text-indigo-700 text-center">
+        <h2 className="text-3xl font-bold text-white text-center mb-4">
           Đổi mật khẩu
         </h2>
 
@@ -68,10 +68,10 @@ const ChangePasswordForm = () => {
           required
         />
 
-        <div className="flex justify-end pt-6">
+        <div className="flex justify-end pt-4">
           <button
             type="submit"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl"
+            className="bg-gradient-to-r from-emerald-500 to-indigo-500 hover:from-emerald-600 hover:to-indigo-600 text-white px-5 py-2 rounded-xl shadow transition-all duration-300"
           >
             Xác nhận
           </button>
@@ -91,7 +91,7 @@ const Field = ({
 }) => {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
+      <label className="block text-sm font-medium text-white mb-1">
         {label}
       </label>
       <input
@@ -100,9 +100,9 @@ const Field = ({
           name,
           required ? { required: `${label} không được để trống` } : {}
         )}
-        className="w-full border border-gray-300 rounded px-4 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+        className="w-full bg-[#12141D] border border-[#2A2B33] text-white rounded-xl px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none placeholder:text-gray-400"
       />
-      {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
+      {error && <p className="text-sm text-red-400 mt-1">{error}</p>}
     </div>
   );
 };

@@ -49,7 +49,7 @@ function Home() {
     }
   }, [notification]);
 
-  // Lấy tất cả categories và poster-images cho từng category
+  // Lấy tất cả categories và events tương ứng
   useEffect(() => {
     const fetchData = async () => {
       const cats = await getCategories();
@@ -68,19 +68,19 @@ function Home() {
   }, []);
 
   return (
-    <div className="relative min-h-screen bg-gray-200 bg-opacity-30 backdrop-blur-md text-black flex flex-col items-center justify-start">
+    <div className="relative min-h-screen bg-[#12141D] text-white flex flex-col items-center justify-start">
       {/* Notification */}
       {notification && (
         <div
-          className={`fixed top-8 left-1/2 transform -translate-x-1/2 px-6 py-4 rounded-xl shadow-lg text-white z-50 transition-all duration-300 ${
-            notification.type === "success" ? "bg-green-500" : "bg-red-500"
+          className={`fixed top-8 left-1/2 transform -translate-x-1/2 px-6 py-4 rounded-xl shadow-lg z-50 transition-all duration-300 ${
+            notification.type === "success" ? "bg-green-600" : "bg-red-600"
           }`}
         >
           <div className="flex items-center gap-3">
             <span>{notification.message}</span>
             <button
               onClick={() => setNotification(null)}
-              className="text-white hover:text-gray-200 text-2xl font-bold leading-none ml-4"
+              className="text-white hover:text-gray-300 text-2xl font-bold leading-none ml-4"
             >
               ×
             </button>
@@ -92,6 +92,7 @@ function Home() {
       <CategoryNav
         selectedCategoryId={selectedCategoryId}
         onSelectCategory={setSelectedCategoryId}
+        categories={categories}
       />
 
       {/* Danh sách sự kiện */}
