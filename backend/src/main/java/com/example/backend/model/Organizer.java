@@ -1,5 +1,6 @@
 package com.example.backend.model;
 
+import com.example.backend.util.StatusOrganizer;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
@@ -31,10 +32,6 @@ public class Organizer {
     @Size(max = 200)
     @Column(name = "org_name", length = 200)
     private String orgName;
-
-    @Size(max = 50)
-    @Column(name = "org_type", length = 50)
-    private String orgType;
 
     @Size(max = 50)
     @Column(name = "tax_code", length = 50)
@@ -76,10 +73,9 @@ public class Organizer {
     @Column(name = "experience")
     private String experience;
 
-    @ColumnDefault("'pending'")
-    @Lob
+    @Enumerated(EnumType.STRING)
     @Column(name = "status")
-    private String status;
+    private StatusOrganizer status;
 
     @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "created_at")
@@ -97,5 +93,9 @@ public class Organizer {
     @OneToMany(mappedBy = "organizer")
     @JsonManagedReference
     private Set<Event> tblEvents = new LinkedHashSet<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "org_type_id")
+    private OrgType orgType;
 
 }

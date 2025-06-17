@@ -145,10 +145,13 @@ export default function UserManagement() {
       searchTerms.push(`roleName:${searchFilters.roles}`);
     }
     if (searchFilters.scoreFrom) {
-      searchTerms.push(`score>${searchFilters.scoreFrom}`);
+      const from = Number.parseFloat(searchFilters.scoreFrom) - 1;
+      searchTerms.push(`score>${from}`);
     }
+
     if (searchFilters.scoreTo) {
-      searchTerms.push(`score<${searchFilters.scoreTo}`);
+      const to = Number.parseFloat(searchFilters.scoreTo) + 1;
+      searchTerms.push(`score<${to}`);
     }
 
     // Convert age to dateOfBirth
@@ -156,7 +159,7 @@ export default function UserManagement() {
       const currentYear = new Date().getFullYear();
       if (searchFilters.ageFrom) {
         const dateFrom = new Date(
-          currentYear - Number.parseInt(searchFilters.ageFrom),
+          currentYear - Number.parseInt(searchFilters.ageFrom) + 1,
           0,
           1
         );
@@ -164,7 +167,7 @@ export default function UserManagement() {
       }
       if (searchFilters.ageTo) {
         const dateTo = new Date(
-          currentYear - Number.parseInt(searchFilters.ageTo),
+          currentYear - Number.parseInt(searchFilters.ageTo) - 1,
           11,
           31
         );

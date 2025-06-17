@@ -14,7 +14,7 @@ public class OrganizerRequest {
     private String name;
 
     @NotBlank(message = "Organization type is required")
-    private String organizationType;
+    private String orgTypeCode;
 
     @NotBlank(message = "Tax or business registration number is required")
     private String taxCode;

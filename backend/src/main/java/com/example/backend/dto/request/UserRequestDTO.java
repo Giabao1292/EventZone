@@ -3,8 +3,7 @@ package com.example.backend.dto.request;
 import com.example.backend.util.Phone;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
@@ -15,6 +14,9 @@ import java.util.Set;
 
 @Setter
 @Getter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class UserRequestDTO {
     @NotBlank(message = "Email must not be blank")
     @Email(message = "Invalid email")
