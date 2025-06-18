@@ -12,7 +12,6 @@ import AdminLayout from "./layouts/admin/AdminLayout";
 import DashboardPage from "./pages/admin/DashboardPage";
 import UserManagementPage from "./pages/admin/UserManagementPage";
 import OrganizerManagementPage from "./pages/admin/OrganizerManagementPage";
-
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() =>
   import("./features/authentication/pages/LoginPage")
