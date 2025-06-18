@@ -78,4 +78,8 @@ public class EventService {
         event.setStatusId(2);
         return eventRepository.save(event);
     }
+    public Event findById(Integer id) {
+        return eventRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found with id = " + id));
+    }
 }

@@ -1,5 +1,9 @@
 package com.example.backend.service;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+
 import com.example.backend.model.UserTemp;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -12,9 +16,9 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
-
-import java.util.HashMap;
-import java.util.Map;
+import com.example.backend.model.User;
+import com.example.backend.model.Event;
+import com.example.backend.model.ShowingTime;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -60,5 +64,65 @@ public class MailService {
 
         mailSender.send(message);
     }
+    public void sendTrackingEventEmail(User user, Event event) throws MessagingException {
+        Set<ShowingTime> showingTimes = event.getTblShowingTimes();
+
+        Optional<ShowingTime> firstTime = showingTimes.stream()
+                .sorted(Comparator.comparing(ShowingTime::getStartTime))
+                .findFirst();
+
+
+        if (firstTime.isEmpty()) {
+            log.warn("Không tìm thấy lịch diễn cho sự kiện: {}", event.getEventTitle());
+            return;
+        }
+
+        ShowingTime showingTime = firstTime.get();
+        String eventTitle = event.getEventTitle();
+        LocalDateTime saleOpenTime = showingTime.getSaleOpenTime();
+        LocalDateTime startTime = showingTime.getStartTime();
+
+        // Chuẩn bị nội dung bằng Thymeleaf
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        Context context = new Context();
+        Map<String, Object> properties = new HashMap<>();
+        properties.put("fullName", user.getFullName());
+        properties.put("eventTitle", eventTitle);
+        properties.put("saleOpenTime", saleOpenTime);
+        properties.put("eventStartTime", startTime);
+        context.setVariables(properties);
+
+        helper.setTo(user.getEmail());
+        helper.setFrom(emailFrom);
+        helper.setSubject("Bạn vừa theo dõi sự kiện: " + eventTitle);
+        helper.setText(templateEngine.process("follow-event-email.html", context), true);
+
+        mailSender.send(message);
+        log.info("Đã gửi email thông báo theo dõi sự kiện cho {}", user.getEmail());
+    }
+    public void sendReminderTrackingEventEmail(User user, Event event, String type, LocalDateTime time) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        Context context = new Context();
+        Map<String, Object> properties = new HashMap<>();
+        properties.put("fullName", user.getFullName());
+        properties.put("eventTitle", event.getEventTitle());
+        properties.put("reminderType", type.equals("bán vé") ? "mở bán vé" : "diễn ra");
+        properties.put("reminderTime", time.format(DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy")));
+
+        context.setVariables(properties);
+
+        helper.setTo(user.getEmail());
+        helper.setFrom(emailFrom);
+        helper.setSubject(" Nhắc bạn sự kiện sắp " + (type.equals("bán vé") ? "mở bán vé" : "diễn ra"));
+        helper.setText(templateEngine.process("reminder-follow-event.html", context), true);
+
+        mailSender.send(message);
+    }
+
+
 
 }

@@ -145,4 +145,8 @@ public class User implements UserDetails, Serializable {
     public boolean isEnabled() {
         return true;
     }
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<TrackingEventUpcoming> trackingEvents = new LinkedHashSet<>();
+
 }

@@ -99,14 +99,17 @@ public class Event {
     private Set<com.example.backend.model.EventVoucher> tblEventVouchers = new LinkedHashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "event")
-    private Set<com.example.backend.model.Review> tblReviews = new LinkedHashSet<>();
+    private Set<Review> tblReviews = new LinkedHashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "event")
     @JsonManagedReference
-    private Set<com.example.backend.model.ShowingTime> tblShowingTimes = new LinkedHashSet<>();
+    private Set<ShowingTime> tblShowingTimes = new LinkedHashSet<>();
 
     @ManyToMany(mappedBy = "wishlist", fetch = FetchType.LAZY)
     @JsonIgnore
     private Set<User> wishlistedUsers = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<TrackingEventUpcoming> trackingUsers = new LinkedHashSet<>();
 
 }

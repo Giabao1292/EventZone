@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Thông báo theo dõi sự kiện</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; background-color: #f4f4f4; padding: 20px;">
+<div style="max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 10px; border: 1px solid #ddd;">
+  <h2 style="color: #0d6efd;">Xin chào <span th:text="${fullName}">Người dùng</span>,</h2>
+  <p>Bạn đã theo dõi sự kiện <strong th:text="${eventTitle}">Tên sự kiện</strong>.</p>
+
+  <p><strong>Thời gian mở bán vé:</strong>
+    <span th:text="${#temporals.format(saleOpenTime, 'dd/MM/yyyy HH:mm')}">--</span></p>
+
+  <p><strong>Thời gian diễn ra sự kiện:</strong>
+    <span th:text="${#temporals.format(eventStartTime, 'dd/MM/yyyy HH:mm')}">--</span></p>
+
+  <p>Chúng tôi sẽ gửi thông báo cho bạn khi sự kiện sắp bắt đầu. Cảm ơn bạn đã sử dụng nền tảng của chúng tôi.</p>
+
+  <br>
+  <p style="font-size: 14px; color: #888;">Trân trọng,<br>Đội ngũ DTFPT</p>
+</div>
+</body>
+</html>
