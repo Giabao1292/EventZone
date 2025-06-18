@@ -11,26 +11,26 @@ import LayoutDesigner from "./features/organizer/components/LayoutDesigner";
 import AdminLayout from "./layouts/admin/AdminLayout";
 import DashboardPage from "./pages/admin/DashboardPage";
 import UserManagementPage from "./pages/admin/UserManagementPage";
+import EventDetail from "./ui/EventDetail";
+import BookingPage  from "./pages/BookingPage";
 import OrganizerManagementPage from "./pages/admin/OrganizerManagementPage";
 
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() =>
-  import("./features/authentication/pages/LoginPage")
+    import("./features/authentication/pages/LoginPage")
 );
 const RegisterPage = lazy(() =>
-  import("./features/authentication/pages/RegisterPage")
+    import("./features/authentication/pages/RegisterPage")
 );
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const ChangePasswordForm = lazy(() => import("./pages/ChangePasswordPage"));
 const ForgotPassword = lazy(() =>
-  import("./features/authentication/pages/ForgotPasswordPage")
+    import("./features/authentication/pages/ForgotPasswordPage")
 );
 const ResetPasswordPage = lazy(() =>
-  import("./features/authentication/pages/ResetPasswordPage")
+    import("./features/authentication/pages/ResetPasswordPage")
 );
 const AppLayout = lazy(() => import("./ui/AppLayout"));
-// const OrganizerLayout = lazy(() => import("./ui/OrganizerLayout"));
-// const AdminLayout = lazy(() => import("./ui/AdminLayout"));
 
 function App() {
   return (
@@ -55,39 +55,38 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
-
-          {/* Public Home Page with AppLayout */}
-          <Route element={<AppLayout />}>
-            <Route path="/" element={<Navigate to="/home" replace />} />
-            <Route path="/home" element={<Home />} />
-          </Route>
-
-          {/* Protected Routes for Authenticated Users */}
-          <Route element={<PrivateRoute />}>
+            {/* Public Home Page with AppLayout */}
             <Route element={<AppLayout />}>
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/change-password" element={<ChangePasswordForm />} />
-              <Route
-                path="/register-organizer"
-                element={<RegisterOrganizerForm />}
-              />
+              <Route path="/" element={<Navigate to="/home" replace />} />
+              <Route path="/home" element={<Home />} />
+              <Route path="/events/:eventId" element={<EventDetail />} />
             </Route>
-          </Route>
 
-          {/* Protected Routes for Organizers */}
-          <Route element={<PrivateRoute allowedRoles={["ORGANIZER"]} />}>
-            <Route path="/organizer" element={<OrganizerLayout />}>
-              <Route
-                path="layout-designer/:showingTimeId"
-                element={<LayoutDesigner />}
-              />
-              <Route
-                path="/organizer/create-event"
-                element={<EventCreationForm />}
-              />
+            {/* Protected Routes for Authenticated Users */}
+            <Route element={<PrivateRoute />}>
+              <Route element={<AppLayout />}>
+                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/change-password" element={<ChangePasswordForm />} />
+                <Route
+                    path="/register-organizer"
+                    element={<RegisterOrganizerForm />}
+                />
+              </Route>
             </Route>
-          </Route>
 
+            {/* Protected Routes for Organizers */}
+            <Route element={<PrivateRoute allowedRoles={["ORGANIZER"]} />}>
+              <Route path="/organizer/*" element={<OrganizerLayout />}>
+                <Route
+                    path="layout-designer/:showingTimeId"
+                    element={<LayoutDesigner />}
+                />
+                <Route
+                    path="create-event"
+                    element={<EventCreationForm />}
+                />
+              </Route>
+            </Route>
           {/* Protected Routes for Admins */}
           <Route element={<PrivateRoute allowedRoles={["ADMIN"]} />}>
             <Route element={<AdminLayout />}>
@@ -102,10 +101,11 @@ function App() {
                 element={<OrganizerManagementPage />}
               />
             </Route>
-          </Route>
-        </Routes>
-      </Suspense>
-    </BrowserRouter>
+            <Route path="/book/:showingId/*" element={<BookingPage />} />
+
+          </Routes>
+        </Suspense>
+      </BrowserRouter>
   );
 }
 

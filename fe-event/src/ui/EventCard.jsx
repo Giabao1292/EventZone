@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom"; // 👈 Thêm dòng này
 
 const formatDate = (isoDate) => {
     if (!isoDate) return "Chưa rõ ngày";
@@ -13,8 +14,17 @@ const formatDate = (isoDate) => {
 };
 
 const EventCard = ({ event }) => {
+    const navigate = useNavigate();
+
+    const handleClick = () => {
+        navigate(`/events/${event.id}`);
+    };
+
     return (
-        <div className="w-[360px] rounded-xl overflow-hidden shadow-md bg-black  shadow-md transition-all duration-300 transform hover:-translate-y-2 hover:shadow-xl">
+        <div
+            onClick={handleClick}
+            className="cursor-pointer w-[360px] rounded-xl overflow-hidden shadow-md bg-black transition-all duration-300 transform hover:-translate-y-2 hover:shadow-xl"
+        >
             <img
                 src={event.posterImage}
                 alt={event.eventTitle}
