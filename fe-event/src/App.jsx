@@ -14,7 +14,6 @@ import UserManagementPage from "./pages/admin/UserManagementPage";
 import EventDetail from "./ui/EventDetail";
 import BookingPage  from "./pages/BookingPage";
 import OrganizerManagementPage from "./pages/admin/OrganizerManagementPage";
-
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() =>
     import("./features/authentication/pages/LoginPage")
