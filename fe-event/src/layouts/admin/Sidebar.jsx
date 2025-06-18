@@ -78,10 +78,10 @@ export default function SidebarNavigation() {
                     ? "text-blue-600 bg-blue-50"
                     : "text-gray-500"
                 }`}
-                href="/events"
+                href="/admin/organizers"
               >
-                <i className="ti ti-alert-circle ps-2 text-2xl"></i>{" "}
-                <span>Event Management</span>
+                <i className="ti ti-list-details ps-2 text-2xl"></i>{" "}
+                <span>Organizer Management</span>
               </a>
             </li>
 

@@ -13,6 +13,7 @@ import DashboardPage from "./pages/admin/DashboardPage";
 import UserManagementPage from "./pages/admin/UserManagementPage";
 import EventDetail from "./ui/EventDetail";
 import BookingPage  from "./pages/BookingPage";
+import OrganizerManagementPage from "./pages/admin/OrganizerManagementPage";
 
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() =>
@@ -33,17 +34,27 @@ const AppLayout = lazy(() => import("./ui/AppLayout"));
 
 function App() {
   return (
-      <BrowserRouter>
-        <ToastContainer position="top-right" autoClose={3000} />
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
-            <Route path="/verify-email" element={<VerifyEmail />} />
-
+    <BrowserRouter>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
             {/* Public Home Page with AppLayout */}
             <Route element={<AppLayout />}>
               <Route path="/" element={<Navigate to="/home" replace />} />
@@ -76,19 +87,20 @@ function App() {
                 />
               </Route>
             </Route>
-
-            {/* Protected Routes for Admins */}
-            <Route element={<PrivateRoute allowedRoles={["ADMIN"]} />}>
-              <Route element={<AdminLayout />}>
-                <Route
-                    path="/admin"
-                    element={<Navigate to="/admin/dashboard" replace />}
-                />
-                <Route path="/admin/dashboard" element={<DashboardPage />} />
-                <Route path="/admin/users" element={<UserManagementPage />} />
-              </Route>
+          {/* Protected Routes for Admins */}
+          <Route element={<PrivateRoute allowedRoles={["ADMIN"]} />}>
+            <Route element={<AdminLayout />}>
+              <Route
+                path="/admin"
+                element={<Navigate to="/admin/dashboard" replace />}
+              />
+              <Route path="/admin/dashboard" element={<DashboardPage />} />
+              <Route path="/admin/users" element={<UserManagementPage />} />
+              <Route
+                path="/admin/organizers"
+                element={<OrganizerManagementPage />}
+              />
             </Route>
-
             <Route path="/book/:showingId/*" element={<BookingPage />} />
 
           </Routes>

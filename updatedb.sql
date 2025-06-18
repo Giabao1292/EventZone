@@ -56,4 +56,16 @@ CREATE TABLE `tbl_user_wishlist` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 INSERT INTO `tbl_user_wishlist` VALUES (3,3),(5,3),(3,5),(5,5);
 
+-- ###Xoá cột org_type của organizer sau đó chạy  lệnh sau####-- 
+CREATE TABLE tbl_org_type (
+    org_type_id INT AUTO_INCREMENT PRIMARY KEY,
+    type_code VARCHAR(50) NOT NULL UNIQUE,
+    type_name VARCHAR(100) NOT NULL,
+    description TEXT
+);
+
+ALTER TABLE tbl_organizer
+ADD COLUMN org_type_id INT,
+ADD CONSTRAINT fk_org_type
+    FOREIGN KEY (org_type_id) REFERENCES tbl_org_type(org_type_id);
 

@@ -60,19 +60,17 @@ const ProfilePage = () => {
       const [year, month, day] = data.dateOfBirth.split("-");
       const formattedDate = `${day}-${month}-${year}`;
 
-      const updatedData = {
-        ...data,
-        dateOfBirth: formattedDate,
-      };
-
+      const updatedData = { ...data, dateOfBirth: formattedDate };
       const updated = await updateUserDetail(updatedData);
       setUser(updated);
+
       reset({
         ...updated,
         dateOfBirth: updated.dateOfBirth
           ? new Date(updated.dateOfBirth).toISOString().split("T")[0]
           : "",
       });
+
       toast.success("Cập nhật thành công!");
     } catch (error) {
       console.error("Lỗi khi cập nhật:", error);
@@ -82,18 +80,17 @@ const ProfilePage = () => {
     }
   };
 
-  // Updated handler to use the service function
   const handleAvatarUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
     try {
       setIsLoading(true);
-      const result = await updateUserAvatar(file); // Call the service function
+      const result = await updateUserAvatar(file);
 
       if (result.code === 200) {
-        setAvatarUrl(result.data); // Update avatarUrl with new URL
-        updateUser({ ...authUser, profileUrl: result.data }); // Update authUser
+        setAvatarUrl(result.data);
+        updateUser({ ...authUser, profileUrl: result.data });
         toast.success("Cập nhật avatar thành công!");
       } else {
         toast.error("Cập nhật avatar thất bại!");
@@ -106,23 +103,20 @@ const ProfilePage = () => {
     }
   };
 
-  if (!user) {
-    return PageLoader;
-  }
+  if (!user) return <PageLoader />;
 
   return (
-    <div className="max-w-3xl mx-auto py-12 px-6">
-      <ToastContainer position="top-right" autoClose={3000} />
-      <div className="flex flex-col items-center mb-10">
+    <div className="max-w-3xl mx-auto py-12 px-6 text-white">
+      <div className="flex flex-col items-center mb-10 relative">
         <div className="relative">
           <img
             src={avatarUrl}
             alt="Avatar"
-            className="w-24 h-24 rounded-full object-cover border-2 border-indigo-600 mb-2"
+            className="w-24 h-24 rounded-full object-cover border-4 border-indigo-600 shadow-md"
           />
           <label
             htmlFor="avatar-upload"
-            className="absolute bottom-0 right-0 bg-indigo-600 text-white p-1 rounded-full cursor-pointer hover:bg-indigo-700"
+            className="absolute bottom-0 right-0 bg-indigo-600 text-white p-1 rounded-full cursor-pointer hover:bg-indigo-700 shadow"
           >
             ✏️
           </label>
@@ -134,16 +128,16 @@ const ProfilePage = () => {
             className="hidden"
           />
         </div>
-        <h1 className="text-4xl font-bold text-center text-indigo-700">
+        <h1 className="text-3xl font-bold text-indigo-400 mt-4">
           Hồ sơ cá nhân
         </h1>
       </div>
 
+      {/* Form */}
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="bg-white shadow-lg rounded-2xl p-8 space-y-6 border border-gray-100"
+        className="bg-[#1D1F29] border border-[#2A2B33] shadow-lg rounded-2xl p-8 space-y-6"
       >
-        {/* Họ tên */}
         <Field
           label="Họ và tên"
           register={register}
@@ -154,17 +148,14 @@ const ProfilePage = () => {
           {user.fullname}
         </Field>
 
-        {/* Email */}
         <Field label="Email" readonly>
           {user.email}
         </Field>
 
-        {/* Tên đăng nhập */}
         <Field label="Tên đăng nhập" readonly>
           {user.username}
         </Field>
 
-        {/* Số điện thoại */}
         <Field
           label="Số điện thoại"
           register={register}
@@ -174,7 +165,6 @@ const ProfilePage = () => {
           {user.phone || "Chưa cập nhật"}
         </Field>
 
-        {/* Ngày sinh */}
         <Field
           label="Ngày sinh"
           register={register}
@@ -187,12 +177,11 @@ const ProfilePage = () => {
             : "Chưa cập nhật"}
         </Field>
 
-        {/* Nút lưu */}
         <div className="flex justify-end pt-6">
           <button
             type="submit"
             disabled={isLoading}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl"
+            className="bg-gradient-to-r from-indigo-500 to-emerald-500 hover:from-indigo-600 hover:to-emerald-600 text-white px-5 py-2 rounded-xl transition-all duration-300"
           >
             {isLoading ? "Đang lưu..." : "Lưu"}
           </button>
@@ -202,7 +191,7 @@ const ProfilePage = () => {
   );
 };
 
-// Component phụ cho form field
+// Reusable field component
 const Field = ({
   label,
   children,
@@ -215,12 +204,12 @@ const Field = ({
 }) => {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
+      <label className="block text-sm font-medium text-gray-300 mb-1">
         {label}
       </label>
       {readonly ? (
         <input
-          className="mt-1 w-full border rounded px-4 py-2 bg-gray-100 cursor-not-allowed text-gray-700"
+          className="mt-1 w-full border border-[#2A2B33] rounded-xl px-4 py-2 bg-[#12141D] text-gray-400 cursor-not-allowed"
           value={children}
           disabled
         />
@@ -232,9 +221,9 @@ const Field = ({
               name,
               required ? { required: `${label} không được để trống` } : {}
             )}
-            className="w-full border border-gray-300 rounded px-4 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full bg-[#12141D] border border-[#2A2B33] text-white rounded-xl px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none placeholder:text-gray-400"
           />
-          {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
+          {error && <p className="text-sm text-red-400 mt-1">{error}</p>}
         </>
       )}
     </div>

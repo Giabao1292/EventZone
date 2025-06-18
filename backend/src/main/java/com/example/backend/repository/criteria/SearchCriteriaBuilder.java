@@ -5,6 +5,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.From;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -17,7 +18,7 @@ import java.util.function.Consumer;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SearchCriteriaBuilder<T> implements Consumer<SearchCriteria> {
+public class SearchCriteriaBuilder implements Consumer<SearchCriteria> {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private CriteriaBuilder criteriaBuilder;
     private Predicate predicate;

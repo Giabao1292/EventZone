@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { register } from "../../../services/organizerService";
+import {
+  register,
+  getOrganizerTypes,
+} from "../../../services/organizerService";
 
 // --- Sub Components ---
 
@@ -55,7 +58,7 @@ const InputGroup = ({
             maxLength={maxLength}
             value={value}
             onChange={onChange}
-            className="w-full p-3 border border-gray-600 rounded-md bg-white text-gray-900 text-base focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none resize-y min-h-[100px]"
+            className="w-full p-3 border border-gray-600 roundemin-h-screen bg-gray-900 py-10 flex justify-center items-startd-md bg-white text-gray-900 text-base focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none resize-y min-h-[100px]"
             required={required}
           ></textarea>
         ) : type === "select" ? (
@@ -87,7 +90,7 @@ const InputGroup = ({
             />
             {filePreviewUrl && (
               <div className="mt-2">
-                {filePreviewUrl.match(/image/) ? (
+                {filePreviewUrl.match("/image/") ? (
                   <img
                     src={filePreviewUrl || "/placeholder.svg"}
                     alt="Preview"
@@ -132,9 +135,21 @@ const InputGroup = ({
 
 // --- Main Component ---
 const RegisterOrganizerForm = () => {
+  const [organizerTypes, setOrganizerTypes] = useState([]);
+  const fetchOrganizerTypes = async () => {
+    try {
+      const response = await getOrganizerTypes();
+      if (response.code === 200) {
+        setOrganizerTypes(response.data || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch organizer types:", err);
+    }
+  };
+
   const [formData, setFormData] = useState({
     name: "",
-    organizationType: "",
+    orgTypeCode: "",
     taxCode: "",
     address: "",
     website: "",
@@ -198,7 +213,7 @@ const RegisterOrganizerForm = () => {
 
     // Add text fields
     data.append("name", formData.name);
-    data.append("organizationType", formData.organizationType);
+    data.append("orgTypeCode", formData.orgTypeCode);
     data.append("taxCode", formData.taxCode);
     data.append("address", formData.address);
     data.append("website", formData.website);
@@ -230,7 +245,7 @@ const RegisterOrganizerForm = () => {
       );
       setFormData({
         name: "",
-        organizationType: "",
+        orgTypeCode: "",
         taxCode: "",
         address: "",
         website: "",
@@ -252,8 +267,11 @@ const RegisterOrganizerForm = () => {
     }
   };
 
+  useEffect(() => {
+    fetchOrganizerTypes();
+  }, []);
   return (
-    <div className="min-h-screen bg-gray-900 py-10 flex justify-center items-start">
+    <div className="min-h-screen py-10 flex justify-center items-start">
       <div className="form-container w-full max-w-4xl bg-gray-800 p-8 rounded-xl shadow-lg text-gray-300">
         <h2 className="text-white text-3xl font-bold mb-6 text-center">
           Đăng Ký Trở Thành Nhà Tổ Chức
@@ -276,20 +294,22 @@ const RegisterOrganizerForm = () => {
             />
             <InputGroup
               label="Loại hình tổ chức:"
-              id="organizationType"
-              name="organizationType"
+              id="orgTypeCode"
+              name="orgTypeCode"
               type="select"
               required
-              value={formData.organizationType}
+              value={formData.orgTypeCode}
               onChange={handleChange}
             >
+              {/* Danh sách option mới */}
               <option value="">Chọn loại hình</option>
-              <option value="company_ltd">Công ty TNHH</option>
-              <option value="private_enterprise">Doanh nghiệp tư nhân</option>
-              <option value="household_business">Hộ kinh doanh cá thể</option>
-              <option value="non_profit">Tổ chức phi lợi nhuận</option>
-              <option value="individual">Cá nhân</option>
+              {organizerTypes.map((type) => (
+                <option key={type.typeCode} value={type.typeCode}>
+                  {type.typeName}
+                </option>
+              ))}
             </InputGroup>
+
             <InputGroup
               label="Mã số thuế/Mã số kinh doanh:"
               id="taxCode"

@@ -10,17 +10,14 @@ const PrivateRoute = ({ allowedRoles }) => {
     return <PageLoader />;
   }
 
-  // Nếu chưa đăng nhập
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  // Nếu không có yêu cầu về role (cho phép tất cả người dùng đã đăng nhập)
   if (!allowedRoles || allowedRoles.length === 0) {
     return <Outlet />;
   }
 
-  // Kiểm tra xem người dùng có vai trò phù hợp không
   const userRoles = user?.roles || [];
   const hasPermission = allowedRoles.some((role) =>
     userRoles.includes(role.toUpperCase())
@@ -30,7 +27,6 @@ const PrivateRoute = ({ allowedRoles }) => {
     return <Outlet />;
   }
 
-  // Nếu không có quyền, chuyển hướng đến trang lỗi hoặc trang chủ
   return <Navigate to="/" replace />;
 };
 PrivateRoute.propTypes = {
