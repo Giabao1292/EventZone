@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -30,7 +31,7 @@ public class Seat {
     @Column(name = "type")
     private String type;
     @Column(name = "price")
-    private int price;
+    private BigDecimal price;
 
     @Column(name = "seat_label", length = 10)
     private String seatLabel;
@@ -38,6 +39,10 @@ public class Seat {
     private Integer x;
     @Column(name = "y", length = 10)
     private Integer y;
+
+    @Column(name = "available", nullable = false)
+    private boolean available = true;
+
 
     @OneToMany(mappedBy = "seat", cascade = CascadeType.ALL)
     @JsonManagedReference

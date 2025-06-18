@@ -1,6 +1,7 @@
 package com.example.backend.controller;
 
 import com.example.backend.dto.request.CreateMultipleShowingTimeRequest;
+import com.example.backend.dto.response.LayoutDTO;
 import com.example.backend.dto.response.ResponseData;
 import com.example.backend.model.ShowingTime;
 import com.example.backend.service.ShowingTimeService;
@@ -10,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
 import java.util.List;
 
 @RestController
@@ -24,5 +27,12 @@ public class ShowingTimeController {
     public ResponseData<List<ShowingTime>> createMultiple(@RequestBody CreateMultipleShowingTimeRequest req) {
         List<ShowingTime> created = showingTimeService.createMultipleShowingTimes(req);
         return new ResponseData(HttpStatus.CREATED.value(), "showing time added successfully", created);
+    }
+
+    @GetMapping("/{id}/layout")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseData<LayoutDTO> getLayout(@PathVariable Long id) {
+        LayoutDTO layout = showingTimeService.getLayout(id);
+        return new ResponseData<>(200, "OK", layout);
     }
 }

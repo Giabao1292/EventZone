@@ -3,6 +3,7 @@
 
     import com.example.backend.dto.request.EventRequest;
     import com.example.backend.dto.response.CategoryResponse;
+    import com.example.backend.dto.response.EventDetailDTO;
     import com.example.backend.dto.response.EventResponse;
     import com.example.backend.dto.response.ResponseData;
     import com.example.backend.model.Category;
@@ -51,4 +52,20 @@
                     submittedEvent
             );
         }
+
+        @GetMapping("/detail/{eventId}")
+        public ResponseEntity<ResponseData<EventDetailDTO>> getEventDetail(@PathVariable int eventId) {
+            EventDetailDTO detail = eventService.getEventDetailById(eventId);
+
+            if (detail == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ResponseData<>(404, "Không tìm thấy sự kiện", null));
+            }
+
+            return ResponseEntity.ok(
+                    new ResponseData<>(200, "Lấy thông tin chi tiết sự kiện thành công", detail)
+            );
+        }
+
+
     }

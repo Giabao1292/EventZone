@@ -5,22 +5,26 @@ import com.example.backend.dto.response.ResponseData;
 import com.example.backend.service.LayoutService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/events")
 @RequiredArgsConstructor
 public class LayoutController {
 
     private final LayoutService layoutService;
 
-    @PostMapping("/save-layout")
+    /**
+     * Legacy endpoint giữ nguyên để frontend cũ không phải đổi
+     */
+    @PostMapping("/api/events/save-layout")
     public ResponseData<?> saveLayout(@RequestBody LayoutRequest request) {
+        // Nếu request thiếu showingTimeId, trả về lỗi rõ ràng
+        if (request.getShowingTimeId() == null) {
+            return new ResponseData<>(HttpStatus.BAD_REQUEST.value(), "showingTimeId là bắt buộc");
+        }
         layoutService.saveLayout(request);
-        return new ResponseData<>(HttpStatus.CREATED.value(), "showing time added successfully");
+        return new ResponseData<>(HttpStatus.CREATED.value(), "Layout đã được lưu thành công");
     }
+
+
 }

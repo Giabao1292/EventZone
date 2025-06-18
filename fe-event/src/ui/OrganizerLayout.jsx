@@ -34,6 +34,6 @@ const OrganizerLayout = ({ children }) => {
 };
 
 OrganizerLayout.propTypes = {
-  children: PropTypes.node.isRequired,
+    children: PropTypes.node,
 };
 export default OrganizerLayout;

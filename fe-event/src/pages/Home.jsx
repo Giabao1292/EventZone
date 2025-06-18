@@ -68,7 +68,7 @@ function Home() {
   }, []);
 
   return (
-    <div className="relative min-h-screen bg-gray-200 bg-opacity-30 backdrop-blur-md text-black flex flex-col items-center justify-start">
+      <div className="relative min-h-screen bg-[#12141D] text-white flex flex-col items-center justify-start">
       {/* Notification */}
       {notification && (
         <div
