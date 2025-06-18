@@ -34,13 +34,24 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="max-w-md mx-auto mt-10 p-6 border rounded shadow relative">
-      <ToastContainer position="top-right" />
+      ToastContainer
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />
       {isLoading && (
         <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-10 rounded">
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-blue-600"></div>
         </div>
       )}
-
       <h2 className="text-2xl mb-4 font-semibold">Quên mật khẩu</h2>
       <form
         onSubmit={handleSubmit}
