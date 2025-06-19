@@ -74,7 +74,7 @@ public class SearchCriteriaRepository {
         Join<Organizer, OrgType> joinOrgType = organizerRoot.join("orgType");
         Predicate predicate = getSearchPredicate(List.of(organizerRoot, joinUserRole, joinOrgType), criteriaBuilder, search);
         countQuery.select(criteriaBuilder.count(organizerRoot)).where(predicate);
-        Long count = entityManager.createQuery(countQuery).getSingleResult();
+         Long count = entityManager.createQuery(countQuery).getSingleResult();
         log.info("End count users search...");
         return count;
     }
