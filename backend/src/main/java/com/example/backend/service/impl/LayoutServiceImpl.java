@@ -31,54 +31,6 @@ public class LayoutServiceImpl implements LayoutService {
     private final SeatRepository seatRepo;
     private final ShowingTimeRepository stRepo;
 
-    @Override
-    public LayoutDTO getLayout(Integer showingTimeId) {
-        // Lấy suất chiếu kèm thông tin event và địa điểm
-        ShowingTime st = stRepo.findById(showingTimeId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy suất chiếu id=" + showingTimeId));
-
-        // Lấy danh sách zones
-        List<ZoneDTO> zones = zoneRepo.findByShowingTimeId(showingTimeId)
-                .stream()
-                .map(z -> new ZoneDTO(
-                        z.getId(),
-                        z.getZoneName(),
-                        z.getType(),
-                        z.getPrice(),
-                        z.getX(),
-                        z.getY(),
-                        z.getWidth(),
-                        z.getHeight(),
-                        z.getCapacity(),
-                        z.getCapacity() != null && z.getCapacity() > 0
-                ))
-                .collect(Collectors.toList());
-
-        // Lấy danh sách seats
-        List<SeatDTO> seats = seatRepo.findByShowingTimeId(showingTimeId)
-                .stream()
-                .map(seat -> new SeatDTO(
-                        seat.getId(),
-                        seat.getSeatLabel(),
-                        seat.getType(),
-                        seat.getPrice(),
-                        seat.getX(),
-                        seat.getY(),
-                        seat.isAvailable()
-                ))
-                .collect(Collectors.toList());
-
-
-        // Build layout DTO
-        LayoutDTO dto = new LayoutDTO();
-        dto.setLayoutMode(st.getLayoutMode());
-        dto.setZones(zones);
-        dto.setSeats(seats);
-        dto.setEventTitle(st.getEvent().getEventTitle());
-        dto.setStartTime(st.getEvent().getStartTime());
-        dto.setLocation(st.getAddress().getVenueName() + ", " + st.getAddress().getCity());
-        return dto;
-    }
 
     @Override
     public void saveLayout(LayoutRequest req) {

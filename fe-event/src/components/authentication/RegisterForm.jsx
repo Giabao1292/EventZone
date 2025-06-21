@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import {
   register as registerApi,
   resendVerificationEmail,
-} from "../../../services/authServices";
+} from "../../services/authServices";
 
 const passwordCriteria = [
   {

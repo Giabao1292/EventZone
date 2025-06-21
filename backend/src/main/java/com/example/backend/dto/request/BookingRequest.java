@@ -1,25 +1,38 @@
 package com.example.backend.dto.request;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-import java.util.List;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
 @Data
 public class BookingRequest {
-    private Integer userId;
+    @NotNull
     private Integer showingTimeId;
+
+    @NotBlank
     private String paymentMethod;
-    private String voucherCode;
-    private List<SeatSelection> seatSelections;
-    private List<ZoneSelection> zoneSelections;
+
+    private List<SeatBookingDTO> seats;
+    private List<ZoneBookingDTO> zones;
 
     @Data
-    public static class SeatSelection {
+    public static class SeatBookingDTO {
+        @NotNull
         private Integer seatId;
+        @NotNull
+        private BigDecimal price;
     }
 
     @Data
-    public static class ZoneSelection {
+    public static class ZoneBookingDTO {
+        @NotNull
         private Integer zoneId;
+        @NotNull
         private Integer quantity;
+        @NotNull
+        private BigDecimal price;
     }
 }

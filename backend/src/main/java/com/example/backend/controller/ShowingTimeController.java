@@ -31,7 +31,7 @@ public class ShowingTimeController {
 
     @GetMapping("/{id}/layout")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseData<LayoutDTO> getLayout(@PathVariable Long id) {
+    public ResponseData<LayoutDTO> getLayout(@PathVariable int id) {
         LayoutDTO layout = showingTimeService.getLayout(id);
         return new ResponseData<>(200, "OK", layout);
     }

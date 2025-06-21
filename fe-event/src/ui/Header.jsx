@@ -3,7 +3,7 @@
 import { Link } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import useAuth from "../hooks/useAuth";
-import avatarDefault from "../assets/images/avtDefault.jpg";
+import avatarDefault from "../assets/images/profile/avtDefault.jpg";
 import { FaBars, FaTimes } from "react-icons/fa";
 
 const Header = () => {

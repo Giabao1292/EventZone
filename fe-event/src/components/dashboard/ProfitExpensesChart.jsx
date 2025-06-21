@@ -1,7 +1,7 @@
 // src/components/dashboard/ProfitExpensesChart.jsx
-import React, { useState } from "react";
 import Chart from "react-apexcharts"; // Import Chart từ react-apexcharts
 import { MoreVertical } from "lucide-react"; // Cho icon ba chấm
+import { useState } from "react";
 
 const ProfitExpensesChart = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);

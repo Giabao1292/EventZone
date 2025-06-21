@@ -8,6 +8,10 @@ spring:
     active: dev
   application:
     name: backend
+  flyway:
+    locations: classpath:db/migration,classpath:dev/db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
   mail:
     from: ${MAIL_USERNAME}
     host: smtp.gmail.com

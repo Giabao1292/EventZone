@@ -4,14 +4,13 @@ import PropTypes from "prop-types";
 import EventInfoStep from "./EventInfoStep";
 import TimeTicketStep from "./TimeTicketStep";
 import SettingsStep from "./SettingsStep";
-import useAuth from "../../../hooks/useAuth";
-import { getCategories } from "../../../services/categoryService";
-import { createShowingTime } from "../../../services/showingTime";
-import apiClient from "../../../api/axios";
+import { getCategories } from "../../services/categoryService";
+import { createShowingTime } from "../../services/showingTime";
+import apiClient from "../../api/axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useLocation, useNavigate } from "react-router-dom";
-
+import useAuth from "../../hooks/useAuth";
 const steps = [
   { id: 1, title: "Thông tin sự kiện" },
   { id: 2, title: "Địa chỉ & Thời gian" },

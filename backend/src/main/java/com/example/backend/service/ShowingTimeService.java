@@ -11,5 +11,5 @@ import java.util.Optional;
 
 public interface ShowingTimeService {
     List<ShowingTime> createMultipleShowingTimes(CreateMultipleShowingTimeRequest req);
-    LayoutDTO getLayout(Long id);
+    LayoutDTO getLayout(Integer id);
 }

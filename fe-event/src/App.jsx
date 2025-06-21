@@ -4,30 +4,31 @@ import { ToastContainer } from "react-toastify";
 import PageLoader from "./ui/PageLoader";
 import VerifyEmail from "./pages/VerifyEmail";
 import PrivateRoute from "./ui/PrivateRoute";
-import RegisterOrganizerForm from "./features/organizer/pages/OrganizerRegistration";
-import OrganizerLayout from "./ui/OrganizerLayout";
-import EventCreationForm from "./features/organizer/components/EventCreationForm";
-import LayoutDesigner from "./features/organizer/components/LayoutDesigner";
+import RegisterOrganizerForm from "./components/organizer/OrganizerRegistration";
+import OrganizerLayout from "./ui/organizer/OrganizerLayout";
+import EventCreationForm from "./components/organizer/EventCreationForm";
+import LayoutDesigner from "./components/organizer/LayoutDesigner";
 import AdminLayout from "./layouts/admin/AdminLayout";
 import DashboardPage from "./pages/admin/DashboardPage";
 import UserManagementPage from "./pages/admin/UserManagementPage";
-import EventDetail from "./ui/EventDetail";
-import BookingPage  from "./pages/BookingPage";
+import EventDetail from "./pages/EventDetail";
+import BookingPage from "./pages/BookingPage";
 import OrganizerManagementPage from "./pages/admin/OrganizerManagementPage";
+import PaymentPage from "./components/booking/Payment";
+import SelectSeats from "./components/booking/SelectSeats";
+import Payment from "./components/booking/Payment";
 const Home = lazy(() => import("./pages/Home"));
-const LoginPage = lazy(() =>
-    import("./features/authentication/pages/LoginPage")
-);
+const LoginPage = lazy(() => import("./components/authentication/LoginPage"));
 const RegisterPage = lazy(() =>
-    import("./features/authentication/pages/RegisterPage")
+  import("./components/authentication/RegisterPage")
 );
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const ChangePasswordForm = lazy(() => import("./pages/ChangePasswordPage"));
 const ForgotPassword = lazy(() =>
-    import("./features/authentication/pages/ForgotPasswordPage")
+  import("./components/authentication/ForgotPasswordPage")
 );
 const ResetPasswordPage = lazy(() =>
-    import("./features/authentication/pages/ResetPasswordPage")
+  import("./components/authentication/ResetPasswordPage")
 );
 const AppLayout = lazy(() => import("./ui/AppLayout"));
 
@@ -54,57 +55,65 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
-            {/* Public Home Page with AppLayout */}
+          {/* Public Home Page with AppLayout */}
+          <Route element={<AppLayout />}>
+            <Route path="/" element={<Navigate to="/home" replace />} />
+            <Route path="/home" element={<Home />} />
+            <Route path="/events/:eventId" element={<EventDetail />} />
+          </Route>
+
+          {/* Protected Routes for Authenticated Users */}
+          <Route element={<PrivateRoute />}>
             <Route element={<AppLayout />}>
-              <Route path="/" element={<Navigate to="/home" replace />} />
-              <Route path="/home" element={<Home />} />
-              <Route path="/events/:eventId" element={<EventDetail />} />
+              <Route path="payment" element={<PaymentPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/change-password" element={<ChangePasswordForm />} />
+              <Route
+                path="/register-organizer"
+                element={<RegisterOrganizerForm />}
+              />
             </Route>
+            <Route path="/book/:showingId" element={<BookingPage />}>
+              <Route
+                index
+                element={
+                  <SelectSeats
+                    showingId={null} // tạm null, sẽ lấy từ useParams ở BookingPage
+                  />
+                }
+              />
+              <Route path="payment" element={<Payment />} />
+            </Route>
+          </Route>
 
-            {/* Protected Routes for Authenticated Users */}
-            <Route element={<PrivateRoute />}>
-              <Route element={<AppLayout />}>
-                <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/change-password" element={<ChangePasswordForm />} />
-                <Route
-                    path="/register-organizer"
-                    element={<RegisterOrganizerForm />}
-                />
-              </Route>
+          {/* Protected Routes for Organizers */}
+          <Route element={<PrivateRoute allowedRoles={["ORGANIZER"]} />}>
+            <Route path="/organizer/*" element={<OrganizerLayout />}>
+              <Route
+                path="layout-designer/:showingTimeId"
+                element={<LayoutDesigner />}
+              />
+              <Route path="create-event" element={<EventCreationForm />} />
             </Route>
-
-            {/* Protected Routes for Organizers */}
-            <Route element={<PrivateRoute allowedRoles={["ORGANIZER"]} />}>
-              <Route path="/organizer/*" element={<OrganizerLayout />}>
-                <Route
-                    path="layout-designer/:showingTimeId"
-                    element={<LayoutDesigner />}
-                />
-                <Route
-                    path="create-event"
-                    element={<EventCreationForm />}
-                />
-              </Route>
-            </Route>
+          </Route>
           {/* Protected Routes for Admins */}
-          <Route element={<PrivateRoute allowedRoles={["ADMIN"]} />}>
-            <Route element={<AdminLayout />}>
-              <Route
-                path="/admin"
-                element={<Navigate to="/admin/dashboard" replace />}
-              />
-              <Route path="/admin/dashboard" element={<DashboardPage />} />
-              <Route path="/admin/users" element={<UserManagementPage />} />
-              <Route
-                path="/admin/organizers"
-                element={<OrganizerManagementPage />}
-              />
-            </Route>
-            <Route path="/book/:showingId/*" element={<BookingPage />} />
-
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
+          <Route element={<PrivateRoute allowedRoles={["ADMIN"]} />} />
+          <Route element={<AdminLayout />}>
+            <Route
+              path="/admin"
+              element={<Navigate to="/admin/dashboard" replace />}
+            />
+            <Route path="/admin/dashboard" element={<DashboardPage />} />
+            <Route path="/admin/users" element={<UserManagementPage />} />
+            <Route
+              path="/admin/organizers"
+              element={<OrganizerManagementPage />}
+            />
+          </Route>
+          <Route path="/book/:showingId/*" element={<BookingPage />} />
+        </Routes>
+      </Suspense>
+    </BrowserRouter>
   );
 }
 

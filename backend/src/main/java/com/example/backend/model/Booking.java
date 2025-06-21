@@ -1,6 +1,7 @@
 package com.example.backend.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -9,6 +10,7 @@ import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -28,6 +30,7 @@ public class Booking {
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JsonBackReference
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
@@ -64,14 +67,20 @@ public class Booking {
 
     @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "created_datetime")
-    private Instant createdDatetime;
+    private LocalDateTime createdDatetime;
 
     @Lob
     @Column(name = "qr_code_data")
     private String qrCodeData;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "booking")
-    private Set<com.example.backend.model.BookingSeat> tblBookingSeats = new LinkedHashSet<>();
+    @OneToMany(
+            mappedBy = "booking",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY // nên để LAZY, tránh load thừa khi không cần
+    )
+    @JsonManagedReference
+    private Set<BookingSeat> tblBookingSeats = new LinkedHashSet<>();
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "showing_time_id", nullable = false)

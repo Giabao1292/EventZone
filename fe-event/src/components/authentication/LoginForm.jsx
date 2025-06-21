@@ -1,10 +1,9 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
-import { login, loginWithGoogle } from "../../../services/authServices";
-import useAuth from "../../../hooks/useAuth";
-import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
-
+import { login, loginWithGoogle } from "../../services/authServices";
+import useAuth from "../../hooks/useAuth";
+import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
 const clientId =
   "4148311475-r0lvc33sk1i36ok7kgimvfqlhejub0p5.apps.googleusercontent.com";
 
