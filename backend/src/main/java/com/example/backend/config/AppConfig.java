@@ -31,7 +31,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class AppConfig implements WebMvcConfigurer , WebSecurityCustomizer {
 
 
-    private String[] WHILE_LIST = {"/api/image","/api/auth/**", "/api/users/**",  "/api/categories","/api/categories/**", "/api/events/detail/**", "/api/events/showing-times/**" ,"/api/showing-times/*/layout"};
+    private String[] WHILE_LIST = {"/api/image","/api/auth/**", "/api/users/**", "/api/vnpay/*", "/api/categories","/api/categories/**", "/api/events/detail/**", "/api/events/showing-times/**" ,"/api/showing-times/*/layout", "/api/bookings/hold"};
     private String[] ORGANIZER_LIST = {"/api/organizer/**","/api/events/**"};
     private final PreFilter preFilter;
     private final UserDetailService userDetailService;

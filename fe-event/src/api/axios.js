@@ -1,6 +1,5 @@
 import axios from "axios";
 import { getToken } from "../utils/storage";
-import { useNavigate } from "react-router-dom";
 
 const apiClient = axios.create({
   baseURL: "http://localhost:8080/api/",
@@ -11,7 +10,7 @@ apiClient.interceptors.request.use(
   (config) => {
     const token = getToken();
     if (token) {
-      config.headers["Authorization"] = `Bearer ${token}`;
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
@@ -21,10 +20,7 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      const navigate = useNavigate(); // Lưu ý: Không hoạt động trực tiếp trong file không phải component
-      navigate("/login");
-    }
+    // Defer 401 handling to components
     return Promise.reject(error);
   }
 );

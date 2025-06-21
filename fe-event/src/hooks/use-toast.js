@@ -1,5 +1,3 @@
-"use client";
-
 // This is a simplified version of the use-toast hook
 import { useState } from "react";
 

@@ -5,22 +5,31 @@ import com.example.backend.dto.request.ShowingTimeRequest;
 import com.example.backend.dto.response.LayoutDTO;
 import com.example.backend.dto.response.SeatDTO;
 import com.example.backend.dto.response.ZoneDTO;
+import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.model.*;
-import com.example.backend.repository.AddressRepository;
-import com.example.backend.repository.EventRepository;
-import com.example.backend.repository.ShowingTimeRepository;
+import com.example.backend.repository.*;
 import com.example.backend.service.ShowingTimeService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public  class ShowingTimeServiceImpl implements ShowingTimeService {
 
     private final ShowingTimeRepository showingTimeRepo;
+
+    private final ZoneRepository zoneRepo;
+
+    private final SeatRepository seatRepo;
+
+    private final ShowingTimeRepository showingTimeRepository;
+
+    private final BookingSeatRepository bookingSeatRepo;
 
     private final EventRepository eventRepo;
 
@@ -113,64 +122,53 @@ public  class ShowingTimeServiceImpl implements ShowingTimeService {
     }
 
     @Override
-    public LayoutDTO getLayout(Long id) {
-        ShowingTime st = showingTimeRepo.findWithLayoutById(id)
-                .orElseThrow(() ->
-                        new EntityNotFoundException("Không tìm thấy suất chiếu với id = " + id)
-                );
+    public LayoutDTO getLayout(Integer showingTimeId) {
+        // Lấy suất chiếu
+        ShowingTime st = showingTimeRepository.findById(showingTimeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy suất chiếu id=" + showingTimeId));
 
-        // Tạo LayoutDTO
+        // Lấy danh sách zones
+        List<ZoneDTO> zones = zoneRepo.findByShowingTimeId(showingTimeId)
+                .stream()
+                .map(z -> new ZoneDTO(
+                        z.getId(),
+                        z.getZoneName(),
+                        z.getType(),
+                        z.getPrice(),
+                        z.getX(),
+                        z.getY(),
+                        z.getWidth(),
+                        z.getHeight(),
+                        z.getCapacity(),
+                        z.getCapacity() != null && z.getCapacity() > 0
+                ))
+                .collect(Collectors.toList());
+
+        // 🧠 Lấy danh sách các seat_id đang bị giữ hoặc đã đặt
+        List<Integer> reservedSeatIds = bookingSeatRepo.findReservedSeatIds(showingTimeId, LocalDateTime.now());
+
+        // Lấy danh sách seats
+        List<SeatDTO> seats = seatRepo.findByShowingTimeId(showingTimeId)
+                .stream()
+                .map(seat -> new SeatDTO(
+                        seat.getId(),
+                        seat.getSeatLabel(),
+                        seat.getType(),
+                        seat.getPrice(),
+                        seat.getX(),
+                        seat.getY(),
+                        !reservedSeatIds.contains(seat.getId()) // nếu chưa bị giữ thì available = true
+                ))
+                .collect(Collectors.toList());
+
+        // Build LayoutDTO
         LayoutDTO dto = new LayoutDTO();
         dto.setLayoutMode(st.getLayoutMode());
-
-        Event event = st.getEvent();
-        if (event != null) {
-            dto.setEventTitle(event.getEventTitle());
-        }
-        // --- LẤY startTime ---
-        dto.setStartTime(st.getStartTime());
-
-        // --- LẤY location từ Address ---
-        Address address = st.getAddress();
-        if (address != null) {
-            dto.setLocation(address.getLocation());
-            // Nếu muốn: dto.setLocation(address.getVenueName() + ", " + address.getLocation() + ", " + address.getCity());
-        }
-
-        List<SeatDTO> seatDtos = new ArrayList<>();
-        for (Seat seat : st.getSeats()) {
-            SeatDTO s = new SeatDTO();
-            s.setId(seat.getId());
-            s.setX(seat.getX());
-            s.setY(seat.getY());
-            s.setType(seat.getType());
-            s.setPrice(seat.getPrice());
-            s.setSeatLabel(seat.getSeatLabel());
-            s.setAvailable(seat.isAvailable());
-            // nếu SeatDTO có thêm field khác thì tiếp tục set ở đây
-            seatDtos.add(s);
-        }
-        dto.setSeats(seatDtos);
-
-        List<ZoneDTO> zoneDtos = new ArrayList<>();
-        for (Zone zone : st.getZones()) {
-            ZoneDTO z = new ZoneDTO();
-            z.setId(zone.getId());
-            z.setX(zone.getX());
-            z.setY(zone.getY());
-            z.setWidth(zone.getWidth());
-            z.setHeight(zone.getHeight());
-            z.setZoneName(zone.getZoneName());
-            z.setType(zone.getType());
-            z.setCapacity(zone.getCapacity());
-            z.setPrice(zone.getPrice());
-            // nếu ZoneDTO có thêm property, set tiếp ở đây
-            zoneDtos.add(z);
-        }
-        dto.setZones(zoneDtos);
-
+        dto.setZones(zones);
+        dto.setSeats(seats);
+        dto.setEventTitle(st.getEvent().getEventTitle());
+        dto.setStartTime(st.getEvent().getStartTime());
+        dto.setLocation(st.getAddress().getVenueName() + ", " + st.getAddress().getCity());
         return dto;
     }
-
-
 }

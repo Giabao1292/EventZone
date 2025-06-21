@@ -1,10 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  register,
-  getOrganizerTypes,
-} from "../../../services/organizerService";
+import { register, getOrganizerTypes } from "../../services/organizerService";
 
 // --- Sub Components ---
 

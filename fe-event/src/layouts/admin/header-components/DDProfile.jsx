@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import useAuth from "../../../hooks/useAuth";
 import avatarDefault from "/assets/images/profile/user-1.jpg";
 const DDProfile = () => {
@@ -11,7 +11,7 @@ const DDProfile = () => {
   const [shouldRender, setShouldRender] = useState(false);
   const dropdownRef = useRef(null);
   const timerRef = useRef(null);
-
+  const navaigate = useNavigate();
   // Xử lý hiệu ứng delay khi hover
   const handleMouseEnter = () => {
     clearTimeout(timerRef.current);
@@ -24,6 +24,7 @@ const DDProfile = () => {
 
   const handleLogoutClick = () => {
     logout();
+    navaigate("/login"); // Chuyển hướng đến trang đăng nhập sau khi đăng xuất
     setIsOpen(false); // Đóng dropdown khi đăng xuất
   };
 

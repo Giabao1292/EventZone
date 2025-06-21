@@ -8,7 +8,7 @@ import {
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import PropTypes from "prop-types";
-import avatarDefault from "../assets/images/avtDefault.jpg"; // Ảnh mặc định
+import avatarDefault from "../assets/images/profile/avtDefault.jpg"; // Ảnh mặc định
 import useAuth from "../hooks/useAuth";
 import PageLoader from "../ui/PageLoader";
 

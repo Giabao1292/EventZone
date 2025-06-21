@@ -39,11 +39,6 @@ public class Seat {
     private Integer x;
     @Column(name = "y", length = 10)
     private Integer y;
-
-    @Column(name = "available", nullable = false)
-    private boolean available = true;
-
-
     @OneToMany(mappedBy = "seat", cascade = CascadeType.ALL)
     @JsonManagedReference
     private Set<BookingSeat> bookingSeats = new HashSet<>();

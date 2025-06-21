@@ -4,7 +4,7 @@ import { Upload } from "lucide-react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-import { uploadImage } from "../../../services/imagesService";
+import { uploadImage } from "../../services/imagesService";
 
 const EventInfoStep = ({
   eventData,

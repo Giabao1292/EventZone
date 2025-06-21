@@ -1,5 +1,3 @@
-// src/components/dashboard/ProductSalesSparkline.jsx
-import React from "react";
 import Chart from "react-apexcharts";
 import { ArrowDownRight, DollarSign } from "lucide-react"; // Icons
 

@@ -1,5 +1,4 @@
 // src/components/dashboard/TopPayingClientsTable.jsx
-import React from "react";
 
 const TopPayingClientsTable = () => {
   // Dữ liệu mẫu (có thể thay thế bằng dữ liệu thực tế từ API sau này)

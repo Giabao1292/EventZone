@@ -30,7 +30,6 @@ public class GlobalExceptionHandler {
     }
     //Xử lý lỗi @RequestParam, @PathVariabl không hợp lệ
 
-
     @ExceptionHandler({MethodArgumentTypeMismatchException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleTypeMismatch(MethodArgumentTypeMismatchException ex, WebRequest request) {
