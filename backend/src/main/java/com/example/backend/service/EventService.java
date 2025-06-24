@@ -17,4 +17,6 @@ public interface EventService {
     Event submitEvent(int eventId);
 
     EventDetailDTO getEventDetailById(int eventId);
+
+    Event editEvent(int eventId, EventRequest request);
 }

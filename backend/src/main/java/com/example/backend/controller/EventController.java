@@ -67,5 +67,23 @@
             );
         }
 
+        @PreAuthorize("hasRole('ORGANIZER')")
+        @PutMapping("/edit/{eventId}")
+        public ResponseData<?> editEvent(
+                @PathVariable int eventId,
+                @RequestBody @Valid EventRequest request
+        ) {
+            Event updatedEvent = eventService.editEvent(eventId, request);
+            if (updatedEvent == null) {
+                return new ResponseData<>(HttpStatus.NOT_FOUND.value(), "Không tìm thấy sự kiện để chỉnh sửa", null);
+            }
+            return new ResponseData<>(HttpStatus.OK.value(), "Sự kiện được cập nhật thành công", updatedEvent);
+        }
+
+
+
+
+
+
 
     }

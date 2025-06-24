@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+
+
 @Service
 @RequiredArgsConstructor
 public class EventServiceImpl implements EventService {
@@ -51,7 +53,11 @@ public class EventServiceImpl implements EventService {
         event.setDescription(request.getDescription());
         event.setStartTime(request.getStartTime());
         event.setEndTime(request.getEndTime());
-        event.setStatusId(1);
+
+        EventStatus status = new EventStatus();
+        status.setStatusName("DRAFT");
+        event.setStatus(status);
+
         event.setAgeRating(request.getAgeRating());
         event.setBannerText(request.getBannerText());
         event.setHeaderImage(request.getHeaderImage());
@@ -67,7 +73,10 @@ public class EventServiceImpl implements EventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
 
-        event.setStatusId(2);
+        EventStatus status = new EventStatus();
+        status.setStatusName("PENDING");
+        event.setStatus(status);
+
         return eventRepository.save(event);
     }
 
@@ -143,4 +152,45 @@ public class EventServiceImpl implements EventService {
                 event.getStartTime()
         );
     }
+
+
+    @Override
+    public Event editEvent(int eventId, EventRequest request) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sự kiện với ID: " + eventId));
+
+        // Update các trường cơ bản
+        event.setEventTitle(request.getEventTitle());
+        event.setDescription(request.getDescription());
+        event.setStartTime(request.getStartTime());
+        event.setEndTime(request.getEndTime());
+        event.setAgeRating(request.getAgeRating());
+        event.setBannerText(request.getBannerText());
+        event.setHeaderImage(request.getHeaderImage());
+        event.setPosterImage(request.getPosterImage());
+        event.setModifiedBy("system"); // Hoặc username thực tế nếu có login
+
+        // Không update location ở đây, vì Address quản lý ở ShowingTime!
+
+        // Update category nếu có
+        if (request.getCategoryId() != null) {
+            Category category = categoryRepository.findById(request.getCategoryId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy Category với ID: " + request.getCategoryId()));
+            event.setCategory(category);
+        }
+
+        // Update organizer nếu có (hiếm khi đổi)
+        if (request.getOrganizerId() != null) {
+            Organizer organizer = organizerRepository.findById(request.getOrganizerId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy Organizer với ID: " + request.getOrganizerId()));
+            event.setOrganizer(organizer);
+        }
+
+        // ... Có thể cập nhật các trường khác nếu cần
+
+        return eventRepository.save(event);
+    }
+
+
+
 }
