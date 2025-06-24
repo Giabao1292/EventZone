@@ -1,8 +1,9 @@
-import { useEffect, useState, useRef, useContext } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import bookingService from "../../services/bookingService";
 import { toast } from "react-toastify";
 import useAuth from "../../hooks/useAuth";
+import apiClient from "../../api/axios";
 
 export default function Payment() {
   const { event, showing, selection } = useOutletContext();
@@ -11,10 +12,13 @@ export default function Payment() {
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes
+  const [timeLeft, setTimeLeft] = useState(300); // 5 phút
+  const [paymentMethod, setPaymentMethod] = useState("PAYOS"); // Mặc định PayOS
+
   const timerRef = useRef(null);
   const isHoldCalled = useRef(false);
 
+  // Đếm ngược thời gian giữ chỗ
   const startTimer = () => {
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
@@ -43,7 +47,7 @@ export default function Payment() {
       try {
         const bookingRequest = {
           showingTimeId: showing.id,
-          paymentMethod: "VNPAY", // Default
+          paymentMethod, // Gửi phương thức lên BE
           seats: selection
             .filter((s) => s.type === "seat")
             .map((s) => ({
@@ -75,10 +79,34 @@ export default function Payment() {
 
     holdBooking();
     return () => clearInterval(timerRef.current);
-  }, [showing, selection, user, navigate]);
+  }, [showing, selection, user, navigate, paymentMethod]);
+
+  const handleConfirmPayment = async () => {
+    if (!booking?.id) {
+      toast.error("Dữ liệu booking không hợp lệ");
+      return;
+    }
+
+    try {
+      const payload = {
+        bookingId: booking.id,
+        amount: booking.finalPrice,
+        description: `Thanh toán vé sự kiện ${event?.title || ""}`,
+        paymentMethod,
+      };
+
+      const res = await apiClient.post("/bookings/pay", payload);
+      const payUrl = res.data.data.checkoutUrl;
+      window.location.href = payUrl;
+    } catch (err) {
+      console.error(err);
+      toast.error("Không tạo được liên kết thanh toán");
+    }
+  };
 
   if (loading) return <div className="text-white p-4">Đang giữ chỗ...</div>;
-  if (error) return <div className="text-red-500 p-4">{error}</div>;
+  if (error) return <div className="text-red-500 p-4">Lỗi: {error}</div>;
+
   if (!booking || !event || !showing || !selection || !user) {
     return (
       <div className="text-red-500 p-4">
@@ -92,22 +120,25 @@ export default function Payment() {
   }, 0);
 
   return (
-    <div className="flex flex-col items-center justify-center h-full p-4 text-white bg-gray-900">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-4">
       <h2 className="text-2xl font-bold mb-4">Thanh toán</h2>
       <div className="w-full max-w-md space-y-4">
+        {/* Sự kiện */}
         <div className="bg-gray-800 p-4 rounded">
           <h3 className="font-semibold">Sự kiện</h3>
           <p>{event.title}</p>
           <p>{new Date(showing.startTime).toLocaleString("vi-VN")}</p>
           <p>{event.location}</p>
         </div>
+
+        {/* Chi tiết đặt chỗ */}
         <div className="bg-gray-800 p-4 rounded">
           <h3 className="font-semibold">Đặt chỗ</h3>
           {selection.map((s, idx) => (
             <p key={idx}>
               {s.type === "seat"
                 ? `Ghế ${s.seatLabel}`
-                : `Khu ${s.zoneName} (x${s.qty})`}
+                : `Khu ${s.zoneName} (x${s.qty})`}{" "}
               :{" "}
               {(s.type === "seat" ? s.price : s.price * s.qty).toLocaleString(
                 "vi-VN"
@@ -115,24 +146,55 @@ export default function Payment() {
               ₫
             </p>
           ))}
-          <p className="font-bold">Tổng: {total.toLocaleString("vi-VN")}₫</p>
+          <p className="font-bold mt-2">
+            Tổng: {total.toLocaleString("vi-VN")}₫
+          </p>
         </div>
+
+        {/* Người dùng */}
         <div className="bg-gray-800 p-4 rounded">
           <h3 className="font-semibold">Khách hàng</h3>
           <p>{user.name}</p>
           <p>{user.email}</p>
-          <p>Phương thức: Thẻ tín dụng</p>
+          <p>Phương thức: {paymentMethod === "PAYOS" ? "PayOS" : "VNPay"}</p>
         </div>
+
+        {/* Chọn phương thức */}
+        <div className="bg-gray-800 p-4 rounded">
+          <h3 className="font-semibold mb-2">Chọn phương thức thanh toán</h3>
+          <label className="block">
+            <input
+              type="radio"
+              value="PAYOS"
+              checked={paymentMethod === "PAYOS"}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+              className="mr-2"
+            />
+            PayOS
+          </label>
+          <label className="block mt-1">
+            <input
+              type="radio"
+              value="VNPAY"
+              checked={paymentMethod === "VNPAY"}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+              className="mr-2"
+            />
+            VNPay
+          </label>
+        </div>
+
+        {/* Timer */}
         <div className="text-center">
           <p className="text-lg font-bold text-yellow-400">
             Thời gian giữ chỗ: {formatTime(timeLeft)}
           </p>
         </div>
+
+        {/* Nút xác nhận */}
         <button
-          onClick={() =>
-            toast.info("Chức năng thanh toán đang được phát triển")
-          }
-          className="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded"
+          onClick={handleConfirmPayment}
+          className="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded font-semibold"
         >
           Xác nhận thanh toán
         </button>

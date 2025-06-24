@@ -47,8 +47,10 @@ public class Event {
     private String eventTitle;
 
     @NotNull
-    @Column(name = "status_id", nullable = false)
-    private Integer statusId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "status_id", nullable = false)
+    @JsonBackReference
+    private EventStatus status;
 
     @Size(max = 20)
     @Column(name = "age_rating", length = 20)

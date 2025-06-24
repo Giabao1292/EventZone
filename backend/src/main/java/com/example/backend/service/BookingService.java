@@ -10,5 +10,5 @@ import java.util.List;
 
 public interface BookingService {
     Booking holdBooking(BookingRequest request, User user);
-    void confirmBooking(Integer bookingId);
+    Booking confirmBooking(Integer bookingId, String payment);
 }

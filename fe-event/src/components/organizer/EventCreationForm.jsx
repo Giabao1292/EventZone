@@ -11,6 +11,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useLocation, useNavigate } from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
+import DepositStep from "./DepositStep";
 const steps = [
   { id: 1, title: "Thông tin sự kiện" },
   { id: 2, title: "Địa chỉ & Thời gian" },
@@ -99,10 +100,10 @@ const EventCreationForm = () => {
     showingTimes: [],
   });
   useEffect(() => {
-    // Handle when returning from layout designer with state
     if (location.state?.eventData) {
-      console.log("Received eventData from state:", location.state.eventData);
+      console.log("Received state:", location.state); // Debug
       setEventData(location.state.eventData);
+      setEventId(location.state.eventData.id || location.state.eventId);
     }
     if (location.state?.returnStep) {
       setCurrentStep(location.state.returnStep);
@@ -129,6 +130,7 @@ const EventCreationForm = () => {
     setEventData((prev) => ({ ...prev, [field]: value }));
   };
 
+  // In EventCreationForm.js
   const isStepValid = () => {
     switch (currentStep) {
       case 1:
@@ -141,7 +143,7 @@ const EventCreationForm = () => {
           eventData.showingTimes.length > 0
         );
       case 3:
-        return eventData.hasDesignedLayout;
+        return eventData.showingTimes.every((st) => st.hasDesignedLayout); // All showing times must be designed
       case 4:
         return true;
       default:
@@ -159,11 +161,11 @@ const EventCreationForm = () => {
           organizerId,
           eventTitle: eventData.event_title,
           description: eventData.description,
-          startTime: eventData.start_time,
-          endTime: eventData.end_time,
+          startTime: eventData?.start_time,
+          endTime: eventData?.end_time,
           categoryId: parseInt(eventData.category_id),
-          ageRating: eventData.age_rating,
-          bannerText: eventData.banner_text,
+          ageRating: eventData?.age_rating,
+          bannerText: eventData?.banner_text,
           headerImage: eventData.header_image,
           posterImage: eventData.poster_image,
         };
@@ -171,9 +173,11 @@ const EventCreationForm = () => {
         const res = await apiClient.post("/events/create", payload);
         const createdId = res.data.data.eventId;
         setEventId(createdId);
+        setEventData((prev) => ({ ...prev, id: createdId })); // Store eventId in eventData
         toast.success("Tạo bản nháp sự kiện thành công!");
       }
 
+      // In EventCreationForm.js, handleNextStep, step 2
       if (currentStep === 2 && eventId) {
         const payload = {
           eventId,
@@ -190,7 +194,10 @@ const EventCreationForm = () => {
         if (Array.isArray(showingTimes) && showingTimes.length > 0) {
           setEventData((prev) => ({
             ...prev,
-            showingTimes, // đã là camelCase → gán thẳng
+            showingTimes: showingTimes.map((st) => ({
+              ...st,
+              hasDesignedLayout: false, // Initialize hasDesignedLayout
+            })),
           }));
           toast.success("Lưu địa điểm & thời gian thành công!");
         } else {
@@ -231,6 +238,7 @@ const EventCreationForm = () => {
       categories,
       loading,
       eventId,
+      setLoading,
     };
 
     switch (currentStep) {
@@ -241,7 +249,7 @@ const EventCreationForm = () => {
       case 3:
         return <SettingsStep {...stepProps} />;
       case 4:
-        return <div>Thông tin thanh toán chưa làm bấm hoàn tất đi</div>;
+        return <DepositStep {...stepProps} />;
       default:
         return null;
     }

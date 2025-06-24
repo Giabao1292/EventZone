@@ -26,11 +26,7 @@ public class BookingServiceImpl implements BookingService {
     private final ShowingTimeRepository showingTimeRepository;
     private final SeatRepository seatRepository;
     private final ZoneRepository zoneRepository;
-    private final PayOS payOS = new PayOS(
-            "CLIENT_ID",
-            "API_KEY",
-            "https://yourdomain.com/api/payos/callback"
-    );
+    private final BookingSeatRepository bookingSeatRepository;
 
     @Override
     public Booking holdBooking(BookingRequest request, User user) {
@@ -40,7 +36,6 @@ public class BookingServiceImpl implements BookingService {
         Booking booking = new Booking();
         booking.setUser(user);
         booking.setShowingTime(showingTime);
-        booking.setPaymentMethod("PAYOS");
         booking.setPaymentStatus("PENDING");
         booking.setCreatedDatetime(LocalDateTime.now());
 
@@ -95,32 +90,29 @@ public class BookingServiceImpl implements BookingService {
 
         return bookingRepository.save(booking);
     }
-
-
-    /**
-     * 2. Tạo link thanh toán PayOS
-     */
     @Override
-    public void confirmBooking(Integer bookingId) {
+    @Transactional
+    public Booking confirmBooking(Integer bookingId, String paymentMethod) {
         Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new RuntimeException("Booking not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy booking"));
 
-        if (!booking.getPaymentStatus().equals("HOLD")) {
-            throw new RuntimeException("Booking already confirmed or expired");
+        if (!"PENDING".equals(booking.getPaymentStatus())) {
+            throw new RuntimeException("Booking không hợp lệ để xác nhận");
         }
-
+        booking.setPaymentMethod(paymentMethod);
         booking.setPaymentStatus("CONFIRMED");
-        booking.setPaidAt(Instant.now());
+        booking.setPaidAt(LocalDateTime.now());
 
-        for (BookingSeat bs : booking.getTblBookingSeats()) {
-            bs.setStatus("CONFIRMED");
-        }
+        booking.getTblBookingSeats().forEach(bs -> bs.setStatus("BOOKED"));
+        bookingSeatRepository.saveAll(booking.getTblBookingSeats());
 
-        bookingRepository.save(booking);
+        return bookingRepository.save(booking);
     }
+
+
     @Scheduled(fixedRate = 60000)
     public void removeExpiredHolds() {
-        LocalDateTime threshold = LocalDateTime.now().minusMinutes(1);
+        LocalDateTime threshold = LocalDateTime.now().minusMinutes(3);
         List<Booking> expired = bookingRepository.findAllByPaymentStatusAndCreatedDatetimeBefore("HOLD", threshold);
 
         for (Booking booking : expired) {

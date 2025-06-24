@@ -3,11 +3,33 @@ import { motion } from "framer-motion";
 import PropTypes from "prop-types";
 
 const SettingsStep = ({ eventData, eventId }) => {
-  console.log(" eventId: setting", eventId);
+  console.log(
+    "eventId in SettingsStep:",
+    eventId,
+    "eventData.id:",
+    eventData?.id
+  ); // Debug
   const navigate = useNavigate();
+
   const handleEditLayout = (showingTime) => {
+    const effectiveEventId = eventId || eventData?.id; // Fallback to eventData.id
+    console.log(
+      "Navigating to LayoutDesigner with eventId:",
+      effectiveEventId,
+      "showingTimeId:",
+      showingTime.id
+    ); // Debug
+    if (!effectiveEventId) {
+      console.error("No eventId available for navigation!");
+      return;
+    }
     navigate(`/organizer/layout-designer/${showingTime.id}`, {
-      state: { layoutMode: showingTime.layoutMode, eventData, eventId },
+      state: {
+        layoutMode: showingTime.layoutMode,
+        eventData,
+        eventId: effectiveEventId,
+        showingTimeId: showingTime.id, // Explicitly pass showingTimeId
+      },
     });
   };
   if (!eventData?.showingTimes?.length) {

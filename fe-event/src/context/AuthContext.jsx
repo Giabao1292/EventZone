@@ -1,9 +1,9 @@
-import { createContext, useEffect, useState, useCallback, useRef } from "react";
-import { getToken, saveToken, removeToken } from "../utils/storage";
-import { getUserDetail } from "../services/userServices";
-import { getOrganizerByUserId } from "../services/organizerService";
+import { createContext, useState, useEffect } from "react";
 import PropTypes from "prop-types";
+import { getToken, removeToken, setToken as saveToken } from "../utils/storage";
+import { getUserDetail } from "../services/userServices";
 import PageLoader from "../ui/PageLoader";
+import { getOrganizerByUserId } from "../services/organizerService";
 
 const AuthContext = createContext();
 
@@ -12,13 +12,11 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
-  const isUserLoaded = useRef(false); // Track if user has been loaded
 
-  // Memoized loadUser to prevent re-creation
-  const loadUser = useCallback(async () => {
-    // Skip if already loaded or no token
-    if (isUserLoaded.current || !token) {
-      setLoading(false);
+  // Hàm tải thông tin người dùng
+  const loadUser = async () => {
+    if (!token) {
+      finishLoading();
       return;
     }
 
@@ -40,23 +38,17 @@ export const AuthProvider = ({ children }) => {
 
       setUser(finalUserData);
       setIsAuthenticated(true);
-      isUserLoaded.current = true; // Mark as loaded
     } catch (error) {
-      console.error("Failed to load user:", error);
-      setUser(null);
-      setIsAuthenticated(false);
-      // Optionally clear token if unauthorized
-      if (error.response?.status === 401) {
-        removeToken();
-        setToken(null);
-        localStorage.removeItem("userRoles");
-      }
+      // ...
     } finally {
-      setLoading(false);
+      finishLoading();
     }
-  }, [token]); // Depend on token
+  };
+  const finishLoading = () => {
+    setLoading(false);
+  };
 
-  // Login function
+  // Đăng nhập
   const login = (data) => {
     const { accessToken, ...userData } = data;
 
@@ -68,28 +60,25 @@ export const AuthProvider = ({ children }) => {
 
     setUser(userData);
     setIsAuthenticated(true);
-    isUserLoaded.current = true; // Mark as loaded to skip loadUser
   };
 
-  // Update user
+  // Cập nhật thông tin người dùng
   const updateUser = (updatedUser) => {
     setUser(updatedUser);
   };
 
-  // Logout
+  // Đăng xuất
   const logout = () => {
     localStorage.clear();
     removeToken();
     setToken(null);
     setUser(null);
     setIsAuthenticated(false);
-    isUserLoaded.current = false; // Reset for next login
   };
 
-  // Run loadUser on mount or token change
   useEffect(() => {
     loadUser();
-  }, [loadUser]); // Depend on loadUser to avoid re-running on token reference change
+  }, [token]);
 
   const authValue = {
     token,

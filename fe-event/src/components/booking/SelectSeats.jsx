@@ -110,7 +110,15 @@ export default function SelectSeats() {
     ])
   );
 
+  const isZoneAvailable = (zone) => {
+    const selectedQty = zoneSelections
+      .filter((s) => s.zone.id === zone.id)
+      .reduce((sum, s) => sum + s.qty, 0);
+    return selectedQty < zone.capacity;
+  };
+
   const toggleZone = (zone) => {
+    if (!isZoneAvailable(zone)) return;
     setZoneSelections((cur) => {
       const exists = cur.find((s) => s.zone.id === zone.id);
       if (exists) {
@@ -123,16 +131,23 @@ export default function SelectSeats() {
 
   const updateQty = (zoneId, qty) => {
     setZoneSelections((cur) =>
-      cur.map((s) =>
-        s.zone.id === zoneId
-          ? { ...s, qty: Math.min(Math.max(1, qty), s.zone.capacity) }
-          : s
-      )
+      cur.map((s) => {
+        if (s.zone.id === zoneId) {
+          const availableQty =
+            s.zone.capacity -
+            cur
+              .filter((sel) => sel.zone.id === zoneId)
+              .reduce((sum, sel) => sum + sel.qty, 0) +
+            s.qty;
+          return { ...s, qty: Math.min(Math.max(1, qty), availableQty) };
+        }
+        return s;
+      })
     );
   };
 
   const toggleSeat = (seat) => {
-    if (!seat.available) return; // Prevent selection of unavailable seats
+    if (!seat.available) return;
     setSeatSelections((cur) => {
       const exists = cur.find((s) => s.id === seat.id);
       if (exists) {
@@ -167,18 +182,23 @@ export default function SelectSeats() {
               const selected = zoneSelections.some(
                 (s) => s.zone.id === zone.id
               );
+              const available = isZoneAvailable(zone);
               const priceKey = `zone|${zone.type}|${zone.price}`;
-              const bgColor = priceColorMap[priceKey] || "#EEE";
+              const bgColor = available
+                ? priceColorMap[priceKey] || "#EEE"
+                : "#6B7280";
               return (
                 <div
                   key={`zone-${zone.id}`}
                   onClick={() => toggleZone(zone)}
                   className={`
-                    absolute flex items-center justify-center text-base font-semibold rounded-2xl shadow-lg cursor-pointer border-2 transition-all
+                    absolute flex items-center justify-center text-base font-semibold rounded-2xl shadow-lg border-2 transition-all
                     ${
-                      selected
-                        ? "ring-4 ring-blue-300 border-blue-400 scale-[1.05] z-10"
-                        : "hover:scale-105 border-transparent z-10"
+                      available
+                        ? selected
+                          ? "ring-4 ring-blue-300 border-blue-400 scale-[1.05] z-10"
+                          : "hover:scale-105 border-transparent z-10 cursor-pointer"
+                        : "cursor-not-allowed border-gray-500 z-10 opacity-70"
                     }
                   `}
                   style={{
@@ -187,15 +207,24 @@ export default function SelectSeats() {
                     width: zone.width,
                     height: zone.height,
                     background: bgColor,
-                    color: "#1e293b",
-                    opacity: selected ? 1 : 0.94,
+                    color: available ? "#1e293b" : "#D1D5DB",
+                    opacity: selected ? 1 : available ? 0.94 : 0.7,
                     boxShadow: selected
                       ? "0 4px 18px 0 #a5b4fc88"
                       : "0 2px 8px 0 #b4b4d8cc",
                   }}
-                  title={`${zone.name} — ${zone.price.toLocaleString(
-                    "vi-VN"
-                  )}₫`}
+                  title={
+                    available
+                      ? `${zone.name} — ${zone.price.toLocaleString(
+                          "vi-VN"
+                        )}₫ (Còn ${
+                          zone.capacity -
+                          zoneSelections
+                            .filter((s) => s.zone.id === zone.id)
+                            .reduce((sum, s) => sum + s.qty, 0)
+                        } ghế)`
+                      : `${zone.name} — Khu vực đã đầy`
+                  }
                 >
                   {zone.name}
                 </div>
@@ -206,7 +235,7 @@ export default function SelectSeats() {
               const priceKey = `seat|${seat.type}|${seat.price}`;
               const bgColor = seat.available
                 ? priceColorMap[priceKey] || "#EEE"
-                : "#6B7280"; // Gray for unavailable
+                : "#6B7280";
               return (
                 <div
                   key={`seat-${seat.id}`}
