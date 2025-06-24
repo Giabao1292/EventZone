@@ -38,16 +38,23 @@ export default function LayoutDesigner({ onSave }) {
   const location = useLocation();
 
   // Lấy eventId từ location.state hoặc params (bắt buộc phải có)
-  const eventId = location.state?.eventId;
+  const eventId = location.state?.eventId || location.state?.eventData?.id;
   const showingTimeId =
     location.state?.showingTimeId || location.pathname.split("/").pop();
   const [layoutMode, setLayoutMode] = useState(
     location.state?.layoutMode || "both"
   );
 
+  console.log("LayoutDesigner state:", {
+    eventId,
+    showingTimeId,
+    locationState: location.state,
+  });
+
   // Nếu không có eventId => không cho thao tác, show lỗi
   useEffect(() => {
     if (!eventId) {
+      console.error("Missing eventId in LayoutDesigner:", location.state);
       alert("Không xác định được sự kiện! Bạn cần tạo sự kiện trước.");
       navigate("/organizer/create-event");
     }
@@ -204,10 +211,8 @@ export default function LayoutDesigner({ onSave }) {
 
   // Lưu layout
   const handleSave = async () => {
-    // Remove local id (nếu dùng chuỗi) hoặc để backend tự sinh id
     const seatsToSend = seats.map(({ id, ...rest }) => ({
       ...rest,
-      // Nếu id là string (local), gửi null hoặc bỏ hẳn trường id
       id: typeof id === "string" && id.startsWith("s-") ? null : id,
     }));
     const zonesToSend = zones.map(({ id, ...rest }) => ({
@@ -216,7 +221,7 @@ export default function LayoutDesigner({ onSave }) {
     }));
 
     const dataToSend = {
-      event_id: eventId, // Sử dụng đúng field name theo backend
+      event_id: eventId,
       showing_time_id: showingTimeId,
       layout_mode: layoutMode,
       seats: seatsToSend,
@@ -239,8 +244,12 @@ export default function LayoutDesigner({ onSave }) {
           eventData: {
             ...location.state?.eventData,
             hasDesignedLayout: true,
-            id: eventId,
+            id: eventId, // Ensure id is set
+            showingTimes: location.state?.eventData?.showingTimes.map((st) =>
+              st.id === showingTimeId ? { ...st, hasDesignedLayout: true } : st
+            ),
           },
+          eventId,
         },
       });
       onSave?.(dataToSend);

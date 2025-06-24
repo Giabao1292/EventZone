@@ -17,6 +17,9 @@ import OrganizerManagementPage from "./pages/admin/OrganizerManagementPage";
 import PaymentPage from "./components/booking/Payment";
 import SelectSeats from "./components/booking/SelectSeats";
 import Payment from "./components/booking/Payment";
+import PaymentResult from "./components/booking/Payment-result";
+import PaymentCancel from "./components/booking/Payment-cancel";
+import DepositResult from "./components/organizer/DepositResult";
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() => import("./components/authentication/LoginPage"));
 const RegisterPage = lazy(() =>
@@ -84,6 +87,9 @@ function App() {
               />
               <Route path="payment" element={<Payment />} />
             </Route>
+            <Route path="/payment-result" element={<PaymentResult />} />
+            <Route path="/payment-cancel" element={<PaymentCancel />} />
+            <Route path="/deposit-result" element={<DepositResult />} />
           </Route>
 
           {/* Protected Routes for Organizers */}

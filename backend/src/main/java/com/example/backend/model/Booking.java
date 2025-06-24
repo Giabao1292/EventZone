@@ -26,7 +26,7 @@ public class Booking {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "booking_id", nullable = false)
-    private Integer id;
+    private Long id;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -51,7 +51,6 @@ public class Booking {
     @Column(name = "final_price", nullable = false, precision = 10, scale = 2)
     private BigDecimal finalPrice;
 
-    @NotNull
     @Lob
     @Column(name = "payment_method", nullable = false)
     private String paymentMethod;
@@ -63,7 +62,7 @@ public class Booking {
     private String paymentStatus;
 
     @Column(name = "paid_at")
-    private Instant paidAt;
+    private LocalDateTime paidAt;
 
     @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "created_datetime")

@@ -12,9 +12,6 @@ public class BookingRequest {
     @NotNull
     private Integer showingTimeId;
 
-    @NotBlank
-    private String paymentMethod;
-
     private List<SeatBookingDTO> seats;
     private List<ZoneBookingDTO> zones;
 

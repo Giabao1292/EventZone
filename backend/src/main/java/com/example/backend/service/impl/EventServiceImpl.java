@@ -19,7 +19,7 @@ public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
     private final CategoryRepository categoryRepository;
     private final OrganizerRepository organizerRepository;
-
+private final EventStatusRepository eventStatusRepository;
     @Override
     public List<EventResponse> getPosterImagesByCategory(int categoryId) {
         List<Event> events = eventRepository.findByCategory_CategoryId(categoryId);
@@ -51,7 +51,10 @@ public class EventServiceImpl implements EventService {
         event.setDescription(request.getDescription());
         event.setStartTime(request.getStartTime());
         event.setEndTime(request.getEndTime());
-        event.setStatusId(1);
+        EventStatus submittedStatus = eventStatusRepository.findByStatusName("DRAFT")
+                .orElseThrow(() -> new RuntimeException("Status not found"));
+
+        event.setStatus(submittedStatus);
         event.setAgeRating(request.getAgeRating());
         event.setBannerText(request.getBannerText());
         event.setHeaderImage(request.getHeaderImage());
@@ -66,8 +69,10 @@ public class EventServiceImpl implements EventService {
     public Event submitEvent(int eventId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
+        EventStatus submittedStatus = eventStatusRepository.findByStatusName("PENDING")
+                .orElseThrow(() -> new RuntimeException("Status not found"));
 
-        event.setStatusId(2);
+        event.setStatus(submittedStatus);
         return eventRepository.save(event);
     }
 
