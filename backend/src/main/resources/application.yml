@@ -3,7 +3,6 @@ spring:
     level:
       org.springframework.security: DEBUG
       com.example.backend: DEBUG
-
   profiles:
     active: dev
   application:
@@ -12,6 +11,7 @@ spring:
     locations: classpath:db/migration,classpath:dev/db/migration
     baseline-on-migrate: true
     baseline-version: 0
+    out-of-order: true
   mail:
     from: ${MAIL_USERNAME}
     host: smtp.gmail.com

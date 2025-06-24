@@ -66,7 +66,7 @@ export default function SidebarNavigation() {
                 }`}
                 href="/admin/users"
               >
-                <i className="ti ti-user-circle ps-2 text-2xl"></i>{" "}
+                <i className="ti ti-user-circle ps-2 text-yellow-500 text-2xl"></i>{" "}
                 <span>User Management</span>
               </a>
             </li>
@@ -80,7 +80,7 @@ export default function SidebarNavigation() {
                 }`}
                 href="/admin/organizers"
               >
-                <i className="ti ti-list-details ps-2 text-2xl"></i>{" "}
+                <i className="ti ti-users ps-2 text-yellow-500 text-2xl"></i>{" "}
                 <span>Organizer Management</span>
               </a>
             </li>
@@ -88,13 +88,14 @@ export default function SidebarNavigation() {
             <li className="sidebar-item">
               <a
                 className={`sidebar-link gap-3 py-2.5 my-1 text-base flex items-center relative rounded-md w-full ${
-                  pathname === "/components/cards"
+                  pathname === "/components/alerts"
                     ? "text-blue-600 bg-blue-50"
                     : "text-gray-500"
                 }`}
-                href="/components/cards"
+                href="/admin/events"
               >
-                <i className="ti ti-cards ps-2 text-2xl"></i> <span>Card</span>
+                <i className="ti ti-ticket ps-2 text-2xl text-red-500"></i>{" "}
+                <span>Event Management</span>
               </a>
             </li>
 
@@ -107,7 +108,7 @@ export default function SidebarNavigation() {
                 }`}
                 href="/components/forms"
               >
-                <i className="ti ti-file-description ps-2 text-2xl"></i>
+                <i className="ti ti-file-description ps-2 text-2xl "></i>
                 <span>Forms</span>
               </a>
             </li>

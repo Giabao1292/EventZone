@@ -30,9 +30,11 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @EnableMethodSecurity
 public class AppConfig implements WebMvcConfigurer , WebSecurityCustomizer {
 
+    private String[] WHITE_LIST = {"/api/image","/api/auth/**", "/api/users/**",
+            "/api/categories","/api/categories/**", "/api/events/**",
+            "/api/showing-times/*/layout"};
+    private String[] ORGANIZER_LIST = {"/api/organizer/**"};
 
-    private String[] WHILE_LIST = {"/api/image","/api/auth/**", "/api/users/**", "/api/vnpay/*", "/api/categories","/api/categories/**", "/api/events/detail/**", "/api/events/showing-times/**" ,"/api/showing-times/*/layout", "/api/bookings/hold"};
-    private String[] ORGANIZER_LIST = {"/api/organizer/**","/api/events/**"};
     private final PreFilter preFilter;
     private final UserDetailService userDetailService;
     @Override
@@ -55,7 +57,7 @@ public class AppConfig implements WebMvcConfigurer , WebSecurityCustomizer {
         return httpSecurity.cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
-                        .requestMatchers(WHILE_LIST).permitAll()
+                        .requestMatchers(WHITE_LIST).permitAll()
                         .requestMatchers(ORGANIZER_LIST).hasAnyRole("ORGANIZER")
                         .anyRequest().authenticated())
                 .authenticationProvider(provider()).addFilterBefore(preFilter, UsernamePasswordAuthenticationFilter.class)

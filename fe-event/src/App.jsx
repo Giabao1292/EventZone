@@ -20,6 +20,7 @@ import Payment from "./components/booking/Payment";
 import PaymentResult from "./components/booking/Payment-result";
 import PaymentCancel from "./components/booking/Payment-cancel";
 import DepositResult from "./components/organizer/DepositResult";
+import EventManagementPage from "./pages/admin/EventManagementPage";
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() => import("./components/authentication/LoginPage"));
 const RegisterPage = lazy(() =>
@@ -115,6 +116,7 @@ function App() {
               path="/admin/organizers"
               element={<OrganizerManagementPage />}
             />
+            <Route path="/admin/events" element={<EventManagementPage />} />
           </Route>
           <Route path="/book/:showingId/*" element={<BookingPage />} />
         </Routes>

@@ -7,6 +7,8 @@ import com.example.backend.model.*;
 import com.example.backend.repository.*;
 import com.example.backend.service.EventService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,7 +21,12 @@ public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
     private final CategoryRepository categoryRepository;
     private final OrganizerRepository organizerRepository;
-private final EventStatusRepository eventStatusRepository;
+
+    private final EventStatusRepository eventStatusRepository;
+
+    private final SearchCriteriaRepository searchCriteriaRepository;
+
+
     @Override
     public List<EventResponse> getPosterImagesByCategory(int categoryId) {
         List<Event> events = eventRepository.findByCategory_CategoryId(categoryId);
@@ -53,7 +60,6 @@ private final EventStatusRepository eventStatusRepository;
         event.setEndTime(request.getEndTime());
         EventStatus submittedStatus = eventStatusRepository.findByStatusName("DRAFT")
                 .orElseThrow(() -> new RuntimeException("Status not found"));
-
         event.setStatus(submittedStatus);
         event.setAgeRating(request.getAgeRating());
         event.setBannerText(request.getBannerText());
@@ -71,7 +77,6 @@ private final EventStatusRepository eventStatusRepository;
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
         EventStatus submittedStatus = eventStatusRepository.findByStatusName("PENDING")
                 .orElseThrow(() -> new RuntimeException("Status not found"));
-
         event.setStatus(submittedStatus);
         return eventRepository.save(event);
     }
@@ -140,6 +145,28 @@ private final EventStatusRepository eventStatusRepository;
         return dto;
     }
 
+    @Override
+    public List<EventSummaryAdmin> searchEvent(Pageable pageable, String... search) {
+        Page<Event> events = search == null || search.length == 0 ? eventRepository.findAll(pageable) : searchCriteriaRepository.searchEvents(pageable, search);
+        return events.getContent().stream().map(event -> {
+            Address address = event.getTblShowingTimes().stream().findFirst().get().getAddress();
+            return EventSummaryAdmin
+                    .builder()
+                    .id(event.getId())
+                    .eventTitle(event.getEventTitle())
+                    .startTime(event.getStartTime())
+                    .endTime(event.getEndTime())
+                    .categoryName(event.getCategory().getCategoryName())
+                    .description(event.getDescription())
+                    .headerImage(event.getHeaderImage())
+                    .organizerName(event.getOrganizer().getOrgName())
+                    .status(event.getStatus().getStatusName())
+                    .ageRating(event.getAgeRating())
+                    .address(address.getVenueName() + ", " + address.getCity() + address.getLocation())
+                    .build();
+        }).toList();
+    }
+
     private EventResponse mapToEventResponse(Event event) {
         return new EventResponse(
                 event.getId(),
@@ -147,5 +174,36 @@ private final EventStatusRepository eventStatusRepository;
                 event.getEventTitle(),
                 event.getStartTime()
         );
+    }
+
+    @Override
+    public EventDetailAdmin getEventDetailAdmin(int eventId) {
+        Event event = eventRepository.findById(eventId).get();
+        Address address = event.getTblShowingTimes().stream().findFirst().get().getAddress();
+        return EventDetailAdmin.builder()
+                .id(event.getId())
+                .eventTitle(event.getEventTitle())
+                .ageRating(event.getAgeRating())
+                .startTime(event.getStartTime())
+                .endTime(event.getEndTime())
+                .description(event.getDescription())
+                .bannerText(event.getBannerText())
+                .headerImage(event.getHeaderImage())
+                .createdAt(event.getCreatedAt())
+                .updatedAt(event.getUpdatedAt())
+                .status(event.getStatus().getStatusName())
+
+                .organizerId(event.getOrganizer().getId())
+                .organizerName(event.getOrganizer().getOrgName())
+                .address(address.getVenueName() + ", " + address.getCity() + address.getLocation())
+                .orgLogoUrl(event.getOrganizer().getOrgLogoUrl())
+
+                .categoryName(event.getCategory().getCategoryName())
+                .showingTimes(event.getTblShowingTimes().stream().map(showingTime -> ShowingTimeDTO
+                        .builder()
+                        .startTime(showingTime.getStartTime())
+                        .endTime(showingTime.getEndTime())
+                        .build()).collect(Collectors.toList()))
+                .build();
     }
 }

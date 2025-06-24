@@ -93,4 +93,26 @@ public class SearchCriteriaRepository {
         return searchCriteriaBuilder.getPredicate();
     }
 
+    public Page<Event> searchEvents(Pageable pageable, String... search){
+        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Event> criteriaQuery = criteriaBuilder.createQuery(Event.class);
+        Root<Event> eventRoot = criteriaQuery.from(Event.class);
+        Join<Event, EventStatus> joinStatus = eventRoot.join("status");
+        Predicate predicate = getSearchPredicate(List.of(eventRoot, joinStatus), criteriaBuilder, search);
+        criteriaQuery.select(eventRoot).where(predicate);
+        List<Event> events = entityManager.createQuery(criteriaQuery).setMaxResults(pageable.getPageSize()).setFirstResult((int)pageable.getOffset()).getResultList();
+        Long count = countEventsSearch(criteriaBuilder ,search);
+        return new PageImpl<>(events, pageable, count);
+    }
+    public Long countEventsSearch(CriteriaBuilder criteriaBuilder ,String... search){
+        log.info("Start count Events search...");
+        CriteriaQuery<Long> countQuery = criteriaBuilder.createQuery(Long.class);
+        Root<Event> eventRoot = countQuery.from(Event.class);
+        Join<Event, EventStatus> joinStatus = eventRoot.join("status");
+        Predicate predicate = getSearchPredicate(List.of(eventRoot, joinStatus), criteriaBuilder, search);
+        countQuery.select(criteriaBuilder.count(eventRoot)).where(predicate);
+        Long count = entityManager.createQuery(countQuery).getSingleResult();
+        log.info("End count Events search...");
+        return count;
+    }
 }

@@ -38,5 +38,5 @@ public class Address {
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "address")
     @JsonManagedReference
-    private Set<com.example.backend.model.ShowingTime> tblShowingTimes = new LinkedHashSet<>();
+    private Set<ShowingTime> tblShowingTimes = new LinkedHashSet<>();
 }

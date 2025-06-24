@@ -43,7 +43,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public TokenResponse authenticate(LoginRequest request) {
         log.info("authenticate");
-        User user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        User user = userService.findByUsername(request.getEmail());
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
         String accessToken = jwtService.generateToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);

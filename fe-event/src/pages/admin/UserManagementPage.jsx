@@ -467,7 +467,7 @@ export default function UserManagement() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
-        <div className="flex gap-3">
+        {/* <div className="flex gap-3">
           <button
             onClick={() => {
               resetRoleForm();
@@ -512,7 +512,7 @@ export default function UserManagement() {
             </svg>
             Add User
           </button>
-        </div>
+        </div> */}
       </div>
 
       {/* Search Filters */}

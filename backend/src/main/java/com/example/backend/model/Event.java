@@ -33,7 +33,7 @@ public class Event {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "organizer_id", nullable = false)
     @JsonBackReference
-    private com.example.backend.model.Organizer organizer;
+    private Organizer organizer;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
@@ -45,12 +45,6 @@ public class Event {
     @NotNull
     @Column(name = "event_title", nullable = false, length = 200)
     private String eventTitle;
-
-    @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "status_id", nullable = false)
-    @JsonBackReference
-    private EventStatus status;
 
     @Size(max = 20)
     @Column(name = "age_rating", length = 20)
@@ -96,19 +90,27 @@ public class Event {
     @Column(name = "modified_by", length = 50)
     private String modifiedBy;
 
+    @Lob
+    @Column(name = "rejection_reason")
+    private String rejection_reason;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "event")
-    private Set<com.example.backend.model.EventVoucher> tblEventVouchers = new LinkedHashSet<>();
+    private Set<EventVoucher> tblEventVouchers = new LinkedHashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "event")
-    private Set<com.example.backend.model.Review> tblReviews = new LinkedHashSet<>();
+    private Set<Review> tblReviews = new LinkedHashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "event")
     @JsonManagedReference
-    private Set<com.example.backend.model.ShowingTime> tblShowingTimes = new LinkedHashSet<>();
+    private Set<ShowingTime> tblShowingTimes = new LinkedHashSet<>();
 
     @ManyToMany(mappedBy = "wishlist", fetch = FetchType.LAZY)
     @JsonIgnore
     private Set<User> wishlistedUsers = new LinkedHashSet<>();
 
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "status_id", nullable = false)
+    @JsonBackReference
+    private EventStatus status;
 }

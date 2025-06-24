@@ -1,12 +1,18 @@
 package com.example.backend.dto.response;
 
 import com.example.backend.model.Event;
-import lombok.Data;
+import lombok.*;
 
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 @Data
+@Getter
+@Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class EventSummaryDTO {
     private Long id;
     private String title;
@@ -24,7 +30,7 @@ public class EventSummaryDTO {
         this.imageUrl = event.getPosterImage(); // dùng 1 trong 3 ảnh bạn có
     }
 
-    private String formatDate(java.time.LocalDateTime localDateTime) {
+    private String formatDate(LocalDateTime localDateTime) {
         return localDateTime.atZone(ZoneId.of("Asia/Ho_Chi_Minh"))
                 .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
     }
