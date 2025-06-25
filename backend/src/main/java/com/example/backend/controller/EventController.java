@@ -134,11 +134,11 @@ public class EventController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ResponseData<>(404, "Không tìm thấy sự kiện", null));
         }
-
         return ResponseEntity.ok(
                 new ResponseData<>(200, "Lấy thông tin chi tiết sự kiện thành công", detail)
         );
     }
+
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseData<List<EventSummaryAdmin>> searchEvent(Pageable pageable, @RequestParam(name = "search", required = false) String... search) {

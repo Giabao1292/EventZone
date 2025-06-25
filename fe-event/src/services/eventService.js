@@ -24,8 +24,8 @@ export const getEvents = async (page, pageSize, searchParams = []) => {
   try {
     // Convert searchParams array to search format if needed
     const formattedSearchParams = Array.isArray(searchParams)
-      ? searchParams
-      : [];
+        ? searchParams
+        : [];
 
     const params = new URLSearchParams();
     params.append("page", page.toString());
@@ -119,11 +119,11 @@ export const getEventDetails = async (eventId) => {
           startDate: event.startTime ? event.startTime.split("T")[0] : "",
           endDate: event.endTime ? event.endTime.split("T")[0] : "",
           startTime: event.startTime
-            ? event.startTime.split("T")[1]?.substring(0, 5)
-            : "",
+              ? event.startTime.split("T")[1]?.substring(0, 5)
+              : "",
           endTime: event.endTime
-            ? event.endTime.split("T")[1]?.substring(0, 5)
-            : "",
+              ? event.endTime.split("T")[1]?.substring(0, 5)
+              : "",
           location: event.address,
           address: event.address,
           maxParticipants: 500, // Not provided in API
@@ -160,7 +160,7 @@ export const getEventDetails = async (eventId) => {
         thumbnailUrl: "/placeholder.svg",
         bannerUrl: "/placeholder.svg",
         description:
-          "A comprehensive technology conference featuring the latest innovations and trends.",
+            "A comprehensive technology conference featuring the latest innovations and trends.",
         startDate: "2024-03-15",
         endDate: "2024-03-16",
         startTime: "09:00",
@@ -173,7 +173,7 @@ export const getEventDetails = async (eventId) => {
         contactEmail: "contact@techconf.com",
         contactPhone: "+84 123 456 789",
         requirements:
-          "Participants should bring their own laptops and business cards.",
+            "Participants should bring their own laptops and business cards.",
         galleryImages: [
           { url: "/placeholder.svg" },
           { url: "/placeholder.svg" },
@@ -210,9 +210,9 @@ export const getEventCategories = async () => {
 };
 
 export const updateEventStatus = async (
-  eventId,
-  status,
-  rejectionReason = null
+    eventId,
+    status,
+    rejectionReason = null
 ) => {
   try {
     const body = {
@@ -262,14 +262,14 @@ export const mapApiEventToComponent = (apiEvent) => {
     title: apiEvent.eventName || apiEvent.eventTitle || "",
     description: apiEvent.description || "",
     startDate:
-      apiEvent.startDate ||
-      (apiEvent.startTime ? apiEvent.startTime.split("T")[0] : ""),
+        apiEvent.startDate ||
+        (apiEvent.startTime ? apiEvent.startTime.split("T")[0] : ""),
     endDate:
-      apiEvent.endDate ||
-      (apiEvent.endTime ? apiEvent.endTime.split("T")[0] : ""),
+        apiEvent.endDate ||
+        (apiEvent.endTime ? apiEvent.endTime.split("T")[0] : ""),
     time: apiEvent.startTime
-      ? apiEvent.startTime.split("T")[1]?.substring(0, 5)
-      : "",
+        ? apiEvent.startTime.split("T")[1]?.substring(0, 5)
+        : "",
     location: apiEvent.location || apiEvent.address || "",
     price: 0,
     maxTickets: 0,
@@ -296,12 +296,12 @@ export const mapApiEventDetailToComponent = (apiEventDetail) => {
     title: apiEventDetail.eventName || apiEventDetail.eventTitle || "",
     description: apiEventDetail.description || "",
     date:
-      apiEventDetail.startDate ||
-      (apiEventDetail.startTime ? apiEventDetail.startTime.split("T")[0] : ""),
+        apiEventDetail.startDate ||
+        (apiEventDetail.startTime ? apiEventDetail.startTime.split("T")[0] : ""),
     time: apiEventDetail.startTime || "",
     endDate:
-      apiEventDetail.endDate ||
-      (apiEventDetail.endTime ? apiEventDetail.endTime.split("T")[0] : ""),
+        apiEventDetail.endDate ||
+        (apiEventDetail.endTime ? apiEventDetail.endTime.split("T")[0] : ""),
     endTime: apiEventDetail.endTime || "",
     location: apiEventDetail.location || apiEventDetail.address || "",
     price: apiEventDetail.price || 0,
@@ -309,9 +309,9 @@ export const mapApiEventDetailToComponent = (apiEventDetail) => {
     soldTickets: 0,
     category: apiEventDetail.categoryName || "",
     imageUrl:
-      apiEventDetail.thumbnailUrl ||
-      apiEventDetail.bannerUrl ||
-      "/placeholder.svg?height=200&width=300",
+        apiEventDetail.thumbnailUrl ||
+        apiEventDetail.bannerUrl ||
+        "/placeholder.svg?height=200&width=300",
     organizerId: "",
     organizerName: apiEventDetail.organizerName || "",
     organizerEmail: apiEventDetail.contactEmail || "",
@@ -366,16 +366,16 @@ export const getEventStats = async () => {
       const stats = {
         total: events.length,
         pending: events.filter(
-          (e) => mapApiStatusToDisplay(e.status) === "pending"
+            (e) => mapApiStatusToDisplay(e.status) === "pending"
         ).length,
         approved: events.filter(
-          (e) => mapApiStatusToDisplay(e.status) === "approved"
+            (e) => mapApiStatusToDisplay(e.status) === "approved"
         ).length,
         rejected: events.filter(
-          (e) => mapApiStatusToDisplay(e.status) === "rejected"
+            (e) => mapApiStatusToDisplay(e.status) === "rejected"
         ).length,
         published: events.filter(
-          (e) => mapApiStatusToDisplay(e.status) === "published"
+            (e) => mapApiStatusToDisplay(e.status) === "published"
         ).length,
       };
       return stats;
