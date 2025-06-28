@@ -59,19 +59,6 @@ jwt:
     hour: 1
   secretKey: iEKeAbUUiOb/waueS/nKrEV4aAEtrO5LZoVq+8fk8XHgXFmMUT70euKykS3JI0yzOAelB167lBKavBiQIRf9UQ==
   refreshKey: 6m08koVwpxvdnLpSRDdLOcLjL+xAgbCgMQ9dX09E1sZMIvW0oDqpTlqgICvxDAcg1y8N1Q4M2QT0Pxux7Lu4Pw==
-logging:
-    level:
-      org:
-        hibernate:
-          SQL: DEBUG
-        type:
-          descriprotor:
-            sql:
-              BasicBinder: TRACE
-        springframework:
-          orm:
-            jpa: DEBUG
-          transaction: TRACE
 payos:
   client_id: e51803fd-d80d-4b51-939b-ac3f6dd689c7
   api_key: 36a92a47-2f6d-4bd2-91f4-15dcd72c03e9
@@ -80,5 +67,4 @@ vnpay:
   tmn_code: 338IG70Y
   hash_secret: OZDZ1SCCTXRH0639M6CL8MLBTHVM6S9Y
   pay_url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
-
   return_url: http://localhost:5173/payment-result

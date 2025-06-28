@@ -209,7 +209,7 @@ public class UserController {
     @DeleteMapping("/{id}")
     public ResponseData<?> deleteUser(@PathVariable Integer id){
         userService.deleteUser(id);
-        return new ResponseData<>(HttpStatus.OK.value(), "User deleted successfully");
+        return new ResponseData<>(HttpStatus.OK.value(), "Inactive user successfully");
     }
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/roles")

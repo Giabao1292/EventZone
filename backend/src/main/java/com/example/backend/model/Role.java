@@ -28,6 +28,6 @@ public class Role {
     private String roleName;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "role",cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "role",cascade = CascadeType.ALL)
     private Set<UserRole> tblUserRoles = new LinkedHashSet<>();
 }

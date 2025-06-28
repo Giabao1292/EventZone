@@ -18,6 +18,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -40,13 +41,16 @@ public class AuthServiceImpl implements AuthService {
     private final UserTempRepository userTempRepository;
     private final UserTempService userTempService;
     private final UserValidator userValidator;
+
+    @Transactional
     @Override
     public TokenResponse authenticate(LoginRequest request) {
-        log.info("authenticate");
+        log.info("Starting Authenticate");
         User user = userService.findByUsername(request.getEmail());
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
         String accessToken = jwtService.generateToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
+        log.info("Ending Authenticate");
         return TokenResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)

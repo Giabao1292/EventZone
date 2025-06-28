@@ -926,407 +926,426 @@ export default function OrganizerManagementPage() {
   };
 
   return (
-    <div className="container mx-auto p-4 space-y-6">
-      {/* Header */}
-      <div className="space-y-4">
-        <h1 className="text-2xl md:text-3xl font-bold">
-          Organizer Registration Requests
-        </h1>
+    <div className="min-h-screen bg-gray-50">
+      <div className="p-6">
+        {/* Header */}
+        <div className="space-y-6">
+          <h1 className="text-2xl md:text-3xl font-bold">
+            Organizer Registration Requests
+          </h1>
 
-        {/* Search Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="w-4 h-4" />
-              Search & Filter
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div>
-                <label className="text-sm font-medium mb-1 block">
-                  Organization Name
-                </label>
-                <Input
-                  placeholder="Search by organization name..."
-                  value={searchFilters.orgName}
-                  onChange={(e) =>
-                    handleFilterChange("orgName", e.target.value)
-                  }
-                />
-              </div>
+          {/* Search Filters */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Filter className="w-4 h-4" />
+                Search & Filter
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                  <label className="text-sm font-medium mb-1 block">
+                    Organization Name
+                  </label>
+                  <Input
+                    placeholder="Search by organization name..."
+                    value={searchFilters.orgName}
+                    onChange={(e) =>
+                      handleFilterChange("orgName", e.target.value)
+                    }
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Status
-                </label>
-                <select
-                  value={searchFilters.status}
-                  onChange={(e) => handleFilterChange("status", e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="ALL">All Status</option>
-                  <option value="PENDING">Pending</option>
-                  <option value="APPROVED">Approved</option>
-                  <option value="REJECTED">Rejected</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Organization Type
-                </label>
-                <select
-                  value={searchFilters.typeCode}
-                  onChange={(e) =>
-                    handleFilterChange("typeCode", e.target.value)
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="ALL">All Types</option>
-                  {organizerTypes.map((type) => (
-                    <option key={type.typeCode} value={type.typeCode}>
-                      {type.typeName}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium mb-1 block">Email</label>
-                <Input
-                  placeholder="Search by email..."
-                  value={searchFilters.email}
-                  onChange={(e) => handleFilterChange("email", e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-2">
-              <Button onClick={applyFilters} disabled={loading}>
-                <Search className="w-4 h-4 mr-2" />
-                Search
-              </Button>
-              <Button
-                variant="outline"
-                onClick={clearFilters}
-                disabled={loading}
-              >
-                Clear Filters
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Error Alert */}
-      {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
-      {/* Table */}
-      <div className="rounded-md bg-white border border-slate-200">
-        {loading ? (
-          <div className="flex items-center justify-center p-8">
-            <Loader2 className="w-8 h-8 animate-spin" />
-            <span className="ml-2">Loading organizers...</span>
-          </div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>
-                  <Button
-                    variant="ghost"
-                    onClick={() => handleSort("orgName")}
-                    className="h-auto p-0 font-semibold"
-                  >
-                    Organization
-                    {getSortIcon("orgName")}
-                  </Button>
-                </TableHead>
-                <TableHead className="hidden md:table-cell">
-                  <Button variant="ghost" className="h-auto p-0 font-semibold">
-                    Type
-                  </Button>
-                </TableHead>
-                <TableHead className="hidden lg:table-cell">
-                  <Button variant="ghost" className="h-auto p-0 font-semibold">
-                    Representative
-                  </Button>
-                </TableHead>
-                <TableHead className="hidden lg:table-cell">
-                  <Button variant="ghost" className="h-auto p-0 font-semibold">
-                    Email
-                  </Button>
-                </TableHead>
-                <TableHead className="hidden sm:table-cell">
-                  <Button
-                    variant="ghost"
-                    // onClick={() => handleSort("createdAt")}
-                    className="h-auto p-0 font-semibold"
-                  >
-                    Date
-                    {/* {getSortIcon("createdAt")} */}
-                  </Button>
-                </TableHead>
-                <TableHead>
-                  <Button
-                    variant="ghost"
-                    // onClick={() => handleSort("status")}
-                    className="h-auto p-0 font-semibold"
-                  >
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Status
-                    {/* {getSortIcon("status")} */}
-                  </Button>
-                </TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {organizers.length === 0 ? (
+                  </label>
+                  <select
+                    value={searchFilters.status}
+                    onChange={(e) =>
+                      handleFilterChange("status", e.target.value)
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="ALL">All Status</option>
+                    <option value="PENDING">Pending</option>
+                    <option value="APPROVED">Approved</option>
+                    <option value="REJECTED">Rejected</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Organization Type
+                  </label>
+                  <select
+                    value={searchFilters.typeCode}
+                    onChange={(e) =>
+                      handleFilterChange("typeCode", e.target.value)
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="ALL">All Types</option>
+                    {organizerTypes.map((type) => (
+                      <option key={type.typeCode} value={type.typeCode}>
+                        {type.typeName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-1 block">
+                    Email
+                  </label>
+                  <Input
+                    placeholder="Search by email..."
+                    value={searchFilters.email}
+                    onChange={(e) =>
+                      handleFilterChange("email", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <Button onClick={applyFilters} disabled={loading}>
+                  <Search className="w-4 h-4 mr-2" />
+                  Search
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={clearFilters}
+                  disabled={loading}
+                >
+                  Clear Filters
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Error Alert */}
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+        {totalPages > 1 && (
+          <div className="flex items-center gap-2 mb-4 space-y-4">
+            <label className="text-sm font-medium text-gray-700">
+              Page Size:
+            </label>
+            <select
+              value={pageSize.toString()}
+              onChange={(e) =>
+                handlePageSizeChange(Number.parseInt(e.target.value))
+              }
+              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white min-w-[60px]"
+            >
+              {[5, 10, 20, 50].map((size) => (
+                <option key={size} value={size.toString()}>
+                  {size}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Table */}
+        <div className="rounded-md bg-white border border-slate-200">
+          {loading ? (
+            <div className="flex items-center justify-center p-8">
+              <Loader2 className="w-8 h-8 animate-spin" />
+              <span className="ml-2">Loading organizers...</span>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">
-                    No organizers found
-                  </TableCell>
+                  <TableHead>
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleSort("orgName")}
+                      className="h-auto p-0 font-semibold"
+                    >
+                      Organization
+                      {getSortIcon("orgName")}
+                    </Button>
+                  </TableHead>
+                  <TableHead className="hidden md:table-cell">
+                    <Button
+                      variant="ghost"
+                      className="h-auto p-0 font-semibold"
+                    >
+                      Type
+                    </Button>
+                  </TableHead>
+                  <TableHead className="hidden lg:table-cell">
+                    <Button
+                      variant="ghost"
+                      className="h-auto p-0 font-semibold"
+                    >
+                      Representative
+                    </Button>
+                  </TableHead>
+                  <TableHead className="hidden lg:table-cell">
+                    <Button
+                      variant="ghost"
+                      className="h-auto p-0 font-semibold"
+                    >
+                      Email
+                    </Button>
+                  </TableHead>
+                  <TableHead className="hidden sm:table-cell">
+                    <Button
+                      variant="ghost"
+                      // onClick={() => handleSort("createdAt")}
+                      className="h-auto p-0 font-semibold"
+                    >
+                      Date
+                      {/* {getSortIcon("createdAt")} */}
+                    </Button>
+                  </TableHead>
+                  <TableHead>
+                    <Button
+                      variant="ghost"
+                      // onClick={() => handleSort("status")}
+                      className="h-auto p-0 font-semibold"
+                    >
+                      Status
+                      {/* {getSortIcon("status")} */}
+                    </Button>
+                  </TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              ) : (
-                organizers.map((organizer, index) => (
-                  <TableRow key={organizer.email || index}>
-                    <TableCell className="font-medium">
-                      <div>
-                        <div className="font-semibold">{organizer.orgName}</div>
-                        <div className="text-sm text-slate-600 md:hidden">
-                          {organizer.orgType}
-                        </div>
-                        <div className="text-sm text-slate-600 lg:hidden">
-                          {organizer.fullName}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      {organizer.orgType}
-                    </TableCell>
-                    <TableCell className="hidden lg:table-cell">
-                      {organizer.fullName}
-                    </TableCell>
-                    <TableCell className="hidden lg:table-cell">
-                      {organizer.email}
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                      {formatDate(organizer.createdAt)}
-                    </TableCell>
-                    <TableCell>{getStatusBadge(organizer.status)}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => openDetails(organizer)}
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>View Details</TooltipContent>
-                        </Tooltip>
-
-                        {organizer.status === "PENDING" && (
-                          <>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                                  onClick={() =>
-                                    openConfirmDialog("approve", organizer)
-                                  }
-                                  disabled={statusUpdateLoading}
-                                >
-                                  <Check className="w-4 h-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Approve</TooltipContent>
-                            </Tooltip>
-
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                  onClick={() =>
-                                    openConfirmDialog("reject", organizer)
-                                  }
-                                  disabled={statusUpdateLoading}
-                                >
-                                  <X className="w-4 h-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Reject</TooltipContent>
-                            </Tooltip>
-                          </>
-                        )}
-                      </div>
+              </TableHeader>
+              <TableBody>
+                {organizers.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8">
+                      No organizers found
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        )}
-      </div>
+                ) : (
+                  organizers.map((organizer, index) => (
+                    <TableRow key={organizer.email || index}>
+                      <TableCell className="font-medium">
+                        <div>
+                          <div className="font-semibold">
+                            {organizer.orgName}
+                          </div>
+                          <div className="text-sm text-slate-600 md:hidden">
+                            {organizer.orgType}
+                          </div>
+                          <div className="text-sm text-slate-600 lg:hidden">
+                            {organizer.fullName}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {organizer.orgType}
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        {organizer.fullName}
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        {organizer.email}
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        {formatDate(organizer.createdAt)}
+                      </TableCell>
+                      <TableCell>{getStatusBadge(organizer.status)}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => openDetails(organizer)}
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>View Details</TooltipContent>
+                          </Tooltip>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-600">Show</span>
-            <Select
-              value={pageSize.toString()}
-              onValueChange={(value) =>
-                handlePageSizeChange(Number.parseInt(value))
-              }
-            >
-              <SelectTrigger className="w-20">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="5">5</SelectItem>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="20">20</SelectItem>
-                <SelectItem value="50">50</SelectItem>
-              </SelectContent>
-            </Select>
-            <span className="text-sm text-slate-600">entries</span>
-          </div>
+                          {organizer.status === "PENDING" && (
+                            <>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                    onClick={() =>
+                                      openConfirmDialog("approve", organizer)
+                                    }
+                                    disabled={statusUpdateLoading}
+                                  >
+                                    <Check className="w-4 h-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Approve</TooltipContent>
+                              </Tooltip>
 
-          <p className="text-sm text-slate-600">
-            Showing {currentPage * pageSize + 1} to{" "}
-            {Math.min((currentPage + 1) * pageSize, totalElements)} of{" "}
-            {totalElements} results
-          </p>
-
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 0 || loading}
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Previous
-            </Button>
-
-            <span className="text-sm">
-              Page {currentPage + 1} of {totalPages}
-            </span>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage >= totalPages - 1 || loading}
-            >
-              Next
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                    onClick={() =>
+                                      openConfirmDialog("reject", organizer)
+                                    }
+                                    disabled={statusUpdateLoading}
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Reject</TooltipContent>
+                              </Tooltip>
+                            </>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          )}
         </div>
-      )}
 
-      {/* Confirmation Dialog */}
-      <Dialog
-        open={confirmDialog.open}
-        onOpenChange={(open) => setConfirmDialog({ ...confirmDialog, open })}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {confirmDialog.type === "approve" ? "Approve" : "Reject"}{" "}
-              Registration
-            </DialogTitle>
-            <DialogDescription>
-              Are you sure you want to {confirmDialog.type} the registration
-              request from <strong>{confirmDialog.organizer?.orgName}</strong>?
-              {confirmDialog.type === "reject" &&
-                " This action cannot be undone."}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() =>
-                setConfirmDialog({ open: false, type: "", organizer: null })
-              }
-              disabled={statusUpdateLoading}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant={
-                confirmDialog.type === "approve" ? "default" : "destructive"
-              }
-              onClick={() =>
-                handleStatusChange(
-                  confirmDialog.organizer,
-                  confirmDialog.type === "approve" ? "APPROVED" : "REJECTED"
-                )
-              }
-              disabled={statusUpdateLoading}
-            >
-              {statusUpdateLoading && (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              )}
-              {confirmDialog.type === "approve" ? "Approve" : "Reject"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-sm text-slate-600">
+              Showing {currentPage * pageSize + 1} to{" "}
+              {Math.min((currentPage + 1) * pageSize, totalElements)} of{" "}
+              {totalElements} results
+            </p>
 
-      {/* Details Drawer/Dialog */}
-      {isMobile ? (
-        <Drawer open={detailsOpen} onOpenChange={setDetailsOpen}>
-          <DrawerContent className="max-h-[90vh]">
-            <DrawerHeader>
-              <DrawerTitle>{selectedOrganizer?.orgName}</DrawerTitle>
-              <DrawerDescription>
-                Registration details and verification documents
-              </DrawerDescription>
-            </DrawerHeader>
-            <div className="px-4 pb-4 overflow-y-auto">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 0 || loading}
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Previous
+              </Button>
+
+              <span className="text-sm">
+                Page {currentPage + 1} of {totalPages}
+              </span>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage >= totalPages - 1 || loading}
+              >
+                Next
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Confirmation Dialog */}
+        <Dialog
+          open={confirmDialog.open}
+          onOpenChange={(open) => setConfirmDialog({ ...confirmDialog, open })}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {confirmDialog.type === "approve" ? "Approve" : "Reject"}{" "}
+                Registration
+              </DialogTitle>
+              <DialogDescription>
+                Are you sure you want to {confirmDialog.type} the registration
+                request from <strong>{confirmDialog.organizer?.orgName}</strong>
+                ?
+                {confirmDialog.type === "reject" &&
+                  " This action cannot be undone."}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() =>
+                  setConfirmDialog({ open: false, type: "", organizer: null })
+                }
+                disabled={statusUpdateLoading}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant={
+                  confirmDialog.type === "approve" ? "default" : "destructive"
+                }
+                onClick={() =>
+                  handleStatusChange(
+                    confirmDialog.organizer,
+                    confirmDialog.type === "approve" ? "APPROVED" : "REJECTED"
+                  )
+                }
+                disabled={statusUpdateLoading}
+              >
+                {statusUpdateLoading && (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                )}
+                {confirmDialog.type === "approve" ? "Approve" : "Reject"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Details Drawer/Dialog */}
+        {isMobile ? (
+          <Drawer open={detailsOpen} onOpenChange={setDetailsOpen}>
+            <DrawerContent className="max-h-[90vh]">
+              <DrawerHeader>
+                <DrawerTitle>{selectedOrganizer?.orgName}</DrawerTitle>
+                <DrawerDescription>
+                  Registration details and verification documents
+                </DrawerDescription>
+              </DrawerHeader>
+              <div className="px-4 pb-4 overflow-y-auto">
+                {selectedOrganizer && (
+                  <DetailsContent
+                    organizer={selectedOrganizer}
+                    details={organizerDetails}
+                  />
+                )}
+              </div>
+            </DrawerContent>
+          </Drawer>
+        ) : (
+          <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>{selectedOrganizer?.orgName}</DialogTitle>
+                <DialogDescription>
+                  Registration details and verification documents
+                </DialogDescription>
+              </DialogHeader>
               {selectedOrganizer && (
                 <DetailsContent
                   organizer={selectedOrganizer}
                   details={organizerDetails}
                 />
               )}
-            </div>
-          </DrawerContent>
-        </Drawer>
-      ) : (
-        <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{selectedOrganizer?.orgName}</DialogTitle>
-              <DialogDescription>
-                Registration details and verification documents
-              </DialogDescription>
-            </DialogHeader>
-            {selectedOrganizer && (
-              <DetailsContent
-                organizer={selectedOrganizer}
-                details={organizerDetails}
-              />
-            )}
-          </DialogContent>
-        </Dialog>
-      )}
+            </DialogContent>
+          </Dialog>
+        )}
+      </div>
     </div>
   );
 }

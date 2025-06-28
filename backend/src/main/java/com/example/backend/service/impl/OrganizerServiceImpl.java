@@ -3,7 +3,6 @@ package com.example.backend.service.impl;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.example.backend.dto.request.OrganizerRequest;
-import com.example.backend.dto.request.UserRequestDTO;
 import com.example.backend.dto.response.*;
 import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.model.OrgType;
@@ -14,22 +13,21 @@ import com.example.backend.repository.*;
 import com.example.backend.service.OrganizerService;
 import com.example.backend.service.UserService;
 import com.example.backend.util.StatusOrganizer;
-import jdk.jshell.Snippet;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.File;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
-import static com.example.backend.util.StatusOrganizer.*;
+import static com.example.backend.util.StatusOrganizer.APPROVED;
+import static com.example.backend.util.StatusOrganizer.PENDING;
 
 @Service
 @RequiredArgsConstructor
@@ -39,7 +37,6 @@ public class OrganizerServiceImpl implements OrganizerService {
     private final OrganizerRepository organizerRepository;
     private final SearchCriteriaRepository searchCriteriaRepository;
     private final OrgTypeRepository orgTypeRepository;
-    private final UserService userService;
     private final RoleRepository roleRepository;
 
     @Override
@@ -127,10 +124,13 @@ public class OrganizerServiceImpl implements OrganizerService {
                 .status(organizer.getStatus())
                 .build()).toList();
     }
-
+    private Page<Organizer> findAllOrganizer(Pageable pageable) {
+        Page<Integer> organizerIds = organizerRepository.findAllOrganizerId(pageable);
+        return new PageImpl<>(organizerRepository.findALlOrganizersByIds(organizerIds.getContent()), pageable, organizerIds.getTotalElements());
+    }
     @Override
     public PageResponse<OrganizerSummaryDTO> searchOrganizers(Pageable pageable, String... search) {
-        Page<Organizer> organizerPage = (search != null && search.length != 0) ? searchCriteriaRepository.searchOrganizers(pageable, search) : organizerRepository.findAll(pageable);
+        Page<Organizer> organizerPage = (search != null && search.length != 0) ? searchCriteriaRepository.searchOrganizers(pageable, search) : findAllOrganizer(pageable);
         List<OrganizerSummaryDTO> organizerResponses = toOrganizerSummaryDTO(organizerPage.getContent());
         return PageResponse.<OrganizerSummaryDTO>builder()
                 .totalElements((int) organizerPage.getTotalElements())

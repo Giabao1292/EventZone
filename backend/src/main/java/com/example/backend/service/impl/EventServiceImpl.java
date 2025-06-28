@@ -1,6 +1,7 @@
 package com.example.backend.service.impl;
 
 import com.example.backend.dto.request.EventRequest;
+import com.example.backend.dto.request.UpdateStatusEvent;
 import com.example.backend.dto.response.*;
 import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.model.*;
@@ -8,9 +9,11 @@ import com.example.backend.repository.*;
 import com.example.backend.service.EventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -145,10 +148,15 @@ public class EventServiceImpl implements EventService {
         return dto;
     }
 
+    private Page<Event> findAllEvents(Pageable pageable) {
+        Page<Integer> eventIds = eventRepository.findAllEventIds(pageable);
+        return new PageImpl<>(eventRepository.findAllEventByIds(eventIds.getContent()), pageable, eventIds.getTotalElements());
+    }
     @Override
-    public List<EventSummaryAdmin> searchEvent(Pageable pageable, String... search) {
+    public PageResponse<EventSummaryAdmin> searchEvent(Pageable pageable, String... search) {
+
         Page<Event> events = search == null || search.length == 0 ? eventRepository.findAll(pageable) : searchCriteriaRepository.searchEvents(pageable, search);
-        return events.getContent().stream().map(event -> {
+        List<EventSummaryAdmin> eventSummaryAdminList = events.getContent().stream().map(event -> {
             Address address = event.getTblShowingTimes().stream().findFirst().get().getAddress();
             return EventSummaryAdmin
                     .builder()
@@ -158,13 +166,20 @@ public class EventServiceImpl implements EventService {
                     .endTime(event.getEndTime())
                     .categoryName(event.getCategory().getCategoryName())
                     .description(event.getDescription())
-                    .headerImage(event.getHeaderImage())
+                    .posterImage(event.getPosterImage())
                     .organizerName(event.getOrganizer().getOrgName())
                     .status(event.getStatus().getStatusName())
                     .ageRating(event.getAgeRating())
-                    .address(address.getVenueName() + ", " + address.getCity() + address.getLocation())
+                    .address(address.getVenueName() + ", " + address.getCity() + " " + address.getLocation())
                     .build();
         }).toList();
+        return PageResponse.<EventSummaryAdmin>builder()
+                .totalElements((int) events.getTotalElements())
+                .size(events.getSize())
+                .number(events.getNumber())
+                .totalPages(events.getTotalPages())
+                .content(eventSummaryAdminList)
+                .build();
     }
 
     private EventResponse mapToEventResponse(Event event) {
@@ -192,12 +207,12 @@ public class EventServiceImpl implements EventService {
                 .createdAt(event.getCreatedAt())
                 .updatedAt(event.getUpdatedAt())
                 .status(event.getStatus().getStatusName())
-
+                .rejectionReason(event.getRejectionReason())
                 .organizerId(event.getOrganizer().getId())
                 .organizerName(event.getOrganizer().getOrgName())
                 .address(address.getVenueName() + ", " + address.getCity() + address.getLocation())
                 .orgLogoUrl(event.getOrganizer().getOrgLogoUrl())
-
+                .organizerEmail(event.getOrganizer().getUser().getEmail())
                 .categoryName(event.getCategory().getCategoryName())
                 .showingTimes(event.getTblShowingTimes().stream().map(showingTime -> ShowingTimeDTO
                         .builder()
@@ -205,5 +220,17 @@ public class EventServiceImpl implements EventService {
                         .endTime(showingTime.getEndTime())
                         .build()).collect(Collectors.toList()))
                 .build();
+    }
+
+    @Override
+    public void updateStatus(UpdateStatusEvent status, int eventId) {
+        Event event = eventRepository.findById(eventId).orElseThrow(() -> new ResourceNotFoundException("Event not found"));
+        EventStatus eventStatus = eventStatusRepository.findByStatusName(status.getStatus()).orElseThrow(()->new ResourceNotFoundException("No status found"));
+        event.setStatus(eventStatus);
+        event.setUpdatedAt(Instant.now());
+        if(status.getRejectionReason() != null) {
+            event.setRejectionReason(status.getRejectionReason());
+        }
+        eventRepository.save(event);
     }
 }
