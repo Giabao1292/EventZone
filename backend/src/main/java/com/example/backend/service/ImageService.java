@@ -2,15 +2,21 @@ package com.example.backend.service;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class ImageService {
+    private final Cloudinary cloudinary;
+
     public String uploadImage(MultipartFile file, Cloudinary cloudinary) throws IOException {
         // Tạo file tạm để upload
         File tempFile = File.createTempFile("image-", file.getOriginalFilename());
@@ -28,5 +34,18 @@ public class ImageService {
 
         // Trả về đường dẫn ảnh
         return (String) uploadResult.get("secure_url");
+    }
+
+    public String uploadQRCodeImage(byte[] imageBytes) throws IOException {
+        String publicId = "qrcodes/" + UUID.randomUUID();
+        Map uploadResult = cloudinary.uploader().upload(
+                new ByteArrayInputStream(imageBytes),
+                ObjectUtils.asMap(
+                        "public_id", publicId,
+                        "overwrite", true,
+                        "resource_type", "image"
+                )
+        );
+        return publicId;
     }
 }

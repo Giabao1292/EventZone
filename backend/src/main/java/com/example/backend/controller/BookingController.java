@@ -88,7 +88,6 @@ public class BookingController {
         try {
             if ("PAYOS".equalsIgnoreCase(paymentMethod)) {
                 PaymentLinkData payment = payOS.getPaymentLinkInformation(Long.valueOf(orderId));
-
                 if ("PAID".equalsIgnoreCase(payment.getStatus())) {
                     bookingService.confirmBooking(orderId,paymentMethod);
                     return new ResponseData<>(200, "Thanh toán thành công (PayOS)", null);

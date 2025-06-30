@@ -4,6 +4,8 @@ import com.example.backend.dto.request.BookingRequest;
 import com.example.backend.model.*;
 import com.example.backend.repository.*;
 import com.example.backend.service.BookingService;
+import com.example.backend.service.ImageService;
+import com.example.backend.service.QrCodeService;
 import vn.payos.PayOS;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -11,12 +13,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +31,8 @@ public class BookingServiceImpl implements BookingService {
     private final SeatRepository seatRepository;
     private final ZoneRepository zoneRepository;
     private final BookingSeatRepository bookingSeatRepository;
+    private final ImageService imageService;
+    private final QrCodeService qrCodeService;
 
     @Override
     public Booking holdBooking(BookingRequest request, User user) {
@@ -92,17 +98,20 @@ public class BookingServiceImpl implements BookingService {
     }
     @Override
     @Transactional
-    public Booking confirmBooking(Integer bookingId, String paymentMethod) {
+    public Booking confirmBooking(Integer bookingId, String paymentMethod) throws IOException {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy booking"));
 
         if (!"PENDING".equals(booking.getPaymentStatus())) {
             throw new RuntimeException("Booking không hợp lệ để xác nhận");
         }
+        String token = UUID.randomUUID().toString();
+        String publicId = imageService.uploadQRCodeImage(qrCodeService.generateQRCodeImage(token));
+        booking.setQrToken(token);
+        booking.setQrPublicId(publicId);
         booking.setPaymentMethod(paymentMethod);
         booking.setPaymentStatus("CONFIRMED");
         booking.setPaidAt(LocalDateTime.now());
-
         booking.getTblBookingSeats().forEach(bs -> bs.setStatus("BOOKED"));
         bookingSeatRepository.saveAll(booking.getTblBookingSeats());
 
