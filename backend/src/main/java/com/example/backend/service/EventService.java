@@ -1,10 +1,9 @@
 package com.example.backend.service;
 
 import com.example.backend.dto.request.EventRequest;
-import com.example.backend.dto.response.CategoryResponse;
-import com.example.backend.dto.response.EventDetailDTO;
-import com.example.backend.dto.response.EventResponse;
+import com.example.backend.dto.response.*;
 import com.example.backend.model.Event;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -18,5 +17,11 @@ public interface EventService {
 
     EventDetailDTO getEventDetailById(int eventId);
 
+    List<EventSummaryAdmin> searchEvent(Pageable pageable, String... search);
+
+    EventDetailAdmin getEventDetailAdmin(int eventId);
+
     Event editEvent(int eventId, EventRequest request);
+
+    List<Event> findEventsByOrganizerId(int organizerId);
 }

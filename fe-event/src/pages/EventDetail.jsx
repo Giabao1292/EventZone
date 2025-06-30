@@ -25,7 +25,10 @@ const EventDetail = () => {
   useEffect(() => {
     const fetchDetail = async () => {
       try {
-        const res = await axios.get(`/api/events/detail/${eventId}`);
+        const token = localStorage.getItem("accessToken"); // <-- thêm dòng này
+        const res = await axios.get(`/api/events/detail/${eventId}`, {
+          headers: { Authorization: `Bearer ${token}` }, // <-- truyền token vào headers
+        });
         setEvent(res.data.data);
       } catch (err) {
         console.error("Lỗi khi lấy chi tiết sự kiện:", err);
@@ -36,6 +39,7 @@ const EventDetail = () => {
     };
     fetchDetail();
   }, [eventId]);
+
 
   if (loading)
     return (

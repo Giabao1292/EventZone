@@ -17,6 +17,14 @@ import OrganizerManagementPage from "./pages/admin/OrganizerManagementPage";
 import PaymentPage from "./components/booking/Payment";
 import SelectSeats from "./components/booking/SelectSeats";
 import Payment from "./components/booking/Payment";
+import PaymentResult from "./components/booking/Payment-result";
+import PaymentCancel from "./components/booking/Payment-cancel";
+import DepositResult from "./components/organizer/DepositResult";
+import EventManagementPage from "./pages/admin/EventManagementPage";
+import OrganizerEventList from "./components/organizer/OrganizerEventList";
+import EditEventForm from "./components/organizer/EditEventForm";
+
+
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() => import("./components/authentication/LoginPage"));
 const RegisterPage = lazy(() =>
@@ -84,18 +92,28 @@ function App() {
               />
               <Route path="payment" element={<Payment />} />
             </Route>
+            <Route path="/payment-result" element={<PaymentResult />} />
+            <Route path="/payment-cancel" element={<PaymentCancel />} />
+            <Route path="/deposit-result" element={<DepositResult />} />
           </Route>
 
           {/* Protected Routes for Organizers */}
           <Route element={<PrivateRoute allowedRoles={["ORGANIZER"]} />}>
             <Route path="/organizer/*" element={<OrganizerLayout />}>
+
+              {/* Route mặc định: hiển thị danh sách sự kiện */}
+              <Route index element={<OrganizerEventList />} />
+
               <Route
-                path="layout-designer/:showingTimeId"
-                element={<LayoutDesigner />}
+                  path="layout-designer/:showingTimeId"
+                  element={<LayoutDesigner />}
               />
               <Route path="create-event" element={<EventCreationForm />} />
+              <Route path="edit/:id" element={<EditEventForm />} />
             </Route>
           </Route>
+
+
           {/* Protected Routes for Admins */}
           <Route element={<PrivateRoute allowedRoles={["ADMIN"]} />} />
           <Route element={<AdminLayout />}>
@@ -109,6 +127,7 @@ function App() {
               path="/admin/organizers"
               element={<OrganizerManagementPage />}
             />
+            <Route path="/admin/events" element={<EventManagementPage />} />
           </Route>
           <Route path="/book/:showingId/*" element={<BookingPage />} />
         </Routes>

@@ -98,4 +98,5 @@ public class Organizer {
     @JoinColumn(name = "org_type_id")
     private OrgType orgType;
 
+
 }

@@ -4,7 +4,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-public class UpdateShowingTimeRequest {
+public class    UpdateShowingTimeRequest {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private LocalDateTime saleOpenTime;

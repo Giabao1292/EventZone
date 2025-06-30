@@ -24,42 +24,64 @@ const CategoryNav = ({ onSelectCategory, selectedCategoryId }) => {
     fetchCategories();
   }, []);
 
+  const buttonVariants = {
+    initial: { scale: 1 },
+    hover: { scale: 1.05 },
+    selected: { scale: 1.08 },
+  };
+
   return (
-    <div className="relative z-20 w-full bg-[#1E2029] shadow-md">
+    <div className="relative w-full bg-gradient-to-b from-[#1E2029]/80 to-[#1E2029] shadow-lg backdrop-blur-sm overflow-hidden">
       {/* Background glow center */}
-      <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
-        <div className="w-[400px] h-[400px] bg-[#FF1B00] opacity-[0.07] blur-[150px] rounded-full" />
+      <div className="absolute inset-0 flex justify-center items-center pointer-events-none z-0">
+        <div className="w-[300px] h-[300px] bg-yellow-500/10 opacity-40 blur-[120px] rounded-full animate-pulse" />
       </div>
 
-      <div className="relative z-10 max-w-6xl mx-auto px-4 py-4 flex justify-center gap-3 sm:gap-6 flex-wrap">
+      <div className="relative z-10 max-w-6xl mx-auto px-4 py-6 flex justify-center gap-3 sm:gap-4 flex-wrap">
         {categories.map((cat) => {
           const isSelected = selectedCategoryId === cat.categoryId;
 
           return (
-            <button
+            <motion.button
               key={cat.categoryId}
               onClick={() => onSelectCategory?.(cat.categoryId)}
-              className={`relative px-5 py-2 sm:py-2.5 rounded-md font-semibold text-sm sm:text-base
-                transition-all duration-200 backdrop-blur
+              className={`relative px-4 py-2 rounded-md font-medium text-sm sm:text-base transition-all duration-300
                 ${
                   isSelected
-                    ? "text-white"
-                    : "text-white/80 hover:text-white hover:bg-white/10"
+                    ? "text-white shadow"
+                    : "text-gray-200 hover:text-white hover:shadow-md"
                 }`}
+              variants={buttonVariants}
+              initial="initial"
+              whileHover="hover"
+              animate={isSelected ? "selected" : "initial"}
+              whileTap={{ scale: 0.95 }}
             >
-              {cat.categoryName}
+              <span className="relative z-20">{cat.categoryName}</span>
 
-              {/* Gạch dưới full width */}
+              {/* Underline glow effect */}
               <AnimatePresence>
                 {isSelected && (
                   <motion.div
                     layoutId="underline"
-                    className="absolute left-0 bottom-0 h-[2px] w-full bg-emerald-400 rounded-full"
-                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    className="absolute left-0 bottom-0 h-[2px] w-full bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
                   />
                 )}
               </AnimatePresence>
-            </button>
+
+              {/* Glow overlay - separate and contained */}
+              {isSelected && (
+                <motion.div
+                  className="absolute inset-0 rounded-md bg-yellow-500/10 pointer-events-none z-[-1]"
+                  animate={{ opacity: [0, 0.2, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                />
+              )}
+            </motion.button>
           );
         })}
       </div>

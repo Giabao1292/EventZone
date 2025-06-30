@@ -27,7 +27,7 @@ public class ShowingTimeController {
     @PostMapping("/create")
     public ResponseData<List<ShowingTime>> createMultiple(@RequestBody CreateMultipleShowingTimeRequest req) {
         List<ShowingTime> created = showingTimeService.createMultipleShowingTimes(req);
-        return new ResponseData(HttpStatus.CREATED.value(), "Suất chiếu được thêm thành công", created);
+        return new ResponseData<>(HttpStatus.CREATED.value(), "Suất chiếu được thêm thành công", created);
     }
 
     @GetMapping("/{id}/layout")

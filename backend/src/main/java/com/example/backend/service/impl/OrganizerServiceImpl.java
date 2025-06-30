@@ -178,4 +178,11 @@ public class OrganizerServiceImpl implements OrganizerService {
         organizer.setStatus(StatusOrganizer.valueOf(status));
         organizerRepository.save(organizer);
     }
+
+    @Override
+    public Organizer getOrganizerByEmail(String email) {
+        return organizerRepository.findByUser_Email(email)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy organizer cho username: " + email));
+    }
+
 }

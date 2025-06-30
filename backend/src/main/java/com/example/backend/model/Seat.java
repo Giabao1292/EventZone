@@ -35,8 +35,10 @@ public class Seat {
 
     @Column(name = "seat_label", length = 10)
     private String seatLabel;
+
     @Column(name = "x", length = 10)
     private Integer x;
+
     @Column(name = "y", length = 10)
     private Integer y;
     @OneToMany(mappedBy = "seat", cascade = CascadeType.ALL)
