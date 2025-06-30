@@ -22,5 +22,8 @@ public interface EventService {
 
     EventDetailAdmin getEventDetailAdmin(int eventId);
 
+    Event editEvent(int eventId, EventRequest request);
+
+    List<Event> findEventsByOrganizerId(int organizerId);
     void updateStatus(UpdateStatusEvent status, int eventId);
 }

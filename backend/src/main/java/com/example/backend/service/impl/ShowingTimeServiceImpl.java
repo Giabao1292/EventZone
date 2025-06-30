@@ -2,6 +2,7 @@ package com.example.backend.service.impl;
 
 import com.example.backend.dto.request.CreateMultipleShowingTimeRequest;
 import com.example.backend.dto.request.ShowingTimeRequest;
+import com.example.backend.dto.request.UpdateShowingTimeRequest;
 import com.example.backend.dto.response.LayoutDTO;
 import com.example.backend.dto.response.SeatDTO;
 import com.example.backend.dto.response.ZoneDTO;
@@ -170,5 +171,40 @@ public  class ShowingTimeServiceImpl implements ShowingTimeService {
         dto.setStartTime(st.getEvent().getStartTime());
         dto.setLocation(st.getAddress().getVenueName() + ", " + st.getAddress().getCity());
         return dto;
+    }
+
+    @Override
+    public ShowingTime updateShowingTime(int id, UpdateShowingTimeRequest req) {
+        // Tìm suất chiếu cần cập nhật
+        ShowingTime st = showingTimeRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy suất chiếu id=" + id));
+
+        // Validate các trường (tùy dự án, bạn có thể thêm nhiều kiểm tra hơn)
+        if (req.getStartTime() == null || req.getEndTime() == null ||
+                req.getSaleOpenTime() == null || req.getSaleCloseTime() == null) {
+            throw new IllegalArgumentException("Các trường thời gian không được để trống");
+        }
+        if (!req.getStartTime().isBefore(req.getEndTime())) {
+            throw new IllegalArgumentException("Start time phải trước end time");
+        }
+        if (!req.getSaleOpenTime().isBefore(req.getSaleCloseTime())) {
+            throw new IllegalArgumentException("Sale open time phải trước sale close time");
+        }
+        if (!req.getSaleOpenTime().isBefore(req.getStartTime())) {
+            throw new IllegalArgumentException("Sale open time phải trước start time");
+        }
+        if (!req.getSaleCloseTime().isBefore(req.getStartTime()) && !req.getSaleCloseTime().isEqual(req.getStartTime())) {
+            throw new IllegalArgumentException("Sale close time phải trước hoặc bằng start time");
+        }
+
+        // Cập nhật thông tin
+        st.setStartTime(req.getStartTime());
+        st.setEndTime(req.getEndTime());
+        st.setSaleOpenTime(req.getSaleOpenTime());
+        st.setSaleCloseTime(req.getSaleCloseTime());
+        st.setLayoutMode(req.getLayoutMode());
+
+        // Lưu lại và trả về
+        return showingTimeRepo.save(st);
     }
 }

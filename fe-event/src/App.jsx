@@ -21,6 +21,8 @@ import PaymentResult from "./components/booking/Payment-result";
 import PaymentCancel from "./components/booking/Payment-cancel";
 import DepositResult from "./components/organizer/DepositResult";
 import EventManagementPage from "./pages/admin/EventManagementPage";
+import OrganizerEventList from "./components/organizer/OrganizerEventList";
+import EditEventForm from "./components/organizer/EditEventForm";
 import VoucherManagementPage from "./pages/admin/VoucherManagementPage";
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() => import("./components/authentication/LoginPage"));
@@ -97,13 +99,20 @@ function App() {
           {/* Protected Routes for Organizers */}
           <Route element={<PrivateRoute allowedRoles={["ORGANIZER"]} />}>
             <Route path="/organizer/*" element={<OrganizerLayout />}>
+
+              {/* Route mặc định: hiển thị danh sách sự kiện */}
+              <Route index element={<OrganizerEventList />} />
+
               <Route
-                path="layout-designer/:showingTimeId"
-                element={<LayoutDesigner />}
+                  path="layout-designer/:showingTimeId"
+                  element={<LayoutDesigner />}
               />
               <Route path="create-event" element={<EventCreationForm />} />
+              <Route path="edit/:id" element={<EditEventForm />} />
             </Route>
           </Route>
+
+
           {/* Protected Routes for Admins */}
           <Route element={<PrivateRoute allowedRoles={["ADMIN"]} />} />
           <Route element={<AdminLayout />}>

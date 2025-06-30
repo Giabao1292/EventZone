@@ -5,12 +5,14 @@ import com.example.backend.dto.request.EventRequest;
 import com.example.backend.dto.request.UpdateStatusEvent;
 import com.example.backend.dto.response.*;
 import com.example.backend.model.Event;
-import com.example.backend.repository.CategoryRepository;
+import com.example.backend.model.Organizer;
 import com.example.backend.service.EventService;
+import com.example.backend.service.OrganizerService;
 import com.example.backend.service.VNPayService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +22,8 @@ import vn.payos.PayOS;
 import vn.payos.type.CheckoutResponseData;
 import vn.payos.type.PaymentData;
 import vn.payos.type.PaymentLinkData;
+
+
 
 import java.util.HashMap;
 import java.util.List;
@@ -31,9 +35,10 @@ import java.util.Map;
 @RequestMapping("/api/events")
 public class EventController {
     private final EventService eventService;
-    private final CategoryRepository categoryRepository;
     private final VNPayService vnpayService;
     private final PayOS payOS;
+    private final OrganizerService organizerService;
+
 
     @PreAuthorize("hasRole('ORGANIZER')")
     @PostMapping("/create")
@@ -137,6 +142,8 @@ public class EventController {
                 new ResponseData<>(200, "Lấy thông tin chi tiết sự kiện thành công", detail)
         );
     }
+
+
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseData<PageResponse<EventSummaryAdmin>> searchEvent(Pageable pageable, @RequestParam(name = "search", required = false) String... search) {
@@ -157,4 +164,48 @@ public class EventController {
         eventService.updateStatus(status, eventId);
         return null;
     }
+
+    @PreAuthorize("hasRole('ORGANIZER')")
+    @PutMapping("/edit/{eventId}")
+    public ResponseEntity<ResponseData<Integer>> editEvent(@PathVariable int eventId, @RequestBody @Valid EventRequest request) {
+        Event updatedEvent = eventService.editEvent(eventId, request);
+        if (updatedEvent == null) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(new ResponseData<>(404, "Không tìm thấy sự kiện để chỉnh sửa", null));
+        }
+        return ResponseEntity
+                .ok(new ResponseData<>(200, "Chỉnh sửa thông tin sự kiện thành công", updatedEvent.getId()));
+    }
+
+
+    @PreAuthorize("hasRole('ORGANIZER')")
+    @GetMapping("/myevents")
+    public ResponseEntity<ResponseData<List<EventSummaryDTO>>> getMyEvents(Authentication authentication) {
+        String email = authentication.getName();
+        System.out.println("EMAIL từ token: " + email);
+
+        Organizer organizer = organizerService.getOrganizerByEmail(email);
+        if (organizer == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ResponseData<>(404, "Không tìm thấy Organizer với email: " + email, null));
+        }
+        List<Event> events = eventService.findEventsByOrganizerId(organizer.getId());
+
+        // Map List<Event> -> List<EventSummaryDTO>
+        List<EventSummaryDTO> eventDTOs = events.stream()
+                .map(EventSummaryDTO::new) // sử dụng constructor EventSummaryDTO(Event event)
+                .toList();
+
+        return ResponseEntity.ok(
+                new ResponseData<>(200, "Lấy danh sách sự kiện thành công", eventDTOs)
+        );
+    }
+
+
+
+
+
+
+
 }

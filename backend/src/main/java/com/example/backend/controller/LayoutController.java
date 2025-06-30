@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequestMapping("/api/events")
 @RequiredArgsConstructor
 public class LayoutController {
 
@@ -16,7 +17,7 @@ public class LayoutController {
     /**
      * Legacy endpoint giữ nguyên để frontend cũ không phải đổi
      */
-    @PostMapping("/api/events/save-layout")
+    @PostMapping("/save-layout")
     public ResponseData<?> saveLayout(@RequestBody LayoutRequest request) {
         // Nếu request thiếu showingTimeId, trả về lỗi rõ ràng
         if (request.getShowingTimeId() == null) {
@@ -25,6 +26,7 @@ public class LayoutController {
         layoutService.saveLayout(request);
         return new ResponseData<>(HttpStatus.CREATED.value(), "Layout đã được lưu thành công");
     }
+
 
 
 }

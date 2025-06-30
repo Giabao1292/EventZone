@@ -12,6 +12,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PutMapping;
+
 
 import java.time.Instant;
 import java.util.List;
@@ -84,67 +86,115 @@ public class EventServiceImpl implements EventService {
         return eventRepository.save(event);
     }
 
+
     @Override
     public EventDetailDTO getEventDetailById(int eventId) {
         Event event = eventRepository.findEventDetail(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sự kiện với ID = " + eventId));
 
-        EventDetailDTO dto = new EventDetailDTO();
-        dto.setId(event.getId());
-        dto.setEventTitle(event.getEventTitle());
-        dto.setDescription(event.getDescription());
-        dto.setStartTime(event.getStartTime());
-        dto.setEndTime(event.getEndTime());
-        dto.setHeaderImage(event.getHeaderImage());
-
+        // Mapping danh sách ShowingTime (nếu có)
         List<ShowingTimeDTO> showingTimeDTOs = event.getTblShowingTimes().stream().map(st -> {
             ShowingTimeDTO stDto = new ShowingTimeDTO();
             stDto.setId(st.getId());
             stDto.setStartTime(st.getStartTime());
             stDto.setEndTime(st.getEndTime());
             stDto.setLayoutMode(st.getLayoutMode());
+            stDto.setSaleOpenTime(st.getSaleOpenTime());
+            stDto.setSaleCloseTime(st.getSaleCloseTime());
 
+            // Mapping Address (nếu có)
             Address address = st.getAddress();
-            AddressDTO addrDto = new AddressDTO();
-            addrDto.setId(address.getId());
-            addrDto.setVenueName(address.getVenueName());
-            addrDto.setLocation(address.getLocation());
-            addrDto.setCity(address.getCity());
-            stDto.setAddress(addrDto);
+            if (address != null) {
+                AddressDTO addrDto = new AddressDTO();
+                addrDto.setId(address.getId());
+                addrDto.setVenueName(address.getVenueName());
+                addrDto.setLocation(address.getLocation());
+                addrDto.setCity(address.getCity());
+                stDto.setAddress(addrDto);
+            }
 
-            List<SeatDTO> seatDTOs = st.getSeats().stream().map(seat -> {
-                SeatDTO seatDTO = new SeatDTO();
-                seatDTO.setId(seat.getId());
-                seatDTO.setSeatLabel(seat.getSeatLabel());
-                seatDTO.setType(seat.getType());
-                seatDTO.setPrice(seat.getPrice());
-                seatDTO.setX(seat.getX());
-                seatDTO.setY(seat.getY());
-                seatDTO.setAvailable(seat.getBookingSeats() == null || seat.getBookingSeats().isEmpty());
-                return seatDTO;
-            }).collect(Collectors.toList());
-            stDto.setSeats(seatDTOs);
+            // Mapping Seats (nếu có)
+            if (st.getSeats() != null) {
+                List<SeatDTO> seatDTOs = st.getSeats().stream().map(seat -> {
+                    SeatDTO seatDTO = new SeatDTO();
+                    seatDTO.setId(seat.getId());
+                    seatDTO.setSeatLabel(seat.getSeatLabel());
+                    seatDTO.setType(seat.getType());
+                    seatDTO.setPrice(seat.getPrice());
+                    seatDTO.setX(seat.getX());
+                    seatDTO.setY(seat.getY());
+                    seatDTO.setAvailable(seat.getBookingSeats() == null || seat.getBookingSeats().isEmpty());
+                    return seatDTO;
+                }).collect(Collectors.toList());
+                stDto.setSeats(seatDTOs);
+            }
 
-            List<ZoneDTO> zoneDTOs = st.getZones().stream().map(zone -> {
-                ZoneDTO zoneDTO = new ZoneDTO();
-                zoneDTO.setId(zone.getId());
-                zoneDTO.setZoneName(zone.getZoneName());
-                zoneDTO.setType(zone.getType());
-                zoneDTO.setPrice(zone.getPrice());
-                zoneDTO.setX(zone.getX());
-                zoneDTO.setY(zone.getY());
-                zoneDTO.setWidth(zone.getWidth());
-                zoneDTO.setHeight(zone.getHeight());
-                zoneDTO.setCapacity(zone.getCapacity());
-                zoneDTO.setAvailable(zone.getBookingSeats() == null || zone.getBookingSeats().size() < zone.getCapacity());
-                return zoneDTO;
-            }).collect(Collectors.toList());
-            stDto.setZones(zoneDTOs);
+            // Mapping Zones (nếu có)
+            if (st.getZones() != null) {
+                List<ZoneDTO> zoneDTOs = st.getZones().stream().map(zone -> {
+                    ZoneDTO zoneDTO = new ZoneDTO();
+                    zoneDTO.setId(zone.getId());
+                    zoneDTO.setZoneName(zone.getZoneName());
+                    zoneDTO.setType(zone.getType());
+                    zoneDTO.setPrice(zone.getPrice());
+                    zoneDTO.setX(zone.getX());
+                    zoneDTO.setY(zone.getY());
+                    zoneDTO.setWidth(zone.getWidth());
+                    zoneDTO.setHeight(zone.getHeight());
+                    zoneDTO.setCapacity(zone.getCapacity());
+                    zoneDTO.setAvailable(zone.getBookingSeats() == null || zone.getBookingSeats().size() < zone.getCapacity());
+                    return zoneDTO;
+                }).collect(Collectors.toList());
+                stDto.setZones(zoneDTOs);
+            }
 
             return stDto;
         }).collect(Collectors.toList());
 
+        // Lấy thông tin địa điểm chung (nếu muốn lấy luôn từ ShowingTime đầu)
+        String location = null;
+        String city = null;
+        String venueName = null;
+        if (event.getTblShowingTimes() != null && !event.getTblShowingTimes().isEmpty()) {
+            ShowingTime firstST = event.getTblShowingTimes().iterator().next();
+            if (firstST.getAddress() != null) {
+                location = firstST.getAddress().getLocation();
+                city = firstST.getAddress().getCity();
+                venueName = firstST.getAddress().getVenueName();
+            }
+        }
+
+        // Tạo và mapping đầy đủ các field cho EventDetailDTO
+        EventDetailDTO dto = new EventDetailDTO();
+        dto.setId(event.getId());
+        dto.setEventTitle(event.getEventTitle());
+        dto.setDescription(event.getDescription());
+
+        // Lấy categoryId từ entity Category (KHÔNG BAO GIỜ DÙNG event.getCategoryId())
+        dto.setCategoryId(event.getCategory() != null ? event.getCategory().getCategoryId() : null);
+
+        dto.setBannerText(event.getBannerText());
+        dto.setHeaderImage(event.getHeaderImage());
+        dto.setPosterImage(event.getPosterImage());
+        dto.setAgeRating(event.getAgeRating());
+
+        // Địa điểm tổng hợp từ ShowingTime đầu (nếu muốn lấy theo event, sửa lại field event)
+        dto.setLocation(location);
+        dto.setCity(city);
+        dto.setVenueName(venueName);
+
+        // Nếu có field maxCapacity (thêm vào entity Event nếu cần)
+        // dto.setMaxCapacity(event.getMaxCapacity()); // Nếu có trong entity Event
+        dto.setMaxCapacity(null);
+
+        dto.setStartTime(event.getStartTime() != null ? event.getStartTime().toString() : null);
+        dto.setEndTime(event.getEndTime() != null ? event.getEndTime().toString() : null);
+
+        // Lấy statusId từ entity EventStatus (nếu có)
+        dto.setStatusId(event.getStatus() != null ? event.getStatus().getId() : null);
+
         dto.setShowingTimes(showingTimeDTOs);
+
         return dto;
     }
 
@@ -221,6 +271,44 @@ public class EventServiceImpl implements EventService {
                         .build()).collect(Collectors.toList()))
                 .build();
     }
+
+
+    @PutMapping("/edit/{eventId}")
+    public Event editEvent(int eventId, EventRequest request) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sự kiện"));
+
+        if (request.getCategoryId() != null) {
+            Category category = new Category();
+            category.setCategoryId(request.getCategoryId());
+            event.setCategory(category);
+        }
+        event.setEventTitle(request.getEventTitle());
+        event.setDescription(request.getDescription());
+        event.setStartTime(request.getStartTime());
+        event.setEndTime(request.getEndTime());
+        event.setAgeRating(request.getAgeRating());
+        event.setBannerText(request.getBannerText());
+        event.setHeaderImage(request.getHeaderImage());
+        event.setPosterImage(request.getPosterImage());
+        event.setModifiedBy("system");
+
+        // === BỔ SUNG DÒNG NÀY ĐỂ ĐẢM BẢO LUÔN VỀ DRAFT ===
+        EventStatus draftStatus = eventStatusRepository.findByStatusName("DRAFT")
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy status DRAFT"));
+        event.setStatus(draftStatus);
+
+        return eventRepository.save(event);
+    }
+
+
+    @Override
+    public List<Event> findEventsByOrganizerId(int organizerId) {
+        return eventRepository.findByOrganizer_Id(organizerId);
+    }
+
+
+
 
     @Override
     public void updateStatus(UpdateStatusEvent status, int eventId) {

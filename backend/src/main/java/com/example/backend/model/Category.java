@@ -11,8 +11,7 @@ import lombok.Setter;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-@Getter
-@Setter
+
 @Entity
 @Data
 @Table(name = "tbl_category", uniqueConstraints = {

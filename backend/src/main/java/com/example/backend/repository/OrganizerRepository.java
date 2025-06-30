@@ -16,6 +16,7 @@ public interface OrganizerRepository extends JpaRepository<Organizer, Integer> {
     Optional<Organizer> findByUserId(int userId);
 
     Page<Organizer> findAll(Pageable pageable);
+    Optional<Organizer> findByUser_Email(String email);
 
     @Query("SELECT o.id FROM Organizer o")
             Page<Integer> findAllOrganizerId(Pageable pageable);

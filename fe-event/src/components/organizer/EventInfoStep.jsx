@@ -1,20 +1,31 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { Upload } from "lucide-react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
 import { uploadImage } from "../../services/imagesService";
 
 const EventInfoStep = ({
-  eventData,
-  handleInputChange,
-  categories,
-  loading,
-}) => {
+                         eventData,
+                         handleInputChange,
+                         categories,
+                         loading,
+                         onNextStep,
+                       }) => {
   const [headerLoading, setHeaderLoading] = useState(false);
   const [posterLoading, setPosterLoading] = useState(false);
   const [errors, setErrors] = useState({});
+
+  // DEBUG: Xem dữ liệu truyền vào
+  useEffect(() => {
+    // Xoá dòng này nếu bạn đã ổn định
+    console.log("EventInfoStep - eventData:", eventData);
+  }, [eventData]);
+
+  // Đảm bảo category_id là string để select hoạt động tốt
+  const categoryValue = eventData.category_id !== undefined && eventData.category_id !== null
+      ? String(eventData.category_id)
+      : "";
 
   const handleFileUpload = async (field, file) => {
     if (!file) return;
@@ -26,9 +37,7 @@ const EventInfoStep = ({
       const imageUrl = await uploadImage(file);
       handleInputChange(field, imageUrl);
       toast.success(
-        `${
-          field === "header_image" ? "Header" : "Poster"
-        } đã tải lên thành công!`
+          `${field === "header_image" ? "Header" : "Poster"} đã tải lên thành công!`
       );
     } catch (error) {
       toast.error(`Lỗi khi tải lên ${field}: ${error.message}`);
@@ -39,7 +48,6 @@ const EventInfoStep = ({
   };
 
   return (
-    <>
       <div className="space-y-6">
         {/* Tiêu đề phần upload */}
         <div className="flex items-center space-x-2 mb-6">
@@ -53,35 +61,34 @@ const EventInfoStep = ({
           <div className="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center bg-gray-800/50">
             <div className="space-y-2">
               {!eventData.header_image ? (
-                <>
-                  <Upload className="mx-auto text-gray-500" size={32} />
-                  <p className="text-sm text-gray-400">Header Image</p>
-                  <p className="text-xs text-gray-500">Chưa chọn file</p>
-                </>
+                  <>
+                    <Upload className="mx-auto text-gray-500" size={32} />
+                    <p className="text-sm text-gray-400">Header Image</p>
+                    <p className="text-xs text-gray-500">Chưa chọn file</p>
+                  </>
               ) : (
-                <img
-                  src={eventData.header_image}
-                  alt="Header Preview"
-                  className="w-full h-32 object-cover rounded-md mx-auto mb-2"
-                />
+                  <img
+                      src={eventData.header_image}
+                      alt="Header Preview"
+                      className="w-full h-32 object-cover rounded-md mx-auto mb-2"
+                  />
               )}
               <input
-                type="file"
-                accept="image/*"
-                onChange={(e) =>
-                  handleFileUpload("header_image", e.target.files[0])
-                }
-                className="hidden"
-                id="header-upload"
-                disabled={loading || headerLoading}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) =>
+                      handleFileUpload("header_image", e.target.files[0])
+                  }
+                  className="hidden"
+                  id="header-upload"
+                  disabled={loading || headerLoading}
               />
               <label
-                htmlFor="header-upload"
-                className={`cursor-pointer ${
-                  loading || headerLoading
-                    ? "text-gray-500"
-                    : "text-blue-400 hover:text-blue-300"
-                }`}
+                  htmlFor="header-upload"
+                  className={`cursor-pointer ${loading || headerLoading
+                      ? "text-gray-500"
+                      : "text-blue-400 hover:text-blue-300"
+                  }`}
               >
                 {headerLoading ? "Đang tải..." : "Chọn file"}
               </label>
@@ -92,35 +99,34 @@ const EventInfoStep = ({
           <div className="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center bg-gray-800/50">
             <div className="space-y-2">
               {!eventData.poster_image ? (
-                <>
-                  <Upload className="mx-auto text-gray-500" size={32} />
-                  <p className="text-sm text-gray-400">Poster Image</p>
-                  <p className="text-xs text-gray-500">Chưa chọn file</p>
-                </>
+                  <>
+                    <Upload className="mx-auto text-gray-500" size={32} />
+                    <p className="text-sm text-gray-400">Poster Image</p>
+                    <p className="text-xs text-gray-500">Chưa chọn file</p>
+                  </>
               ) : (
-                <img
-                  src={eventData.poster_image}
-                  alt="Poster Preview"
-                  className="w-full h-32 object-cover rounded-md mx-auto mb-2"
-                />
+                  <img
+                      src={eventData.poster_image}
+                      alt="Poster Preview"
+                      className="w-full h-32 object-cover rounded-md mx-auto mb-2"
+                  />
               )}
               <input
-                type="file"
-                accept="image/*"
-                onChange={(e) =>
-                  handleFileUpload("poster_image", e.target.files[0])
-                }
-                className="hidden"
-                id="poster-upload"
-                disabled={loading || posterLoading}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) =>
+                      handleFileUpload("poster_image", e.target.files[0])
+                  }
+                  className="hidden"
+                  id="poster-upload"
+                  disabled={loading || posterLoading}
               />
               <label
-                htmlFor="poster-upload"
-                className={`cursor-pointer ${
-                  loading || posterLoading
-                    ? "text-gray-500"
-                    : "text-blue-400 hover:text-blue-300"
-                }`}
+                  htmlFor="poster-upload"
+                  className={`cursor-pointer ${loading || posterLoading
+                      ? "text-gray-500"
+                      : "text-blue-400 hover:text-blue-300"
+                  }`}
               >
                 {posterLoading ? "Đang tải..." : "Chọn file"}
               </label>
@@ -136,17 +142,16 @@ const EventInfoStep = ({
               Tên sự kiện *
             </label>
             <input
-              type="text"
-              value={eventData.event_title || ""}
-              onChange={(e) => handleInputChange("event_title", e.target.value)}
-              className={`w-full px-3 py-2 bg-gray-800 border ${
-                errors.eventTitle ? "border-red-500" : "border-gray-600"
-              } rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-white placeholder-gray-400`}
-              placeholder="Nhập tên sự kiện"
-              disabled={loading}
+                type="text"
+                value={eventData.event_title || ""}
+                onChange={(e) => handleInputChange("event_title", e.target.value)}
+                className={`w-full px-3 py-2 bg-gray-800 border ${errors.eventTitle ? "border-red-500" : "border-gray-600"
+                } rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-white placeholder-gray-400`}
+                placeholder="Nhập tên sự kiện"
+                disabled={loading}
             />
             {errors.eventTitle && (
-              <p className="text-xs text-red-400 mt-1">{errors.eventTitle}</p>
+                <p className="text-xs text-red-400 mt-1">{errors.eventTitle}</p>
             )}
           </div>
 
@@ -156,16 +161,16 @@ const EventInfoStep = ({
               Danh mục *
             </label>
             <select
-              value={eventData.category_id || ""}
-              onChange={(e) => handleInputChange("category_id", e.target.value)}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-white"
-              disabled={loading}
+                value={categoryValue}
+                onChange={(e) => handleInputChange("category_id", e.target.value)}
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-white"
+                disabled={loading}
             >
               <option value="">Chọn danh mục</option>
               {categories.map((cat) => (
-                <option key={cat.categoryId} value={cat.categoryId}>
-                  {cat.categoryName}
-                </option>
+                  <option key={cat.categoryId} value={String(cat.categoryId)}>
+                    {cat.categoryName}
+                  </option>
               ))}
             </select>
           </div>
@@ -176,12 +181,12 @@ const EventInfoStep = ({
               Mô tả sự kiện
             </label>
             <textarea
-              value={eventData.description || ""}
-              onChange={(e) => handleInputChange("description", e.target.value)}
-              rows={4}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-white placeholder-gray-400"
-              placeholder="Mô tả chi tiết về sự kiện"
-              disabled={loading}
+                value={eventData.description || ""}
+                onChange={(e) => handleInputChange("description", e.target.value)}
+                rows={4}
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-white placeholder-gray-400"
+                placeholder="Mô tả chi tiết về sự kiện"
+                disabled={loading}
             />
           </div>
 
@@ -192,18 +197,17 @@ const EventInfoStep = ({
                 Thời gian bắt đầu *
               </label>
               <input
-                type="datetime-local"
-                value={eventData.start_time || ""}
-                onChange={(e) =>
-                  handleInputChange("start_time", e.target.value)
-                }
-                className={`w-full px-3 py-2 bg-gray-800 border ${
-                  errors.startTime ? "border-red-500" : "border-gray-600"
-                } rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-white`}
-                disabled={loading}
+                  type="datetime-local"
+                  value={eventData.start_time || ""}
+                  onChange={(e) =>
+                      handleInputChange("start_time", e.target.value)
+                  }
+                  className={`w-full px-3 py-2 bg-gray-800 border ${errors.startTime ? "border-red-500" : "border-gray-600"
+                  } rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-white`}
+                  disabled={loading}
               />
               {errors.startTime && (
-                <p className="text-xs text-red-400 mt-1">{errors.startTime}</p>
+                  <p className="text-xs text-red-400 mt-1">{errors.startTime}</p>
               )}
             </div>
             <div>
@@ -211,34 +215,32 @@ const EventInfoStep = ({
                 Thời gian kết thúc *
               </label>
               <input
-                type="datetime-local"
-                value={eventData.end_time || ""}
-                onChange={(e) => handleInputChange("end_time", e.target.value)}
-                className={`w-full px-3 py-2 bg-gray-800 border ${
-                  errors.endTime ? "border-red-500" : "border-gray-600"
-                } rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-white`}
-                disabled={loading}
+                  type="datetime-local"
+                  value={eventData.end_time || ""}
+                  onChange={(e) => handleInputChange("end_time", e.target.value)}
+                  className={`w-full px-3 py-2 bg-gray-800 border ${errors.endTime ? "border-red-500" : "border-gray-600"
+                  } rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-white`}
+                  disabled={loading}
               />
               {errors.endTime && (
-                <p className="text-xs text-red-400 mt-1">{errors.endTime}</p>
+                  <p className="text-xs text-red-400 mt-1">{errors.endTime}</p>
               )}
             </div>
           </div>
 
           {/* Độ tuổi và Banner Text */}
           <div className="grid grid-cols-2 gap-4">
-            {/* Độ tuổi */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Độ tuổi
               </label>
               <select
-                value={eventData.age_rating || ""}
-                onChange={(e) =>
-                  handleInputChange("age_rating", e.target.value)
-                }
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-white"
-                disabled={loading}
+                  value={eventData.age_rating || ""}
+                  onChange={(e) =>
+                      handleInputChange("age_rating", e.target.value)
+                  }
+                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-white"
+                  disabled={loading}
               >
                 <option value="">Chọn độ tuổi</option>
                 <option value="All ages">Mọi lứa tuổi</option>
@@ -247,33 +249,31 @@ const EventInfoStep = ({
               </select>
             </div>
 
-            {/* Banner Text */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Banner Text
               </label>
               <input
-                type="text"
-                value={eventData.banner_text || ""}
-                onChange={(e) =>
-                  handleInputChange("banner_text", e.target.value)
-                }
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-white placeholder-gray-400"
-                placeholder="Text hiển thị trên banner"
-                disabled={loading}
+                  type="text"
+                  value={eventData.banner_text || ""}
+                  onChange={(e) =>
+                      handleInputChange("banner_text", e.target.value)
+                  }
+                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-white placeholder-gray-400"
+                  placeholder="Text hiển thị trên banner"
+                  disabled={loading}
               />
             </div>
           </div>
         </div>
       </div>
-    </>
   );
 };
 
 // Kiểu dữ liệu props
 EventInfoStep.propTypes = {
   eventData: PropTypes.shape({
-    event_title: PropTypes.string.isRequired,
+    event_title: PropTypes.string,
     category_id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     description: PropTypes.string,
     age_rating: PropTypes.string,
@@ -284,12 +284,12 @@ EventInfoStep.propTypes = {
     end_time: PropTypes.string,
   }).isRequired,
   handleInputChange: PropTypes.func.isRequired,
-  onNextStep: PropTypes.func.isRequired,
+  onNextStep: PropTypes.func,
   categories: PropTypes.arrayOf(
-    PropTypes.shape({
-      categoryId: PropTypes.number.isRequired,
-      categoryName: PropTypes.string.isRequired,
-    })
+      PropTypes.shape({
+        categoryId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+        categoryName: PropTypes.string,
+      })
   ).isRequired,
   loading: PropTypes.bool.isRequired,
 };

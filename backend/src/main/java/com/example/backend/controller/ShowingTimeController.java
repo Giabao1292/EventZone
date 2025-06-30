@@ -1,6 +1,7 @@
 package com.example.backend.controller;
 
 import com.example.backend.dto.request.CreateMultipleShowingTimeRequest;
+import com.example.backend.dto.request.UpdateShowingTimeRequest;
 import com.example.backend.dto.response.LayoutDTO;
 import com.example.backend.dto.response.ResponseData;
 import com.example.backend.model.ShowingTime;
@@ -26,7 +27,7 @@ public class ShowingTimeController {
     @PostMapping("/create")
     public ResponseData<List<ShowingTime>> createMultiple(@RequestBody CreateMultipleShowingTimeRequest req) {
         List<ShowingTime> created = showingTimeService.createMultipleShowingTimes(req);
-        return new ResponseData(HttpStatus.CREATED.value(), "showing time added successfully", created);
+        return new ResponseData<>(HttpStatus.CREATED.value(), "Suất chiếu được thêm thành công", created);
     }
 
     @GetMapping("/{id}/layout")
@@ -35,4 +36,14 @@ public class ShowingTimeController {
         LayoutDTO layout = showingTimeService.getLayout(id);
         return new ResponseData<>(200, "OK", layout);
     }
+
+    @PreAuthorize("hasRole('ORGANIZER')")
+    @PutMapping("/{id}")
+    public ResponseData<ShowingTime> updateSingle(@PathVariable int id, @RequestBody UpdateShowingTimeRequest req) {
+        ShowingTime updated = showingTimeService.updateShowingTime(id, req);
+        return new ResponseData<>(200, "Cập nhật sự kiện thành công", updated);
+    }
+
+
+
 }
