@@ -17,11 +17,7 @@ import OrganizerManagementPage from "./pages/admin/OrganizerManagementPage";
 import PaymentPage from "./components/booking/Payment";
 import SelectSeats from "./components/booking/SelectSeats";
 import Payment from "./components/booking/Payment";
-import PaymentResult from "./components/booking/Payment-result";
-import PaymentCancel from "./components/booking/Payment-cancel";
-import DepositResult from "./components/organizer/DepositResult";
-import EventManagementPage from "./pages/admin/EventManagementPage";
-import VoucherManagementPage from "./pages/admin/VoucherManagementPage";
+import WishlistPage from "./pages/WishListPage";
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() => import("./components/authentication/LoginPage"));
 const RegisterPage = lazy(() =>
@@ -70,6 +66,7 @@ function App() {
           {/* Protected Routes for Authenticated Users */}
           <Route element={<PrivateRoute />}>
             <Route element={<AppLayout />}>
+              <Route path="/wishlist" element={<WishlistPage />} />
               <Route path="payment" element={<PaymentPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/change-password" element={<ChangePasswordForm />} />
@@ -89,9 +86,6 @@ function App() {
               />
               <Route path="payment" element={<Payment />} />
             </Route>
-            <Route path="/payment-result" element={<PaymentResult />} />
-            <Route path="/payment-cancel" element={<PaymentCancel />} />
-            <Route path="/deposit-result" element={<DepositResult />} />
           </Route>
 
           {/* Protected Routes for Organizers */}
@@ -113,13 +107,10 @@ function App() {
             />
             <Route path="/admin/dashboard" element={<DashboardPage />} />
             <Route path="/admin/users" element={<UserManagementPage />} />
-            <Route path="/admin/vouchers" element={<VoucherManagementPage />} />
-
             <Route
               path="/admin/organizers"
               element={<OrganizerManagementPage />}
             />
-            <Route path="/admin/events" element={<EventManagementPage />} />
           </Route>
           <Route path="/book/:showingId/*" element={<BookingPage />} />
         </Routes>
