@@ -25,6 +25,4 @@ public class LayoutController {
         layoutService.saveLayout(request);
         return new ResponseData<>(HttpStatus.CREATED.value(), "Layout đã được lưu thành công");
     }
-
-
 }

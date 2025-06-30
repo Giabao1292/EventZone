@@ -139,8 +139,7 @@ public class EventController {
     }
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    public ResponseData<PageResponse<EventSummaryAdmin>> searchEvent(Pageable pageable, @RequestParam(name = "search", required = false) String... search) {
-                PageResponse<EventSummaryAdmin> listEvents = eventService.searchEvent(pageable, search);
+    public ResponseData<PageResponse<EventSummaryAdmin>> searchEvent(Pageable pageable, @RequestParam(name = "search", required = false) String... search) {         PageResponse<EventSummaryAdmin> listEvents = eventService.searchEvent(pageable, search);
         return new ResponseData<>(HttpStatus.OK.value(), "Get list of events", listEvents);
     }
 
@@ -155,6 +154,6 @@ public class EventController {
     @PatchMapping("/{id}/status")
     public ResponseData<?> updateEvent(@PathVariable("id") int eventId, @RequestBody UpdateStatusEvent status) {
         eventService.updateStatus(status, eventId);
-        return null;
+        return new ResponseData<>(HttpStatus.OK.value(), "Update status succesfully");
     }
 }
