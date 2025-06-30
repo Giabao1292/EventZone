@@ -85,7 +85,7 @@ public class Organizer {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne
     @JoinColumn(name = "user_id")
     @JsonBackReference
     private User user;
@@ -94,7 +94,7 @@ public class Organizer {
     @JsonManagedReference
     private Set<Event> tblEvents = new LinkedHashSet<>();
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne()
     @JoinColumn(name = "org_type_id")
     private OrgType orgType;
 

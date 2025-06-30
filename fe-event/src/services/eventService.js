@@ -22,7 +22,6 @@ export const searchEvents = async (page = 0, size = 10, searchParams = []) => {
 
 export const getEvents = async (page, pageSize, searchParams = []) => {
   try {
-    // Convert searchParams array to search format if needed
     const formattedSearchParams = Array.isArray(searchParams)
       ? searchParams
       : [];
@@ -31,20 +30,21 @@ export const getEvents = async (page, pageSize, searchParams = []) => {
     params.append("page", page.toString());
     params.append("size", pageSize.toString());
 
-    // Add search parameters in format: search=field:value
     formattedSearchParams.forEach((param) => {
       params.append("search", param);
     });
 
-    const response = await apiClient.get(`/events/search?${params}`);
+    const response = await apiClient.get("/events", {
+      params: Object.fromEntries(params),
+    });
+
     const data = response.data;
 
-    // Map response to expected format
-    if (data.code === 200 && data.data) {
+    if (data.code === 200 && data.data && data.data.content) {
       return {
         code: 200,
         data: {
-          content: data.data.map((event) => ({
+          content: data.data.content.map((event) => ({
             eventId: event.id,
             eventName: event.eventTitle,
             category: event.categoryName,
@@ -53,13 +53,14 @@ export const getEvents = async (page, pageSize, searchParams = []) => {
             startDate: event.startTime ? event.startTime.split("T")[0] : "",
             status: event.status,
             description: event.description,
-            headerImage: event.headerImage,
+            posterImage: event.posterImage,
             ageRating: event.ageRating,
             endTime: event.endTime,
           })),
-          totalElements: data.data.length,
-          totalPages: Math.ceil(data.data.length / pageSize),
-          number: page,
+          totalElements: data.data.totalElements,
+          totalPages: data.data.totalPages,
+          number: data.data.number,
+          size: data.data.size,
         },
         message: "Events fetched successfully",
       };
@@ -68,35 +69,10 @@ export const getEvents = async (page, pageSize, searchParams = []) => {
     return data;
   } catch (error) {
     console.error("Error fetching events:", error);
-    // Return fallback data on error
     return {
-      code: 200,
-      data: {
-        content: [
-          {
-            eventId: 1,
-            eventName: "Tech Conference 2024",
-            category: "Technology",
-            organizerName: "Tech Corp",
-            location: "Ho Chi Minh City",
-            startDate: "2024-03-15",
-            status: "PENDING",
-          },
-          {
-            eventId: 2,
-            eventName: "Music Festival",
-            category: "Entertainment",
-            organizerName: "Music Events Ltd",
-            location: "Hanoi",
-            startDate: "2024-04-20",
-            status: "APPROVED",
-          },
-        ],
-        totalElements: 2,
-        totalPages: 1,
-        number: page,
-      },
-      message: "Events fetched successfully",
+      code: 500,
+      data: null,
+      message: "Failed to fetch events",
     };
   }
 };
@@ -137,8 +113,10 @@ export const getEventDetails = async (eventId) => {
             { url: event.orgLogoUrl || "/placeholder.svg" },
           ],
           // Additional fields from API
+          rejectionReason: event.rejectionReason || "",
           ageRating: event.ageRating,
           organizerName: event.organizerName,
+          organizerEmail: event.organizerEmail,
           categoryName: event.categoryName,
           status: event.status,
           bannerText: event.bannerText,
@@ -220,15 +198,14 @@ export const updateEventStatus = async (
       ...(rejectionReason && { rejectionReason }),
     };
 
-    const response = await apiClient.put(`/events/${eventId}/status`, body);
+    const response = await apiClient.patch(`/events/${eventId}/status`, body);
     return response.data;
   } catch (error) {
-    console.error("Error updating event status:", error);
-    // Return fallback response on error
-    return {
-      code: 200,
-      message: `Event status updated to ${status} successfully`,
-    };
+    console.error(
+      "Error updating event status:",
+      error.response?.data || error.message
+    );
+    throw error;
   }
 };
 
@@ -258,24 +235,20 @@ export const buildSearchParams = (statusName, eventTitle) => {
 // Map API response to component format
 export const mapApiEventToComponent = (apiEvent) => {
   return {
-    id: apiEvent.eventId?.toString() || apiEvent.id?.toString() || "",
-    title: apiEvent.eventName || apiEvent.eventTitle || "",
+    id: apiEvent.id?.toString() || "",
+    title: apiEvent.eventTitle || "",
     description: apiEvent.description || "",
-    startDate:
-      apiEvent.startDate ||
-      (apiEvent.startTime ? apiEvent.startTime.split("T")[0] : ""),
-    endDate:
-      apiEvent.endDate ||
-      (apiEvent.endTime ? apiEvent.endTime.split("T")[0] : ""),
+    startDate: apiEvent.startTime ? apiEvent.startTime.split("T")[0] : "",
+    endDate: apiEvent.endTime ? apiEvent.endTime.split("T")[0] : "",
     time: apiEvent.startTime
       ? apiEvent.startTime.split("T")[1]?.substring(0, 5)
       : "",
-    location: apiEvent.location || apiEvent.address || "",
+    location: apiEvent.address || "",
     price: 0,
     maxTickets: 0,
     soldTickets: 0,
-    category: apiEvent.category || apiEvent.categoryName || "",
-    imageUrl: apiEvent.headerImage || "/placeholder.svg?height=200&width=300",
+    category: apiEvent.categoryName || "",
+    imageUrl: apiEvent.posterImage || "/placeholder.svg?height=200&width=300",
     organizerId: "",
     organizerName: apiEvent.organizerName || "",
     organizerEmail: "",
@@ -308,13 +281,14 @@ export const mapApiEventDetailToComponent = (apiEventDetail) => {
     maxTickets: apiEventDetail.maxParticipants || 0,
     soldTickets: 0,
     category: apiEventDetail.categoryName || "",
+    rejectionReason: apiEventDetail.rejectionReason || "",
     imageUrl:
       apiEventDetail.thumbnailUrl ||
       apiEventDetail.bannerUrl ||
       "/placeholder.svg?height=200&width=300",
     organizerId: "",
     organizerName: apiEventDetail.organizerName || "",
-    organizerEmail: apiEventDetail.contactEmail || "",
+    organizerEmail: apiEventDetail.organizerEmail || "",
     status: mapApiStatusToDisplay(apiEventDetail.status),
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -335,6 +309,7 @@ export const mapApiStatusToDisplay = (apiStatus) => {
     "Đã duyệt": "approved",
     "Từ chối": "rejected",
     "Đã xuất bản": "published",
+    DRAFT: "pending",
     PENDING: "pending",
     APPROVED: "approved",
     REJECTED: "rejected",
@@ -357,12 +332,9 @@ export const mapDisplayStatusToApi = (displayStatus) => {
 };
 
 // Get event statistics
-export const getEventStats = async () => {
+export const getEventStats = (events) => {
   try {
-    const allEvents = await getEvents(0, 1000, []);
-
-    if (allEvents.code === 200 && allEvents.data && allEvents.data.content) {
-      const events = allEvents.data.content;
+    if (events && events.length > 0) {
       const stats = {
         total: events.length,
         pending: events.filter(
@@ -389,7 +361,7 @@ export const getEventStats = async () => {
       published: 0,
     };
   } catch (error) {
-    console.error("Error fetching event stats:", error);
+    console.error("Error calculating event stats:", error);
     return {
       total: 0,
       pending: 0,

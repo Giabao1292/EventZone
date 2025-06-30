@@ -1,18 +1,14 @@
 package com.example.backend.repository;
 
-import com.example.backend.dto.response.OrganizerResponse;
-import com.example.backend.dto.response.UserResponseDTO;
 import com.example.backend.model.*;
 import com.example.backend.repository.criteria.SearchCriteria;
 import com.example.backend.repository.criteria.SearchCriteriaBuilder;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.JoinTable;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.criteria.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
@@ -32,10 +28,17 @@ public class SearchCriteriaRepository {
         CriteriaBuilder criteriaBuilder =  entityManager.getCriteriaBuilder();
         CriteriaQuery<User> criteriaQuery = criteriaBuilder.createQuery(User.class);
         Root<User> userRoot = criteriaQuery.from(User.class);
+
+        userRoot.fetch("organizer", JoinType.LEFT);
+        Fetch<User, UserRole> userRoleFetch = userRoot.fetch("tblUserRoles", JoinType.LEFT);
+        userRoleFetch.fetch("role", JoinType.LEFT);
+        //Fetch để tránh việc N + 1 xảy ra khi tự động load organizer(EAGER), khi truy cập đến tblUserRoles(Lazy).
+
         Join<User, UserRole> joinUserRole = userRoot.join("tblUserRoles", JoinType.LEFT);
         Join<UserRole, Role> joinRole = joinUserRole.join("role", JoinType.LEFT);
         Predicate predicate = getSearchPredicate(List.of(userRoot, joinRole), criteriaBuilder, search);
         criteriaQuery.select(userRoot).where(predicate);
+
         List<User> listUsers = entityManager.createQuery(criteriaQuery)
                 .setFirstResult((int)pageable.getOffset()).setMaxResults(pageable.getPageSize()).getResultList();
         Long count = countUsersSearch(criteriaBuilder,search);
@@ -54,10 +57,15 @@ public class SearchCriteriaRepository {
         log.info("End count users search...");
         return count;
     }
+
     public Page<Organizer> searchOrganizers(Pageable pageable, String... search){
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
         CriteriaQuery<Organizer> criteriaQuery = criteriaBuilder.createQuery(Organizer.class);
         Root<Organizer> organizerRoot = criteriaQuery.from(Organizer.class);
+
+        organizerRoot.fetch("user", JoinType.LEFT);
+        organizerRoot.fetch("orgType", JoinType.LEFT);
+
         Join<Organizer, User> joinUser = organizerRoot.join("user");
         Join<Organizer, OrgType> joinOrgType = organizerRoot.join("orgType");
         Predicate predicate = getSearchPredicate(List.of(organizerRoot,joinUser, joinOrgType), criteriaBuilder, search);
@@ -70,6 +78,7 @@ public class SearchCriteriaRepository {
         log.info("Start count organizer search...");
         CriteriaQuery<Long> countQuery = criteriaBuilder.createQuery(Long.class);
         Root<Organizer> organizerRoot = countQuery.from(Organizer.class);
+
         Join<Organizer, User> joinUserRole = organizerRoot.join("user");
         Join<Organizer, OrgType> joinOrgType = organizerRoot.join("orgType");
         Predicate predicate = getSearchPredicate(List.of(organizerRoot, joinUserRole, joinOrgType), criteriaBuilder, search);
@@ -97,6 +106,13 @@ public class SearchCriteriaRepository {
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
         CriteriaQuery<Event> criteriaQuery = criteriaBuilder.createQuery(Event.class);
         Root<Event> eventRoot = criteriaQuery.from(Event.class);
+
+        eventRoot.fetch("status", JoinType.LEFT);
+        eventRoot.fetch("organizer", JoinType.LEFT);
+        eventRoot.fetch("category", JoinType.LEFT);
+        Fetch<Event, ShowingTime> fetchShowingTime = eventRoot.fetch("tblShowingTimes", JoinType.LEFT);
+        fetchShowingTime.fetch("address", JoinType.LEFT);
+
         Join<Event, EventStatus> joinStatus = eventRoot.join("status");
         Predicate predicate = getSearchPredicate(List.of(eventRoot, joinStatus), criteriaBuilder, search);
         criteriaQuery.select(eventRoot).where(predicate);
@@ -113,6 +129,27 @@ public class SearchCriteriaRepository {
         countQuery.select(criteriaBuilder.count(eventRoot)).where(predicate);
         Long count = entityManager.createQuery(countQuery).getSingleResult();
         log.info("End count Events search...");
+        return count;
+    }
+
+    public Page<Voucher> searchVouchers(Pageable pageable, String... search){
+        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Voucher> criteriaQuery = criteriaBuilder.createQuery(Voucher.class);
+        Root<Voucher> voucherRoot = criteriaQuery.from(Voucher.class);
+        Predicate predicate = getSearchPredicate(List.of(voucherRoot), criteriaBuilder, search);
+        criteriaQuery.select(voucherRoot).where(predicate);
+        List<Voucher> vouchers = entityManager.createQuery(criteriaQuery).setMaxResults(pageable.getPageSize()).setFirstResult((int)pageable.getOffset()).getResultList();
+        Long count = countVouchersSearch(criteriaBuilder ,search);
+        return new PageImpl<>(vouchers, pageable, count);
+    }
+    public Long countVouchersSearch(CriteriaBuilder criteriaBuilder ,String... search){
+        log.info("Start count Vouchers search...");
+        CriteriaQuery<Long> countQuery = criteriaBuilder.createQuery(Long.class);
+        Root<Voucher> voucherRoot = countQuery.from(Voucher.class);
+        Predicate predicate = getSearchPredicate(List.of(voucherRoot), criteriaBuilder, search);
+        countQuery.select(criteriaBuilder.count(voucherRoot)).where(predicate);
+        Long count = entityManager.createQuery(countQuery).getSingleResult();
+        log.info("End count Vouchers search...");
         return count;
     }
 }

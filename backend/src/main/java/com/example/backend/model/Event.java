@@ -92,7 +92,7 @@ public class Event {
 
     @Lob
     @Column(name = "rejection_reason")
-    private String rejection_reason;
+    private String rejectionReason;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "event")
     private Set<EventVoucher> tblEventVouchers = new LinkedHashSet<>();

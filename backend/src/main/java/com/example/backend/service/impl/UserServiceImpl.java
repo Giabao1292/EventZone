@@ -16,6 +16,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -130,18 +131,24 @@ public class UserServiceImpl implements UserService {
 
         return user.getWishlist().stream().map(EventSummaryDTO::new).collect(Collectors.toCollection(LinkedHashSet::new));
     }
-
+    private Page<User> findAllUser(Pageable pageable) {
+        Page<Long> listUserIds = userRepository.findAllUserIds(pageable);
+        return new PageImpl<User>(userRepository.findUsersToSearch(listUserIds.getContent()), pageable, listUserIds.getTotalElements());
+    }
     @Override
     public PageResponse<UserResponseDTO> getListUser(Pageable pageable, String... search) {
-        Page<User> users;
-        if (search == null || search.length == 0) {
-            users = userRepository.findAll(pageable);
-        } else {
-            users = searchCriteriaRepository.searchUsers(pageable, search);
-        }
+        Page<User> users = search == null || search.length == 0 ? findAllUser(pageable) : searchCriteriaRepository.searchUsers(pageable, search);
         List<UserResponseDTO> userResponse = users.getContent().stream().map(user -> {
-            UserResponseDTO userDTO = UserResponseDTO.builder().id(user.getId()).fullName(user.getFullName()).phone(user.getPhone()).dateOfBirth(user.getDateOfBirth()).email(user.getEmail()).score(user.getScore()).status(user.getStatus()).roles(user.getTblUserRoles().stream().map(userRole -> userRole.getRole().getRoleName()).collect(Collectors.toSet())).build();
-            return userDTO;
+            return UserResponseDTO.builder()
+                    .id(user.getId())
+                    .fullName(user.getFullName())
+                    .phone(user.getPhone())
+                    .dateOfBirth(user.getDateOfBirth())
+                    .email(user.getEmail())
+                    .score(user.getScore())
+                    .status(user.getStatus())
+                    .roles(user.getTblUserRoles().stream().map(userRole -> userRole.getRole().getRoleName()).collect(Collectors.toSet()))
+                    .build();
         }).collect(Collectors.toList());
         return PageResponse.<UserResponseDTO>builder().content(userResponse).size(users.getSize()).number(users.getNumber()).totalPages(users.getTotalPages()).totalElements((int) users.getTotalElements()).build();
     }
@@ -211,6 +218,9 @@ public class UserServiceImpl implements UserService {
     }
     @Override
     public List<RoleResponseDTO> getListRole(){
-        return roleRepository.findAll().stream().map(role -> RoleResponseDTO.builder().roleName(role.getRoleName()).build()).toList();
+        return roleRepository.findAll().stream()
+                .map(role -> RoleResponseDTO.builder()
+                        .roleName(role.getRoleName()).build()).toList();
     }
+
 }

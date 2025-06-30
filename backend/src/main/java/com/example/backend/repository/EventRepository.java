@@ -23,7 +23,14 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
 
     Page<Event> findAll(Pageable pageable);
 
+
     List<Event> findByOrganizer_Id(int organizerId);
 
 
+
+    @Query("SELECT e.id FROM Event e")
+    Page<Integer> findAllEventIds(Pageable pageable);
+
+    @Query("SELECT e FROM Event e LEFT JOIN FETCH e.status s LEFT JOIN FETCH e.organizer o ")
+    List<Event> findAllEventByIds(List<Integer> ids);
 }

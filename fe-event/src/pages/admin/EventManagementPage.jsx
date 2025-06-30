@@ -316,23 +316,22 @@ const EventApprovalModal = ({ event, isOpen, onClose, onSuccess }) => {
 
   const handleReject = async () => {
     if (!event || !rejectionReason.trim()) return;
+
     setIsLoading(true);
 
     try {
-      const response = await updateEventStatus(
+      await updateEventStatus(
         event.id,
         mapDisplayStatusToApi("rejected"),
         rejectionReason
       );
-      if (response.code === 200) {
-        alert("Sự kiện đã được từ chối!");
-        onSuccess();
-        onClose();
-        setAction(null);
-        setRejectionReason("");
-      } else {
-        alert("Có lỗi xảy ra khi từ chối sự kiện!");
-      }
+
+      // Nếu tới được đây tức là không bị catch lỗi => Thành công
+      alert("Sự kiện đã được từ chối!");
+      onSuccess?.();
+      onClose?.();
+      setAction(null);
+      setRejectionReason("");
     } catch (error) {
       console.error("Error rejecting event:", error);
       alert("Có lỗi xảy ra khi từ chối sự kiện!");
@@ -569,32 +568,58 @@ const EventApprovalModal = ({ event, isOpen, onClose, onSuccess }) => {
               </div>
             </div>
 
-            {/* Rejection Reason Form */}
-            {action === "reject" && (
+            {displayEvent?.status === "rejected" ? (
+              // ✅ Trường hợp đã bị từ chối: Hiển thị readonly lý do
               <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
                 <Label
                   htmlFor="rejection-reason"
                   className="text-lg font-semibold text-red-800 mb-3 block"
                 >
-                  Lý do từ chối sự kiện *
+                  Lý do từ chối sự kiện
                 </Label>
                 <Textarea
-                  placeholder="Vui lòng nhập lý do cụ thể tại sao sự kiện này bị từ chối..."
-                  value={rejectionReason}
-                  onChange={(e) => setRejectionReason(e.target.value)}
+                  value={displayEvent.rejectionReason}
+                  readOnly
                   rows={4}
                 />
                 <p className="text-sm text-red-600 mt-2">
-                  Lý do từ chối sẽ được gửi email thông báo đến người tổ chức
+                  Lý do từ chối đã được gửi email cho người tổ chức.
                 </p>
               </div>
+            ) : (
+              action === "reject" && (
+                // ✅ Trường hợp đang thực hiện hành động từ chối: Hiển thị form nhập lý do
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <Label
+                    htmlFor="rejection-reason"
+                    className="text-lg font-semibold text-red-800 mb-3 block"
+                  >
+                    Lý do từ chối sự kiện *
+                  </Label>
+                  <Textarea
+                    placeholder="Vui lòng nhập lý do cụ thể tại sao sự kiện này bị từ chối..."
+                    value={rejectionReason}
+                    onChange={(e) => setRejectionReason(e.target.value)}
+                    rows={4}
+                  />
+                  <p className="text-sm text-red-600 mt-2">
+                    Lý do từ chối sẽ được gửi email thông báo đến người tổ chức.
+                  </p>
+                </div>
+              )
             )}
           </div>
         )}
       </DialogContent>
 
       <DialogFooter>
-        {!action ? (
+        {displayEvent?.status === "rejected" ? (
+          // ✅ Trường hợp đã bị từ chối: Chỉ có nút Đóng
+          <Button variant="outline" onClick={resetModal}>
+            Đóng
+          </Button>
+        ) : !action ? (
+          // ✅ Chưa chọn action: Hiển thị 2 nút Duyệt / Từ chối
           <>
             <Button variant="outline" onClick={resetModal}>
               Đóng
@@ -612,6 +637,7 @@ const EventApprovalModal = ({ event, isOpen, onClose, onSuccess }) => {
             </Button>
           </>
         ) : action === "approve" ? (
+          // ✅ Đang chọn duyệt
           <>
             <Button variant="outline" onClick={() => setAction(null)}>
               Quay lại
@@ -630,6 +656,7 @@ const EventApprovalModal = ({ event, isOpen, onClose, onSuccess }) => {
             </Button>
           </>
         ) : (
+          // ✅ Đang chọn từ chối
           <>
             <Button variant="outline" onClick={() => setAction(null)}>
               Quay lại
@@ -757,10 +784,6 @@ const AttendeeManagement = ({ eventId, eventTitle }) => {
     alert("Check-out thành công!");
   };
 
-  const handleSearch = () => {
-    fetchEvents(searchTerm, statusFilter);
-  };
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -841,20 +864,15 @@ const AttendeeManagement = ({ eventId, eventTitle }) => {
             {/* Search Input */}
             <div className="flex-1 space-y-2">
               <Label className="text-sm font-medium text-gray-700">
-                Tìm kiếm sự kiện
+                Tìm kiếm người tham dự
               </Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <Input
-                  placeholder="Nhập tên sự kiện để tìm kiếm..."
+                  placeholder="Nhập tên, email hoặc mã vé..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-11 h-12 text-base border-2 border-gray-200 focus:border-blue-500 rounded-lg"
-                  onKeyPress={(e) => {
-                    if (e.key === "Enter") {
-                      handleSearch();
-                    }
-                  }}
                 />
               </div>
             </div>
@@ -862,40 +880,18 @@ const AttendeeManagement = ({ eventId, eventTitle }) => {
             {/* Status Filter */}
             <div className="w-full lg:w-64 space-y-2">
               <Label className="text-sm font-medium text-gray-700">
-                Trạng thái
+                Trạng thái check-in
               </Label>
               <Select
                 value={statusFilter}
                 onValueChange={setStatusFilter}
                 className="h-12 text-base border-2 border-gray-200 focus:border-blue-500 rounded-lg"
               >
-                <SelectItem value="all">🔍 Tất cả trạng thái</SelectItem>
-                <SelectItem value="pending">⏳ Chờ duyệt</SelectItem>
-                <SelectItem value="approved">✅ Đã duyệt</SelectItem>
-                <SelectItem value="rejected">❌ Bị từ chối</SelectItem>
-                <SelectItem value="published">🚀 Đã xuất bản</SelectItem>
+                <SelectItem value="all">Tất cả</SelectItem>
+                <SelectItem value="not_checked_in">Chưa check-in</SelectItem>
+                <SelectItem value="checked_in">Đã check-in</SelectItem>
+                <SelectItem value="checked_out">Đã check-out</SelectItem>
               </Select>
-            </div>
-
-            {/* Search Button */}
-            <div className="w-full lg:w-auto">
-              <Button
-                onClick={handleSearch}
-                disabled={isLoading}
-                className="w-full lg:w-auto h-12 px-8 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
-              >
-                {isLoading ? (
-                  <>
-                    <LoadingSpinner size="sm" />
-                    <span className="ml-2">Đang tìm...</span>
-                  </>
-                ) : (
-                  <>
-                    <Search className="w-5 h-5 mr-2" />
-                    Tìm kiếm
-                  </>
-                )}
-              </Button>
             </div>
 
             {/* Clear Filters Button */}
@@ -1265,53 +1261,53 @@ const EventManagementPage = () => {
   const [selectedEventId, setSelectedEventId] = useState("1");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [pagination, setPagination] = useState({
+    number: 0,
+    size: 5,
+    totalElements: 0,
+    totalPages: 0,
+  });
+  const PAGE_SIZE_OPTIONS = [1, 5, 10, 15, 20, 25];
 
   // Fetch events from API
-  const fetchEvents = useCallback(
-    async (searchQuery = "", statusQuery = "all") => {
-      setIsLoading(true);
-      setError(null);
+  const fetchEvents = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
 
-      try {
-        const searchParams = buildSearchParams(statusQuery, searchQuery);
-        const response = await searchEvents(0, 50, searchParams); // Get first 50 events
-
-        if (response.code === 200 && response.data) {
-          const mappedEvents = response.data.map(mapApiEventToComponent);
-          setEvents(mappedEvents);
-        } else {
-          setError("Không thể tải danh sách sự kiện");
-        }
-      } catch (error) {
-        console.error("Error fetching events:", error);
-        setError("Có lỗi xảy ra khi tải danh sách sự kiện");
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    []
-  );
-
-  // Fetch stats from API
-  const fetchStats = useCallback(async () => {
     try {
-      const statsData = await getEventStats();
-      setStats(statsData);
+      const searchParams = buildSearchParams(statusFilter, searchTerm);
+
+      const response = await searchEvents(
+        pagination.number,
+        pagination.size,
+        searchParams
+      );
+
+      if (response.code === 200 && response.data && response.data.content) {
+        const mappedEvents = response.data.content.map(mapApiEventToComponent);
+        setEvents(mappedEvents);
+        setStats(getEventStats(response.data.content));
+
+        setPagination({
+          totalElements: response.data.totalElements,
+          totalPages: response.data.totalPages,
+          number: response.data.number,
+          size: response.data.size,
+        });
+      } else {
+        setError("Không thể tải danh sách sự kiện");
+      }
     } catch (error) {
-      console.error("Error fetching stats:", error);
+      console.error("Error fetching events:", error);
+      setError("Có lỗi xảy ra khi tải danh sách sự kiện");
+    } finally {
+      setIsLoading(false);
     }
-  }, []);
+  }, [pagination.number, pagination.size, statusFilter, searchTerm]);
 
-  // Initial load
   useEffect(() => {
-    fetchEvents("", "all");
-    fetchStats();
-  }, [fetchEvents, fetchStats]);
-
-  // Filter change
-  useEffect(() => {
-    fetchEvents(searchTerm, statusFilter);
-  }, [statusFilter, fetchEvents]);
+    fetchEvents();
+  }, [pagination.size, pagination.number]);
 
   const filteredEvents = events;
 
@@ -1334,6 +1330,31 @@ const EventManagementPage = () => {
     );
   };
 
+  const renderPaginationButtons = () => {
+    const buttons = [];
+    for (let i = 0; i < pagination.totalPages; i++) {
+      buttons.push(
+        <button
+          key={i}
+          onClick={() =>
+            setPagination((prev) => ({
+              ...prev,
+              number: i,
+            }))
+          }
+          className={`px-3 py-1 text-sm border rounded-md ${
+            i === pagination.number
+              ? "bg-blue-500 text-white"
+              : "border-gray-300 hover:bg-gray-50"
+          }`}
+        >
+          {i + 1}
+        </button>
+      );
+    }
+    return buttons;
+  };
+
   const handleViewEvent = (event) => {
     setSelectedEvent(event);
     setIsModalOpen(true);
@@ -1344,7 +1365,6 @@ const EventManagementPage = () => {
     setIsModalOpen(false);
     // Refresh events list
     fetchEvents();
-    fetchStats();
   };
 
   const handleSearch = () => {
@@ -1418,17 +1438,6 @@ const EventManagementPage = () => {
             <p className="text-red-100 text-sm">Không được duyệt</p>
           </CardContent>
         </Card>
-        {/* <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-purple-100">
-              Đã xuất bản
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{stats.published}</div>
-            <p className="text-purple-100 text-sm">Đang hoạt động</p>
-          </CardContent>
-        </Card> */}
       </div>
 
       {/* Filters */}
@@ -1539,6 +1548,29 @@ const EventManagementPage = () => {
       {/* Events List */}
       {!isLoading && (
         <div className="space-y-4">
+          <div className="flex items-center gap-2 mb-4">
+            <label className="text-sm font-medium text-gray-700">
+              Page Size:
+            </label>
+            <select
+              value={pagination.size.toString()}
+              onChange={(e) => {
+                const newSize = Number.parseInt(e.target.value);
+                setPagination((prev) => ({
+                  ...prev,
+                  size: newSize,
+                  number: 0,
+                }));
+              }}
+              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white min-w-[60px]"
+            >
+              {PAGE_SIZE_OPTIONS.map((size) => (
+                <option key={size} value={size.toString()}>
+                  {size}
+                </option>
+              ))}
+            </select>
+          </div>
           {filteredEvents.map((event) => (
             <Card
               key={event.id}
@@ -1691,6 +1723,49 @@ const EventManagementPage = () => {
               </CardContent>
             </Card>
           ))}
+          {pagination.totalPages > 1 && (
+            <div className="flex items-center justify-between p-4 border-t mt-4">
+              <div className="text-sm text-gray-500">
+                Showing {pagination.number * pagination.size + 1} to{" "}
+                {Math.min(
+                  (pagination.number + 1) * pagination.size,
+                  pagination.totalElements
+                )}{" "}
+                of {pagination.totalElements} results
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() =>
+                    setPagination((prev) => ({
+                      ...prev,
+                      number: prev.number - 1,
+                    }))
+                  }
+                  disabled={pagination.number === 0}
+                  className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+
+                <div className="flex items-center gap-1">
+                  {renderPaginationButtons()}
+                </div>
+
+                <button
+                  onClick={() =>
+                    setPagination((prev) => ({
+                      ...prev,
+                      number: prev.number + 1,
+                    }))
+                  }
+                  disabled={pagination.number >= pagination.totalPages - 1}
+                  className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -1709,6 +1784,11 @@ const EventManagementPage = () => {
         </Card>
       )}
     </div>
+  );
+
+  const reportMemo = useMemo(
+    () => <EventReport eventId={selectedEventId} />,
+    [selectedEventId]
   );
 
   return (
@@ -1740,7 +1820,7 @@ const EventManagementPage = () => {
           />
         )}
 
-        {currentView === "reports" && <EventReport eventId={selectedEventId} />}
+        {currentView === "reports" && reportMemo}
 
         {/* Approval Modal */}
         <EventApprovalModal
