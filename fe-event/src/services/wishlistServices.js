@@ -7,7 +7,7 @@ export const wishlistService = {
    */
   async getWishlist() {
     try {
-      const response = await apiClient.get("/wishlist")
+      const response = await apiClient.get("/users/wishlist")
       if (response.data.code === 200) {
         return response.data.data || []
       }
@@ -27,7 +27,7 @@ export const wishlistService = {
    */
   async addToWishlist(eventId) {
     try {
-      const response = await apiClient.post(`/wishlist/${eventId}`)
+      const response = await apiClient.post(`/users/wishlist/${eventId}`)
       if (response.data.code === 200) {
         return response.data.message
       }
@@ -44,7 +44,7 @@ export const wishlistService = {
    */
   async removeFromWishlist(eventId) {
     try {
-      const response = await apiClient.delete(`/wishlist/${eventId}`)
+      const response = await apiClient.delete(`/users/wishlist/${eventId}`)
       if (response.data.code === 200) {
         return response.data.message
       }

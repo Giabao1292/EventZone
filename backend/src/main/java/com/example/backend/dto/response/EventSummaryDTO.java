@@ -2,17 +2,14 @@ package com.example.backend.dto.response;
 
 import com.example.backend.model.Event;
 import lombok.*;
-
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 @Data
-@Getter
-@Setter
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class EventSummaryDTO {
     private Long id;
     private String title;

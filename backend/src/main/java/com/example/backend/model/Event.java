@@ -104,9 +104,8 @@ public class Event {
     @JsonManagedReference
     private Set<ShowingTime> tblShowingTimes = new LinkedHashSet<>();
 
-    @ManyToMany(mappedBy = "wishlist", fetch = FetchType.LAZY)
-    @JsonIgnore
-    private Set<User> wishlistedUsers = new LinkedHashSet<>();
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<Wishlist> wishlistedUsers = new LinkedHashSet<>();
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
