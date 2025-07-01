@@ -4,6 +4,7 @@ import { useLocation, Link } from "react-router-dom";
 import { saveToken } from "../utils/storage";
 import CategoryNav from "../ui/CategoryNav";
 import EventCard from "../ui/EventCard";
+import WishlistPage from "../services/wishlistServices";
 import {
   getCategories,
   getEventsByCategory,
@@ -103,13 +104,39 @@ function Home() {
     fetchData();
   }, []);
 
-  const toggleFavorite = (eventId) => {
-    const newFavorites = new Set(favorites);
-    newFavorites.has(eventId)
-      ? newFavorites.delete(eventId)
-      : newFavorites.add(eventId);
-    setFavorites(newFavorites);
-  };
+  const [wishlistEventIds, setWishlistEventIds] = useState(new Set())
+
+  useEffect(() => {
+    const fetchWishlist = async () => {
+      try {
+        const wishlist = await wishlistService.getWishlist()
+        const ids = new Set(wishlist.map(event => event.id))
+        setWishlistEventIds(ids)
+      } catch (err) {
+        console.error("Error loading wishlist:", err.message)
+      }
+    }
+
+    fetchWishlist()
+  }, [])
+
+
+  const toggleFavorite = async (eventId) => {
+    try {
+      const updatedSet = new Set(wishlistEventIds)
+      if (wishlistEventIds.has(eventId)) {
+        await wishlistService.removeFromWishlist(eventId)
+        updatedSet.delete(eventId)
+      } else {
+        await wishlistService.addToWishlist(eventId)
+        updatedSet.add(eventId)
+      }
+      setWishlistEventIds(updatedSet)
+    } catch (error) {
+      console.error("Failed to update wishlist:", error.message)
+    }
+  }
+
 
   const nextSlide = () =>
     setCurrentSlide(
@@ -133,9 +160,8 @@ function Home() {
 
         {notification && (
           <div
-            className={`fixed top-8 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-lg shadow-md z-50 transition-all ${
-              notification.type === "success" ? "bg-green-600" : "bg-red-600"
-            }`}
+            className={`fixed top-8 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-lg shadow-md z-50 transition-all ${notification.type === "success" ? "bg-green-600" : "bg-red-600"
+              }`}
           >
             <div className="flex items-center gap-2 text-sm">
               <span>{notification.message}</span>
@@ -218,12 +244,11 @@ function Home() {
                     className="absolute top-2 right-2 z-10 p-1 rounded-full bg-black/30 backdrop-blur hover:bg-black/50 transition"
                   >
                     <svg
-                      className={`w-5 h-5 ${
-                        favorites.has(event.id)
-                          ? "fill-red-500 text-red-500"
-                          : "text-white"
-                      }`}
-                      fill={favorites.has(event.id) ? "currentColor" : "none"}
+                      className={`w-5 h-5 ${wishlistEventIds.has(event.id)
+                        ? "fill-red-500 text-red-500"
+                        : "text-white"
+                        }`}
+                      fill={wishlistEventIds.has(event.id) ? "currentColor" : "none"}
                       stroke="currentColor"
                       viewBox="0 0 24 24"
                     >
