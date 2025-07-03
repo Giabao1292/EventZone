@@ -32,8 +32,8 @@ public class AppConfig implements WebMvcConfigurer , WebSecurityCustomizer {
 
     private String[] WHITE_LIST = {"/api/image","/api/auth/**", "/api/users/**",
             "/api/categories","/api/categories/**",
-            "/api/showing-times/*/layout"};
-//    private String[] ORGANIZER_LIST = {"/api/organizer/**"};
+            "/api/showing-times/*/layout","/api/event-ads/active-today","/api/events/detail/{eventId}","/api/events/home"};
+    private String[] ORGANIZER_LIST = {"/api/organizer/**","/api/event-ads/*"};
 
     private final PreFilter preFilter;
     private final UserDetailService userDetailService;
@@ -58,7 +58,7 @@ public class AppConfig implements WebMvcConfigurer , WebSecurityCustomizer {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
                         .requestMatchers(WHITE_LIST).permitAll()
-//                        .requestMatchers(ORGANIZER_LIST).hasAnyRole("ORGANIZER")
+                        .requestMatchers(ORGANIZER_LIST).hasAnyRole("ORGANIZER")
                         .anyRequest().authenticated())
                 .authenticationProvider(provider()).addFilterBefore(preFilter, UsernamePasswordAuthenticationFilter.class)
                 .sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

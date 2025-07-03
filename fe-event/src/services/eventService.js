@@ -1,5 +1,10 @@
 import apiClient from "../api/axios";
 
+export const getHomeEvents = async () => {
+  const res = await apiClient.get("/events/home");
+  return res.data.data; // {ongoing, upcoming}
+};
+
 // Search events with pagination and filters
 export const searchEvents = async (page = 0, size = 10, searchParams = []) => {
   try {

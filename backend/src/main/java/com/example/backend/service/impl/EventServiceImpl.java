@@ -47,7 +47,10 @@ public class EventServiceImpl implements EventService {
                 .map(c -> new CategoryResponse(c.getCategoryId(), c.getCategoryName()))
                 .collect(Collectors.toList());
     }
-
+    @Override
+    public List<Event> getApprovedEvents() {
+        return eventRepository.findByStatus_StatusName("APPROVED");
+    }
     @Override
     public Event createEvent(EventRequest request) {
         Organizer organizer = organizerRepository.findById(request.getOrganizerId())

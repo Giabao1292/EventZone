@@ -1,11 +1,14 @@
 
 package com.example.backend.controller;
 
+import com.example.backend.dto.request.EventHomeDTO;
 import com.example.backend.dto.request.EventRequest;
 import com.example.backend.dto.request.UpdateStatusEvent;
 import com.example.backend.dto.response.*;
 import com.example.backend.model.Event;
 import com.example.backend.model.Organizer;
+import com.example.backend.model.Seat;
+import com.example.backend.model.ShowingTime;
 import com.example.backend.service.EventService;
 import com.example.backend.service.OrganizerService;
 import com.example.backend.service.VNPayService;
@@ -24,10 +27,8 @@ import vn.payos.type.PaymentData;
 import vn.payos.type.PaymentLinkData;
 
 
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.util.*;
 
 
 @RestController
@@ -39,6 +40,47 @@ public class EventController {
     private final PayOS payOS;
     private final OrganizerService organizerService;
 
+    @GetMapping("/home")
+    public ResponseEntity<ResponseData<Map<String, List<EventHomeDTO>>>> getHomeEvents() {
+        List<Event> events = eventService.getApprovedEvents();
+        List<EventHomeDTO> ongoingEvents = new ArrayList<>();
+        List<EventHomeDTO> upcomingEvents = new ArrayList<>();
+        LocalDateTime now = LocalDateTime.now();
+
+        for (Event event : events) {
+            Set<ShowingTime> showings = event.getTblShowingTimes();
+            if (showings == null || showings.isEmpty()) continue;
+
+            boolean isOngoing = showings.stream()
+                    .anyMatch(st -> st.getSaleOpenTime() != null && st.getSaleCloseTime() != null &&
+                            !now.isBefore(st.getSaleOpenTime()) && !now.isAfter(st.getSaleCloseTime()));
+
+            boolean isUpcoming = showings.stream()
+                    .allMatch(st -> st.getSaleOpenTime() != null && now.isBefore(st.getSaleOpenTime()));
+
+            OptionalDouble lowestPriceOpt = showings.stream()
+                    .flatMap(st -> st.getSeats().stream())
+                    .mapToDouble(seat -> seat.getPrice().doubleValue())
+                    .min();
+
+            double lowestPrice = lowestPriceOpt.orElse(0);
+            EventHomeDTO dto = new EventHomeDTO(event, lowestPrice);
+
+            if (isOngoing) {
+                ongoingEvents.add(dto);
+            } else if (isUpcoming) {
+                upcomingEvents.add(dto);
+            }
+        }
+
+        Map<String, List<EventHomeDTO>> result = new HashMap<>();
+        result.put("ongoing", ongoingEvents);
+        result.put("upcoming", upcomingEvents);
+
+        return ResponseEntity.ok(
+                new ResponseData<>(200, "Lấy sự kiện trang chủ thành công", result)
+        );
+    }
 
     @PreAuthorize("hasRole('ORGANIZER')")
     @PostMapping("/create")
@@ -162,7 +204,7 @@ public class EventController {
     @PatchMapping("/{id}/status")
     public ResponseData<?> updateEvent(@PathVariable("id") int eventId, @RequestBody UpdateStatusEvent status) {
         eventService.updateStatus(status, eventId);
-        return null;
+        return new ResponseData<>(HttpStatus.OK.value(), "Approved event successfully");
     }
 
     @PreAuthorize("hasRole('ORGANIZER')")
@@ -201,11 +243,4 @@ public class EventController {
                 new ResponseData<>(200, "Lấy danh sách sự kiện thành công", eventDTOs)
         );
     }
-
-
-
-
-
-
-
 }

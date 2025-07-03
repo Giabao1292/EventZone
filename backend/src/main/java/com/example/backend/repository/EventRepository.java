@@ -12,6 +12,7 @@ import java.util.Optional;
 
 public interface EventRepository extends JpaRepository<Event, Integer> {
     List<Event> findByCategory_CategoryId(int categoryId);
+    List<Event> findByStatus_StatusName(String statusName); // "APPROVED"
 
     @Query("SELECT DISTINCT e FROM Event e " +
             "LEFT JOIN FETCH e.tblShowingTimes st " +
