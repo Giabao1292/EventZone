@@ -211,7 +211,6 @@ public class EventController {
     @PatchMapping("/{id}/status")
     public ResponseData<?> updateEvent(@PathVariable("id") int eventId, @RequestBody UpdateStatusEvent status) {
         eventService.updateStatus(status, eventId);
-        return new ResponseData<>(HttpStatus.OK.value(), "Approved event successfully");
         return new ResponseData<>(HttpStatus.OK.value(), "Update status succesfully");
     }
 
