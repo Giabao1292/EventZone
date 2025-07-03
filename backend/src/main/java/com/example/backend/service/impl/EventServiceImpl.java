@@ -208,8 +208,10 @@ public class EventServiceImpl implements EventService {
     @Override
     public PageResponse<EventSummaryAdmin> searchEvent(Pageable pageable, String... search) {
 
-        Page<Event> events = search == null || search.length == 0 ? eventRepository.findAll(pageable) : searchCriteriaRepository.searchEvents(pageable, search);
-        List<EventSummaryAdmin> eventSummaryAdminList = events.getContent().stream().map(event -> {
+        Page<Event> events = search != null && search.length != 0 ? searchCriteriaRepository.searchEvents(pageable, search) : findAllEvents(pageable) ;
+        List<EventSummaryAdmin> eventSummaryAdminList = events.getContent().stream()
+                .filter(event -> !event.getStatus().getStatusName().equalsIgnoreCase("DRAFT"))
+                .map(event -> {
             Address address = event.getTblShowingTimes().stream().findFirst().get().getAddress();
             return EventSummaryAdmin
                     .builder()

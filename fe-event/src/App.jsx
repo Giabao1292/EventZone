@@ -136,6 +136,7 @@ function App() {
               element={<OrganizerManagementPage />}
             />
             <Route path="/admin/events" element={<EventManagementPage />} />
+            <Route path="/admin/profile" element={<ProfilePage />} />
           </Route>
           <Route path="/book/:showingId/*" element={<BookingPage />} />
         </Routes>

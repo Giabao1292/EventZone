@@ -1,6 +1,5 @@
 package com.example.backend.validation;
 
-import com.example.backend.dto.request.RegisterRequest;
 import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;

@@ -36,7 +36,7 @@ public class Address {
     private String city;
 
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "address")
+    @OneToMany(cascade = CascadeType.ALL ,mappedBy = "address")
     @JsonManagedReference
     private Set<ShowingTime> tblShowingTimes = new LinkedHashSet<>();
 }

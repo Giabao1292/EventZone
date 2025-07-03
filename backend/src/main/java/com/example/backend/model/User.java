@@ -92,7 +92,7 @@ public class User implements UserDetails, Serializable {
     @JsonManagedReference
     private Set<Booking> tblBookings = new LinkedHashSet<>();
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonManagedReference
     private Organizer organizer;
 

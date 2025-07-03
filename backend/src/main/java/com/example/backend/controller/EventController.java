@@ -12,6 +12,7 @@ import com.example.backend.model.ShowingTime;
 import com.example.backend.service.EventService;
 import com.example.backend.service.OrganizerService;
 import com.example.backend.service.VNPayService;
+import com.example.backend.service.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +29,11 @@ import vn.payos.type.PaymentLinkData;
 
 
 import java.time.LocalDateTime;
+
 import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -39,6 +44,8 @@ public class EventController {
     private final VNPayService vnpayService;
     private final PayOS payOS;
     private final OrganizerService organizerService;
+    private final BookingService bookingService;
+    private final ShowingTimeService showingTimeService;
 
     @GetMapping("/home")
     public ResponseEntity<ResponseData<Map<String, List<EventHomeDTO>>>> getHomeEvents() {
@@ -189,7 +196,7 @@ public class EventController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseData<PageResponse<EventSummaryAdmin>> searchEvent(Pageable pageable, @RequestParam(name = "search", required = false) String... search) {
-                PageResponse<EventSummaryAdmin> listEvents = eventService.searchEvent(pageable, search);
+        PageResponse<EventSummaryAdmin> listEvents = eventService.searchEvent(pageable, search);
         return new ResponseData<>(HttpStatus.OK.value(), "Get list of events", listEvents);
     }
 
@@ -205,6 +212,7 @@ public class EventController {
     public ResponseData<?> updateEvent(@PathVariable("id") int eventId, @RequestBody UpdateStatusEvent status) {
         eventService.updateStatus(status, eventId);
         return new ResponseData<>(HttpStatus.OK.value(), "Approved event successfully");
+        return new ResponseData<>(HttpStatus.OK.value(), "Update status succesfully");
     }
 
     @PreAuthorize("hasRole('ORGANIZER')")
@@ -238,9 +246,27 @@ public class EventController {
         List<EventSummaryDTO> eventDTOs = events.stream()
                 .map(EventSummaryDTO::new) // sử dụng constructor EventSummaryDTO(Event event)
                 .toList();
-
         return ResponseEntity.ok(
                 new ResponseData<>(200, "Lấy danh sách sự kiện thành công", eventDTOs)
         );
+    }
+
+    @PreAuthorize("hasAnyRole({'ORGANIZER', 'ADMIN'})")
+    @GetMapping("/{eventId}/attendees")
+    public ResponseData<PageResponse<AttendeeResponse>> searchAttendee(Pageable pageable, @PathVariable("eventId") int eventId, @RequestParam("startTime") LocalDateTime startTime, String... search) {
+        PageResponse<AttendeeResponse> response = bookingService.searchAttendees(pageable, eventId, startTime, search);
+        return new ResponseData<>(HttpStatus.OK.value(), "Get list attendees successful", response);
+    }
+    @PreAuthorize("hasAnyRole({'ORGANIZER', 'ADMIN'})")
+    @GetMapping("/{eventId}/analytics")
+    public ResponseData<AnalyticAttendeesResponse> getAnalytics(@PathVariable("eventId") int eventId, @RequestParam("startTime") LocalDateTime startTime) {
+        AnalyticAttendeesResponse response = bookingService.getAnalytics(eventId, startTime);
+        return new ResponseData<>(HttpStatus.OK.value(), "Get list attendees successful", response);
+    }
+    @PreAuthorize("hasAnyRole({'ORGANIZER', 'ADMIN'})")
+    @GetMapping("/{eventId}/showing-times")
+    public ResponseData<List<ShowingTimeAdmin>> getShowingTime(@PathVariable int eventId){
+        List<ShowingTimeAdmin> showingTimeAdminList = showingTimeService.getListShowingTime(eventId);
+        return new ResponseData<>(HttpStatus.OK.value(), "Get list showing time successful", showingTimeAdminList);
     }
 }
