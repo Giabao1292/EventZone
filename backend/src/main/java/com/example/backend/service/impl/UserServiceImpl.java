@@ -154,7 +154,7 @@ public class UserServiceImpl implements UserService {
     }
     @Override
     public PageResponse<UserResponseDTO> getListUser(Pageable pageable, String... search) {
-        Page<User> users = search == null || search.length == 0 ? findAllUser(pageable) : searchCriteriaRepository.searchUsers(pageable, search);
+        Page<User> users = search != null && search.length != 0 ? searchCriteriaRepository.searchUsers(pageable, search) : findAllUser(pageable);
         List<UserResponseDTO> userResponse = users.getContent().stream().map(user -> {
             return UserResponseDTO.builder()
                     .id(user.getId())

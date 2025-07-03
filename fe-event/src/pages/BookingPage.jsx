@@ -18,7 +18,7 @@ export default function BookingPage() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-900 text-white">
       <Header />
-      <main className="flex-1 flex overflow-hidden">
+      <main className="flex-1 flex items-center justify-center overflow-auto">
         <Outlet
           context={{
             event,

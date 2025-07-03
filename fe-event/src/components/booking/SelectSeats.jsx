@@ -6,6 +6,9 @@ import {
   Ticket,
   BadgeDollarSign,
   Users2,
+  Minus,
+  Plus,
+  X,
 } from "lucide-react";
 import apiClient from "../../api/axios";
 
@@ -70,13 +73,33 @@ export default function SelectSeats() {
     fetchLayout();
   }, [fetchLayout]);
 
-  if (loading)
+  if (loading) {
     return (
-      <div className="w-full h-[80vh] flex items-center justify-center text-2xl text-slate-200 bg-gradient-to-br from-[#1c2030] via-[#1e2237] to-[#23233a] animate-pulse">
-        Đang tải sơ đồ…
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-300 text-lg">Đang tải sơ đồ...</p>
+        </div>
       </div>
     );
-  if (error) return <div className="text-red-500">{error}</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 flex items-center justify-center">
+        <div className="bg-slate-800/90 backdrop-blur-sm border border-red-500/30 rounded-xl shadow-lg p-6 max-w-md">
+          <div className="text-center">
+            <div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <X className="w-6 h-6 text-red-400" />
+            </div>
+            <h3 className="font-semibold text-white mb-2">Có lỗi xảy ra</h3>
+            <p className="text-slate-300">{error}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!layout) return null;
 
   const { eventTitle, startTime, location, zones = [], seats = [] } = layout;
@@ -176,280 +199,345 @@ export default function SelectSeats() {
 
     if (zones.length > 0 || seats.length > 0) {
       return (
-        <div style={{ width: containerWidth, height: containerHeight }}>
-          <div style={layoutStyle}>
-            {zones.map((zone) => {
-              const selected = zoneSelections.some(
-                (s) => s.zone.id === zone.id
-              );
-              const available = isZoneAvailable(zone);
-              const priceKey = `zone|${zone.type}|${zone.price}`;
-              const bgColor = available
-                ? priceColorMap[priceKey] || "#EEE"
-                : "#6B7280";
-              return (
-                <div
-                  key={`zone-${zone.id}`}
-                  onClick={() => toggleZone(zone)}
-                  className={`
-                    absolute flex items-center justify-center text-base font-semibold rounded-2xl shadow-lg border-2 transition-all
-                    ${
+        <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl shadow-lg p-6">
+          <div className="mb-6 text-center">
+            <div className="inline-flex items-center gap-2 bg-slate-700 text-white px-6 py-2 rounded-full shadow-md border border-slate-600">
+              <div className="w-3 h-3 bg-white rounded"></div>
+              <span className="text-sm font-medium">Sân khấu</span>
+            </div>
+          </div>
+          <div
+            style={{
+              width: containerWidth,
+              height: containerHeight,
+              overflow: "hidden",
+            }}
+          >
+            <div style={layoutStyle}>
+              {zones.map((zone) => {
+                const selected = zoneSelections.some(
+                  (s) => s.zone.id === zone.id
+                );
+                const available = isZoneAvailable(zone);
+                const priceKey = `zone|${zone.type}|${zone.price}`;
+                const bgColor = available
+                  ? priceColorMap[priceKey] || "#64748b"
+                  : "#374151";
+
+                return (
+                  <div
+                    key={`zone-${zone.id}`}
+                    onClick={() => toggleZone(zone)}
+                    className={`
+                      absolute flex items-center justify-center text-sm font-semibold rounded-lg shadow-md border-2 transition-all cursor-pointer
+                      ${
+                        selected
+                          ? "ring-4 ring-blue-400/50 border-blue-400 scale-105 z-10"
+                          : available
+                          ? "hover:scale-105 border-transparent hover:shadow-lg"
+                          : "cursor-not-allowed border-gray-600 opacity-60"
+                      }
+                    `}
+                    style={{
+                      left: zone.x,
+                      top: zone.y,
+                      width: zone.width,
+                      height: zone.height,
+                      background: bgColor,
+                      color: available ? "#1e293b" : "#9CA3AF",
+                    }}
+                    title={
                       available
-                        ? selected
-                          ? "ring-4 ring-blue-300 border-blue-400 scale-[1.05] z-10"
-                          : "hover:scale-105 border-transparent z-10 cursor-pointer"
-                        : "cursor-not-allowed border-gray-500 z-10 opacity-70"
+                        ? `${zone.name} — ${zone.price.toLocaleString(
+                            "vi-VN"
+                          )}₫ (Còn ${
+                            zone.capacity -
+                            zoneSelections
+                              .filter((s) => s.zone.id === zone.id)
+                              .reduce((sum, s) => sum + s.qty, 0)
+                          } chỗ)`
+                        : `${zone.name} — Khu vực đã đầy`
                     }
-                  `}
-                  style={{
-                    left: zone.x,
-                    top: zone.y,
-                    width: zone.width,
-                    height: zone.height,
-                    background: bgColor,
-                    color: available ? "#1e293b" : "#D1D5DB",
-                    opacity: selected ? 1 : available ? 0.94 : 0.7,
-                    boxShadow: selected
-                      ? "0 4px 18px 0 #a5b4fc88"
-                      : "0 2px 8px 0 #b4b4d8cc",
-                  }}
-                  title={
-                    available
-                      ? `${zone.name} — ${zone.price.toLocaleString(
-                          "vi-VN"
-                        )}₫ (Còn ${
-                          zone.capacity -
-                          zoneSelections
-                            .filter((s) => s.zone.id === zone.id)
-                            .reduce((sum, s) => sum + s.qty, 0)
-                        } ghế)`
-                      : `${zone.name} — Khu vực đã đầy`
-                  }
-                >
-                  {zone.name}
-                </div>
-              );
-            })}
-            {seats.map((seat) => {
-              const selected = seatSelections.some((s) => s.id === seat.id);
-              const priceKey = `seat|${seat.type}|${seat.price}`;
-              const bgColor = seat.available
-                ? priceColorMap[priceKey] || "#EEE"
-                : "#6B7280";
-              return (
-                <div
-                  key={`seat-${seat.id}`}
-                  onClick={() => toggleSeat(seat)}
-                  className={`
-                    absolute flex items-center justify-center text-xs font-bold rounded-full border-2 shadow transition-all
-                    ${
+                  >
+                    {zone.name}
+                  </div>
+                );
+              })}
+
+              {seats.map((seat) => {
+                const selected = seatSelections.some((s) => s.id === seat.id);
+                const priceKey = `seat|${seat.type}|${seat.price}`;
+                const bgColor = seat.available
+                  ? priceColorMap[priceKey] || "#64748b"
+                  : "#374151";
+
+                return (
+                  <div
+                    key={`seat-${seat.id}`}
+                    onClick={() => toggleSeat(seat)}
+                    className={`
+                      absolute flex items-center justify-center text-xs font-bold rounded-full border-2 shadow transition-all
+                      ${
+                        seat.available
+                          ? selected
+                            ? "ring-4 ring-blue-400/50 border-blue-400 scale-110 z-20 cursor-pointer"
+                            : "hover:scale-105 cursor-pointer border-transparent"
+                          : "cursor-not-allowed border-gray-600 opacity-60"
+                      }
+                    `}
+                    style={{
+                      left: seat.x,
+                      top: seat.y,
+                      width: GRID_SIZE,
+                      height: GRID_SIZE,
+                      background: bgColor,
+                      color: seat.available ? "#1e293b" : "#9CA3AF",
+                    }}
+                    title={
                       seat.available
-                        ? selected
-                          ? "ring-4 ring-blue-300 border-blue-400 scale-110 z-20"
-                          : "hover:scale-105 cursor-pointer border-transparent z-20"
-                        : "cursor-not-allowed border-gray-500 z-10 opacity-70"
+                        ? `${seat.label} — ${seat.price?.toLocaleString(
+                            "vi-VN"
+                          )}₫`
+                        : `${seat.label} — Ghế đã được đặt`
                     }
-                  `}
-                  style={{
-                    left: seat.x,
-                    top: seat.y,
-                    width: GRID_SIZE,
-                    height: GRID_SIZE,
-                    background: bgColor,
-                    color: seat.available ? "#1e293b" : "#D1D5DB",
-                    boxShadow: selected
-                      ? "0 2px 10px #a5b4fc66"
-                      : "0 1px 5px #8db4e899",
-                  }}
-                  title={
-                    seat.available
-                      ? `${seat.label} — ${seat.price?.toLocaleString(
-                          "vi-VN"
-                        )}₫`
-                      : `${seat.label} — Ghế đã được đặt`
-                  }
-                >
-                  {seat.label}
-                </div>
-              );
-            })}
+                  >
+                    {seat.label}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       );
     }
+
     return (
-      <div className="text-sky-300 text-center">Không có dữ liệu sơ đồ</div>
+      <div className="text-center text-slate-400 bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-8 shadow-lg">
+        <Ticket className="w-12 h-12 mx-auto mb-4 text-slate-500" />
+        <p>Không có dữ liệu sơ đồ</p>
+      </div>
     );
   };
 
   return (
-    <div className="h-screen w-full bg-[#181e2a] grid grid-cols-3 overflow-hidden">
-      <div className="col-span-2 flex flex-col items-center h-full p-4">
-        <h3 className="text-sky-200 text-lg text-center mb-4 font-semibold flex items-center justify-center gap-2">
-          <Ticket className="w-6 h-6 text-sky-400" />
-          Chọn khu vực và/hoặc ghế
-        </h3>
-        <div className="flex justify-center items-start w-full flex-1 gap-12">
-          {renderMap()}
-        </div>
-        <div className="flex flex-wrap justify-center gap-5 mt-auto mb-2">
-          {priceList.map((p, idx) => (
-            <div
-              key={p.key}
-              className="flex items-center gap-3 px-6 py-3 rounded-xl shadow text-slate-800 text-lg font-semibold"
-              style={{
-                background: priceColorMap[p.key],
-                border: "2px solid #b4b4d8",
-              }}
-            >
-              <BadgeDollarSign className="w-6 h-6 text-sky-400" />
-              <span>
-                {p.type}: {Number(p.price).toLocaleString("vi-VN")}₫
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div
-        className="col-span-1 flex flex-col h-full p-0"
-        style={{
-          background:
-            "linear-gradient(120deg,rgba(27,34,51,0.98) 55%,rgba(30,39,59,0.98) 120%)",
-          color: "#f5f6fa",
-          borderLeft: "1.5px solid #31375b",
-        }}
-      >
-        <div className="flex-1 overflow-auto p-4 flex flex-col gap-5">
-          <div className="space-y-3">
-            <h2 className="text-3xl font-extrabold flex items-center gap-2 text-sky-200 drop-shadow tracking-wide">
-              <Ticket className="w-6 h-6 text-sky-200" />
-              {eventTitle}
-            </h2>
-            <div className="flex items-center gap-2 text-lg text-sky-100">
-              <CalendarClock className="w-5 h-5 text-sky-200" />
-              {startTime ? new Date(startTime).toLocaleString("vi-VN") : ""}
-            </div>
-            <div className="flex items-center gap-2 text-lg text-sky-100">
-              <MapPin className="w-5 h-5 text-sky-200" />
-              {location}
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800">
+      <div className="grid lg:grid-cols-3 gap-6 p-6 max-w-7xl mx-auto">
+        {/* Left Column - Seat Map */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Event Header */}
+          <div className="bg-slate-800/90 backdrop-blur-sm border border-slate-700 rounded-xl shadow-lg p-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center border border-blue-500/30">
+                <Ticket className="w-6 h-6 text-blue-400" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-white">{eventTitle}</h1>
+                <div className="flex items-center gap-6 text-sm text-slate-300 mt-2">
+                  <div className="flex items-center gap-2">
+                    <CalendarClock className="w-4 h-4 text-blue-400" />
+                    {startTime
+                      ? new Date(startTime).toLocaleString("vi-VN")
+                      : ""}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-blue-400" />
+                    {location}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          <div>
-            <h3 className="font-semibold mb-2 text-sky-100 text-sm flex items-center gap-2">
-              <BadgeDollarSign className="w-4 h-4 text-sky-200" />
-              BẢNG GIÁ & MÀU
-            </h3>
-            <ul>
-              {priceList.length === 0 && (
-                <li className="text-gray-400 text-sm">Chưa có dữ liệu giá.</li>
-              )}
+
+          {/* Seat Map */}
+          <div className="bg-slate-800/90 backdrop-blur-sm border border-slate-700 rounded-xl shadow-lg p-6">
+            <div className="mb-4">
+              <h2 className="text-xl font-bold text-white mb-2">
+                Sơ đồ chỗ ngồi
+              </h2>
+              <p className="text-slate-300 text-sm">
+                Nhấn vào khu vực hoặc ghế để chọn
+              </p>
+            </div>
+            <div className="flex justify-center">{renderMap()}</div>
+          </div>
+        </div>
+
+        {/* Right Column - Selection Summary & Price Legend */}
+        <div className="space-y-6">
+          {/* Price Legend */}
+          <div className="bg-slate-800/90 backdrop-blur-sm border border-slate-700 rounded-xl shadow-lg p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <BadgeDollarSign className="w-5 h-5 text-green-400" />
+              <h3 className="text-xl font-bold text-white">Bảng giá</h3>
+            </div>
+            <div className="grid grid-cols-1 gap-4">
               {priceList.map((p, idx) => (
-                <li
-                  key={idx}
-                  className="flex items-center space-x-2 text-slate-100 text-sm mb-1 font-semibold"
+                <div
+                  key={p.key}
+                  className="flex items-center gap-3 p-4 rounded-lg border border-slate-600 transition-all hover:border-slate-500 bg-slate-700/50"
+                  style={{
+                    backgroundColor: `${priceColorMap[p.key]}15`,
+                  }}
                 >
-                  <span
+                  <div
+                    className="w-5 h-5 rounded border-2 shadow-sm"
                     style={{
-                      width: 20,
-                      height: 20,
-                      display: "inline-block",
-                      borderRadius: 5,
-                      background: priceColorMap[p.key],
-                      border: "2px solid #b4b4d8",
-                      marginRight: 8,
-                      boxShadow: "0 0 3px #b4b4d8bb",
+                      backgroundColor: priceColorMap[p.key],
+                      borderColor: priceColorMap[p.key],
                     }}
                   />
-                  <span>
-                    {p.type}: <b>{Number(p.price).toLocaleString("vi-VN")}₫</b>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="space-y-4 flex-1 overflow-auto">
-            {zoneSelections.length > 0 && (
-              <>
-                <div className="text-sky-200 font-bold mb-2">
-                  Khu vực đã chọn
+                  <div>
+                    <div className="font-semibold text-white">{p.type}</div>
+                    <div className="text-sm text-slate-300 font-medium">
+                      {Number(p.price).toLocaleString("vi-VN")}₫
+                    </div>
+                  </div>
                 </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Zone Selections */}
+          {zoneSelections.length > 0 && (
+            <div className="bg-slate-800/90 backdrop-blur-sm border border-slate-700 rounded-xl shadow-lg p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Users2 className="w-5 h-5 text-purple-400" />
+                <h3 className="text-lg font-bold text-white">
+                  Khu vực đã chọn
+                </h3>
+              </div>
+              <div className="space-y-3">
                 {zoneSelections.map((sel) => (
                   <div
                     key={sel.zone.id}
-                    className="flex items-center justify-between rounded-lg bg-[#21294b] px-3 py-2 shadow"
+                    className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg border border-slate-600"
                   >
-                    <span className="font-medium text-sky-100 flex items-center gap-2">
-                      <Users2 className="w-4 h-4" />
-                      {sel.zone.name}
-                    </span>
-                    <input
-                      type="number"
-                      min={1}
-                      max={sel.zone.capacity}
-                      value={sel.qty}
-                      onChange={(e) =>
-                        updateQty(sel.zone.id, Number(e.target.value))
-                      }
-                      className="w-16 border border-sky-400 rounded p-1 text-center bg-[#171d2b] text-white focus:outline-none focus:border-sky-400"
-                    />
+                    <div>
+                      <div className="font-semibold text-white">
+                        {sel.zone.name}
+                      </div>
+                      <div className="text-sm text-slate-300">
+                        {sel.zone.price.toLocaleString("vi-VN")}₫ / vé
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => updateQty(sel.zone.id, sel.qty - 1)}
+                        disabled={sel.qty <= 1}
+                        className="w-8 h-8 rounded-full border border-slate-500 bg-slate-700 text-white flex items-center justify-center hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <Minus className="w-4 h-4" />
+                      </button>
+                      <span className="w-8 text-center font-semibold text-white">
+                        {sel.qty}
+                      </span>
+                      <button
+                        onClick={() => updateQty(sel.zone.id, sel.qty + 1)}
+                        disabled={sel.qty >= sel.zone.capacity}
+                        className="w-8 h-8 rounded-full border border-slate-500 bg-slate-700 text-white flex items-center justify-center hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 ))}
-              </>
-            )}
-            {seatSelections.length > 0 && (
-              <div className="mt-3">
-                <div className="text-sky-200 font-bold mb-2">Ghế đã chọn</div>
+              </div>
+            </div>
+          )}
+
+          {/* Seat Selections */}
+          {seatSelections.length > 0 && (
+            <div className="bg-slate-800/90 backdrop-blur-sm border border-slate-700 rounded-xl shadow-lg p-6">
+              <h3 className="text-lg font-bold text-white mb-4">Ghế đã chọn</h3>
+              <div className="space-y-3">
                 {seatSelections.map((seat) => (
                   <div
                     key={seat.id}
-                    className="flex justify-between items-center rounded px-3 py-2 bg-[#22294d] mb-2"
+                    className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg border border-slate-600"
                   >
-                    <span className="font-medium text-white">{seat.label}</span>
-                    <span className="text-white font-semibold">
-                      {seat.price?.toLocaleString("vi-VN")}₫
-                    </span>
+                    <div>
+                      <div className="font-semibold text-white">
+                        Ghế {seat.label}
+                      </div>
+                      <div className="text-sm text-slate-300">
+                        {seat.price?.toLocaleString("vi-VN")}₫
+                      </div>
+                    </div>
                     <button
-                      className="text-pink-300 hover:text-pink-500 font-bold text-sm px-2"
                       onClick={() => toggleSeat(seat)}
+                      className="w-8 h-8 rounded-full text-red-400 hover:bg-red-500/20 flex items-center justify-center transition-colors"
                     >
-                      Xoá
+                      <X className="w-4 h-4" />
                     </button>
                   </div>
                 ))}
               </div>
-            )}
-            {zoneSelections.length + seatSelections.length === 0 && (
-              <p className="text-sky-300">
-                Chưa có khu vực hoặc ghế nào được chọn.
-              </p>
-            )}
+            </div>
+          )}
+
+          {/* Empty State */}
+          {zoneSelections.length + seatSelections.length === 0 && (
+            <div className="bg-slate-800/90 backdrop-blur-sm border border-slate-700 rounded-xl shadow-lg p-6">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Ticket className="w-8 h-8 text-slate-400" />
+                </div>
+                <h3 className="font-semibold text-white mb-2">
+                  Chưa chọn chỗ ngồi
+                </h3>
+                <p className="text-sm text-slate-300">
+                  Nhấn vào khu vực hoặc ghế trên sơ đồ để chọn
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Total & Continue Button */}
+          <div className="bg-slate-800/90 backdrop-blur-sm border border-slate-700 rounded-xl shadow-lg p-6">
+            <div className="space-y-4">
+              <div className="flex justify-between items-center pb-4 border-b border-slate-600">
+                <span className="text-lg font-semibold text-white">
+                  Tổng cộng:
+                </span>
+                <span className="text-2xl font-bold text-blue-400">
+                  {total.toLocaleString("vi-VN")}₫
+                </span>
+              </div>
+
+              <button
+                onClick={() =>
+                  handleStep1Complete([
+                    ...zoneSelections.map((s) => ({
+                      type: "zone",
+                      zoneId: s.zone.id,
+                      qty: s.qty,
+                      price: s.zone.price,
+                      zoneName: s.zone.name,
+                    })),
+                    ...seatSelections.map((s) => ({
+                      type: "seat",
+                      seatId: s.id,
+                      seatLabel: s.label,
+                      price: s.price,
+                      qty: 1,
+                    })),
+                  ])
+                }
+                disabled={zoneSelections.length + seatSelections.length === 0}
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-slate-600 disabled:to-slate-600 disabled:cursor-not-allowed text-white py-4 rounded-xl text-lg font-semibold transition-all shadow-lg hover:shadow-xl"
+              >
+                Tiếp tục thanh toán
+              </button>
+
+              {zoneSelections.length + seatSelections.length > 0 && (
+                <div className="text-center">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                    {zoneSelections.length + seatSelections.length} mục đã chọn
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-        <div className="p-4 pt-2 border-t border-[#273151] bg-transparent">
-          <button
-            onClick={() =>
-              handleStep1Complete([
-                ...zoneSelections.map((s) => ({
-                  type: "zone",
-                  zoneId: s.zone.id,
-                  qty: s.qty,
-                  price: s.zone.price,
-                  zoneName: s.zone.name,
-                })),
-                ...seatSelections.map((s) => ({
-                  type: "seat",
-                  seatId: s.id,
-                  seatLabel: s.label,
-                  price: s.price,
-                  qty: 1,
-                })),
-              ])
-            }
-            disabled={zoneSelections.length + seatSelections.length === 0}
-            className="w-full bg-gradient-to-r from-sky-400/90 to-[#1e233a] hover:from-sky-400 hover:to-[#6EE7B7] transition text-white text-lg py-2 rounded-xl font-bold shadow-xl tracking-wider disabled:opacity-50"
-          >
-            Tiếp tục — {total.toLocaleString("vi-VN")}₫
-          </button>
         </div>
       </div>
     </div>

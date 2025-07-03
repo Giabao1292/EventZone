@@ -21,4 +21,7 @@ public class ShowingTimeDTO {
     private AddressDTO address;
     private List<SeatDTO> seats;
     private List<ZoneDTO> zones;
+
+    private LocalDateTime saleOpenTime;
+    private LocalDateTime saleCloseTime;
 }

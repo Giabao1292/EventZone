@@ -12,6 +12,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -150,6 +151,48 @@ public class SearchCriteriaRepository {
         countQuery.select(criteriaBuilder.count(voucherRoot)).where(predicate);
         Long count = entityManager.createQuery(countQuery).getSingleResult();
         log.info("End count Vouchers search...");
+        return count;
+    }
+
+    public Page<Booking> searchAttendees(Pageable pageable, Integer eventId, LocalDateTime startTime, String... search){
+        log.info("Start search Attendees search...");
+        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Booking> criteriaQuery = criteriaBuilder.createQuery(Booking.class);
+        Root<Booking> bookingRoot = criteriaQuery.from(Booking.class);
+        Fetch<Booking, BookingSeat> seatFetch = bookingRoot.fetch("tblBookingSeats", JoinType.LEFT);
+        seatFetch.fetch("seat", JoinType.LEFT);
+        seatFetch.fetch("zone", JoinType.LEFT);
+        Fetch<Booking, User> userFetch = bookingRoot.fetch("user", JoinType.LEFT);
+        userFetch.fetch("tblReviews", JoinType.LEFT);
+        userFetch.fetch("organizer", JoinType.LEFT);
+        Join<Booking, User> joinUser = bookingRoot.join("user", JoinType.LEFT);
+        Join<Booking, ShowingTime> joinShowingTime = bookingRoot.join("showingTime", JoinType.LEFT);
+        Join<ShowingTime, Event> joinEvent = joinShowingTime.join("event", JoinType.LEFT);
+
+        Predicate eventPredicate = criteriaBuilder.equal(joinEvent.get("id"), eventId);
+        Predicate showingTimePredicate = criteriaBuilder.equal(joinShowingTime.get("startTime"), startTime);
+        Predicate predicate = getSearchPredicate(List.of(bookingRoot, joinUser, joinShowingTime, joinEvent), criteriaBuilder, search);
+        criteriaQuery.select(bookingRoot).where(criteriaBuilder.and(eventPredicate, showingTimePredicate, predicate));
+        List<Booking> bookings = entityManager.createQuery(criteriaQuery).setMaxResults(pageable.getPageSize()).setFirstResult((int)pageable.getOffset()).getResultList();
+        Long count = countAttendeesSearch(criteriaBuilder,eventId, startTime ,search);
+        log.info("End search Attendees search...");
+        return new PageImpl<>(bookings, pageable, count);
+    }
+    public Long countAttendeesSearch(CriteriaBuilder criteriaBuilder ,int eventId, LocalDateTime startTime, String... search){
+        log.info("Start count Attendees search...");
+        CriteriaQuery<Long> countQuery = criteriaBuilder.createQuery(Long.class);
+        Root<Booking> bookingRoot = countQuery.from(Booking.class);
+        Join<Booking, User> joinUser = bookingRoot.join("user", JoinType.LEFT);
+        Join<Booking, ShowingTime> joinShowingTime = bookingRoot.join("showingTime", JoinType.LEFT);
+        Join<ShowingTime, Event> joinEvent = joinShowingTime.join("event", JoinType.LEFT);
+
+        Predicate eventPredicate = criteriaBuilder.equal(joinEvent.get("id"), eventId);
+        Predicate showingTimePredicate = criteriaBuilder.equal(joinShowingTime.get("startTime"), startTime);
+        Predicate predicate = getSearchPredicate(List.of(bookingRoot, joinUser, joinShowingTime, joinEvent), criteriaBuilder, search);
+
+        countQuery.select(criteriaBuilder.count(bookingRoot)).where(criteriaBuilder.and(eventPredicate, showingTimePredicate, predicate));
+        Long count = entityManager.createQuery(countQuery).getSingleResult();
+        log.info("End count Attendees search...");
         return count;
     }
 }

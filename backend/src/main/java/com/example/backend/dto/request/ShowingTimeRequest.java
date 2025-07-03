@@ -10,4 +10,5 @@ public class ShowingTimeRequest {
     private LocalDateTime saleOpenTime;
     private LocalDateTime saleCloseTime;
     private String layoutMode;
+
 }

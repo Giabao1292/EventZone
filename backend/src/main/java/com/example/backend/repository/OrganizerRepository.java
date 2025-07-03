@@ -1,6 +1,7 @@
 package com.example.backend.repository;
 
 import com.example.backend.model.Organizer;
+import com.example.backend.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -17,8 +18,10 @@ public interface OrganizerRepository extends JpaRepository<Organizer, Integer> {
 
     Page<Organizer> findAll(Pageable pageable);
 
+    Optional<Organizer> findByUser_Email(String email);
+
     @Query("SELECT o.id FROM Organizer o")
-            Page<Integer> findAllOrganizerId(Pageable pageable);
+    Page<Integer> findAllOrganizerId(Pageable pageable);
 
     @Query("SELECT o FROM Organizer o LEFT JOIN FETCH o.orgType ot LEFT JOIN FETCH o.user u WHERE o.id in :ids")
     List<Organizer> findALlOrganizersByIds(List<Integer> ids);

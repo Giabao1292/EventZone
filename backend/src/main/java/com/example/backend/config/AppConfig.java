@@ -31,9 +31,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class AppConfig implements WebMvcConfigurer , WebSecurityCustomizer {
 
     private String[] WHITE_LIST = {"/api/image","/api/auth/**", "/api/users/**",
-            "/api/categories","/api/categories/**", "/api/events/**",
-            "/api/showing-times/*/layout"};
-    private String[] ORGANIZER_LIST = {"/api/organizer/**"};
+            "/api/categories","/api/categories/**",
+            "/api/showing-times/*/layout","/api/event-ads/active-today","/api/events/detail/{eventId}","/api/events/home"};
+    private String[] ORGANIZER_LIST = {"/api/organizer/**","/api/event-ads/*"};
 
     private final PreFilter preFilter;
     private final UserDetailService userDetailService;

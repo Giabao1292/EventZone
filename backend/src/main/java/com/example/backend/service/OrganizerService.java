@@ -2,6 +2,7 @@ package com.example.backend.service;
 
 import com.example.backend.dto.request.OrganizerRequest;
 import com.example.backend.dto.response.*;
+import com.example.backend.model.Organizer;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,4 +22,7 @@ public interface OrganizerService {
     List<OrgTypeResponse> findAllOrgType();
 
     void updateOrg(int id, String status);
+
+    Organizer getOrganizerByEmail(String email);
+
 }

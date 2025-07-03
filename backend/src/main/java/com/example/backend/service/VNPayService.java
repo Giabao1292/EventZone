@@ -1,6 +1,7 @@
 package com.example.backend.service;
 
 import com.example.backend.model.Booking;
+import com.example.backend.model.EventAds;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -216,4 +217,62 @@ public class VNPayService {
             return false;
         }
     }
+    public String createAdsPaymentUrl(EventAds ads, HttpServletRequest request) throws Exception {
+        long amount = Math.round(ads.getTotalPrice() * 100); // VND x100
+        String clientIp = getClientIp(request);
+        String vnp_TxnRef = getRandomNumber(ads.getId()); // Random mã đơn hàng
+
+        Map<String, String> vnp_Params = new HashMap<>();
+        vnp_Params.put("vnp_Version", "2.1.0");
+        vnp_Params.put("vnp_Command", "pay");
+        vnp_Params.put("vnp_TmnCode", vnp_TmnCode);
+        vnp_Params.put("vnp_Amount", String.valueOf(amount));
+        vnp_Params.put("vnp_CurrCode", "VND");
+        vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
+        vnp_Params.put("vnp_OrderInfo", "EventAdsID:" + ads.getId());
+        vnp_Params.put("vnp_OrderType", "advertising");
+        vnp_Params.put("vnp_Locale", "vn");
+        vnp_Params.put("vnp_IpAddr", clientIp);
+        vnp_Params.put("vnp_ReturnUrl", "http://localhost:5173/organizer/payment-ads-result" + "?adsId=" + ads.getId() + "&paymentMethod=VNPAY");
+
+        // Thời gian tạo và hết hạn
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
+        String createDate = sdf.format(calendar.getTime());
+        calendar.add(Calendar.MINUTE, 15);
+        String expireDate = sdf.format(calendar.getTime());
+
+        vnp_Params.put("vnp_CreateDate", createDate);
+        vnp_Params.put("vnp_ExpireDate", expireDate);
+
+        // Sắp xếp params + build hash & query
+        List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
+        Collections.sort(fieldNames);
+
+        StringBuilder hashData = new StringBuilder();
+        StringBuilder query = new StringBuilder();
+
+        for (int i = 0; i < fieldNames.size(); i++) {
+            String key = fieldNames.get(i);
+            String value = vnp_Params.get(key);
+            if (value != null && !value.isEmpty()) {
+                hashData.append(key).append("=").append(URLEncoder.encode(value, StandardCharsets.UTF_8));
+                query.append(URLEncoder.encode(key, StandardCharsets.UTF_8)).append("=")
+                        .append(URLEncoder.encode(value, StandardCharsets.UTF_8));
+                if (i < fieldNames.size() - 1) {
+                    hashData.append("&");
+                    query.append("&");
+                }
+            }
+        }
+
+        String secureHash = hmacSHA512(vnp_HashSecret, hashData.toString());
+        query.append("&vnp_SecureHash=").append(secureHash);
+
+        String paymentUrl = vnp_PayUrl + "?" + query;
+        log.info("Generated VNPAY Ads Payment URL: {}", paymentUrl);
+
+        return paymentUrl;
+    }
+
 }
