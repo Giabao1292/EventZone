@@ -55,7 +55,6 @@ public class BookingController {
 
         try {
             String checkoutUrl;
-
             if ("PAYOS".equalsIgnoreCase(paymentMethod)) {
                 PaymentData paymentData = PaymentData.builder()
                         .orderCode(bookingId.longValue())
