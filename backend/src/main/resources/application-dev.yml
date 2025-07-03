@@ -6,8 +6,8 @@ spring:
     add-properties: true
   datasource:
     url: jdbc:mysql://localhost:3306/event
-    username: root
-    password: 123456
+    username: Phatnehihi
+    password: Hungphat111
 
   jpa:
     hibernate:

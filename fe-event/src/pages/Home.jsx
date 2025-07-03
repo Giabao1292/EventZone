@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { useLocation, Link } from "react-router-dom";
 import Slider from "react-slick"; // ✅ thêm thư viện
 import { saveToken } from "../utils/storage";
+import CategoryNav from "../ui/CategoryNav";
+import EventCard from "../ui/EventCard";
+import WishlistPage from "../services/wishlistServices";
 import {
   getCategories,
   getEventsByCategory,
@@ -91,13 +94,39 @@ export default function Home() {
     fetchCategories();
   }, []);
 
-  const toggleFavorite = (eventId) => {
-    const newFavorites = new Set(favorites);
-    newFavorites.has(eventId)
-      ? newFavorites.delete(eventId)
-      : newFavorites.add(eventId);
-    setFavorites(newFavorites);
-  };
+  const [wishlistEventIds, setWishlistEventIds] = useState(new Set())
+
+  useEffect(() => {
+    const fetchWishlist = async () => {
+      try {
+        const wishlist = await wishlistService.getWishlist()
+        const ids = new Set(wishlist.map(event => event.id))
+        setWishlistEventIds(ids)
+      } catch (err) {
+        console.error("Error loading wishlist:", err.message)
+      }
+    }
+
+    fetchWishlist()
+  }, [])
+
+
+  const toggleFavorite = async (eventId) => {
+    try {
+      const updatedSet = new Set(wishlistEventIds)
+      if (wishlistEventIds.has(eventId)) {
+        await wishlistService.removeFromWishlist(eventId)
+        updatedSet.delete(eventId)
+      } else {
+        await wishlistService.addToWishlist(eventId)
+        updatedSet.add(eventId)
+      }
+      setWishlistEventIds(updatedSet)
+    } catch (error) {
+      console.error("Failed to update wishlist:", error.message)
+    }
+  }
+
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -121,21 +150,20 @@ export default function Home() {
     <div className="min-h-screen text-white text-sm md:text-base relative overflow-hidden">
       <BackgroundEffect image={backGround} />
 
-      {notification && (
-        <div
-          className={`fixed top-8 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-lg shadow-md z-50 transition-all ${
-            notification.type === "success" ? "bg-green-600" : "bg-red-600"
-          }`}
-        >
-          <div className="flex items-center gap-2 text-sm">
-            <span>{notification.message}</span>
-            <button
-              onClick={() => setNotification(null)}
-              className="text-white hover:text-gray-300 font-bold"
-            >
-              ×
-            </button>
-          </div>
+        {notification && (
+          <div
+            className={`fixed top-8 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-lg shadow-md z-50 transition-all ${notification.type === "success" ? "bg-green-600" : "bg-red-600"
+              }`}
+          >
+            <div className="flex items-center gap-2 text-sm">
+              <span>{notification.message}</span>
+              <button
+                onClick={() => setNotification(null)}
+                className="text-white hover:text-gray-300 font-bold"
+              >
+                ×
+              </button>
+            </div>
         </div>
       )}
 

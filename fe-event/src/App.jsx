@@ -17,6 +17,7 @@ import OrganizerManagementPage from "./pages/admin/OrganizerManagementPage";
 import PaymentPage from "./components/booking/Payment";
 import SelectSeats from "./components/booking/SelectSeats";
 import Payment from "./components/booking/Payment";
+import WishlistPage from "./pages/WishListPage";
 import PaymentResult from "./components/booking/Payment-result";
 import PaymentCancel from "./components/booking/Payment-cancel";
 import DepositResult from "./components/organizer/DepositResult";
@@ -75,6 +76,7 @@ function App() {
           {/* Protected Routes for Authenticated Users */}
           <Route element={<PrivateRoute />}>
             <Route element={<AppLayout />}>
+              <Route path="/wishlist" element={<WishlistPage />} />
               <Route path="payment" element={<PaymentPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/change-password" element={<ChangePasswordForm />} />
@@ -94,9 +96,6 @@ function App() {
               />
               <Route path="payment" element={<Payment />} />
             </Route>
-            <Route path="/payment-result" element={<PaymentResult />} />
-            <Route path="/payment-cancel" element={<PaymentCancel />} />
-            <Route path="/deposit-result" element={<DepositResult />} />
           </Route>
 
           {/* Protected Routes for Organizers */}
@@ -130,7 +129,6 @@ function App() {
             <Route path="/admin/users" element={<UserManagementPage />} />
             <Route path="/admin/vouchers" element={<VoucherManagementPage />} />
             <Route path="/admin/ads" element={<AdsManagement />} />
-
             <Route
               path="/admin/organizers"
               element={<OrganizerManagementPage />}

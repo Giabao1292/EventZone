@@ -39,6 +39,7 @@ public class UserServiceImpl implements UserService {
     private final SearchCriteriaRepository searchCriteriaRepository;
     private final UserValidator userValidator;
     private final UserRoleRepository userRoleRepository;
+    private final WishlistRepository wishlistRepository;
 
     @Override
     public User findByUsername(String email) {
@@ -105,14 +106,26 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void addToWishlist(String username, Integer eventId) {
-        User user = userRepository.findByEmail(username).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        Event event = eventRepository.findById(eventId).orElseThrow(() -> new ResourceNotFoundException("Event not found"));
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
 
-        if (user.getWishlist().add(event)) {
-            userRepository.save(user);
+        // Kiểm tra đã tồn tại trong wishlist chưa
+        if (wishlistRepository.existsByUserAndEvent(user, event)) {
+            throw new IllegalStateException("Event already in wishlist");
         }
+
+        // Tạo Wishlist mới
+        Wishlist wishlistItem = Wishlist.builder()
+                .user(user)
+                .event(event)
+                .build();
+
+        wishlistRepository.save(wishlistItem);
     }
+
 
     @Override
     public void removeFromWishlist(String username, Integer eventId) {
@@ -127,9 +140,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Set<EventSummaryDTO> getWishlist(String email) {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        return user.getWishlist().stream().map(EventSummaryDTO::new).collect(Collectors.toCollection(LinkedHashSet::new));
+        return user.getWishlist().stream()
+                .map(Wishlist::getEvent)                  // Lấy Event từ Wishlist
+                .map(EventSummaryDTO::new)                // Tạo DTO từ Event
+                .collect(Collectors.toCollection(LinkedHashSet::new)); // Trả về Set
     }
     private Page<User> findAllUser(Pageable pageable) {
         Page<Long> listUserIds = userRepository.findAllUserIds(pageable);
