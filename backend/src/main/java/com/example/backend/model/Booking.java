@@ -36,10 +36,9 @@ public class Booking {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "voucher_id")
-    private com.example.backend.model.Voucher voucher;
+    private Voucher voucher;
 
     @NotNull
     @Column(name = "original_price", nullable = false, precision = 10, scale = 2)
@@ -89,8 +88,7 @@ public class Booking {
     @OneToMany(
             mappedBy = "booking",
             cascade = CascadeType.ALL,
-            orphanRemoval = true,
-            fetch = FetchType.LAZY // nên để LAZY, tránh load thừa khi không cần
+            orphanRemoval = true
     )
     @JsonManagedReference
     private Set<BookingSeat> tblBookingSeats = new LinkedHashSet<>();

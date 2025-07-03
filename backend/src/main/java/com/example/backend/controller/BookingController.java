@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -111,5 +112,11 @@ public class BookingController {
             e.printStackTrace();
             return new ResponseData<>(500, "Lỗi xác minh thanh toán: " + e.getMessage(), null);
         }
+    }
+    @PreAuthorize("hasAnyRole({'ORGANIZER', 'ADMIN'})")
+    @PatchMapping("/{bookingId}/check-in")
+    public ResponseData<?> checkInAttendee(@PathVariable Integer bookingId) {
+        bookingService.checkIn(bookingId);
+        return new ResponseData<>(HttpStatus.OK.value(), "Check in successful");
     }
 }

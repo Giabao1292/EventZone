@@ -1,11 +1,24 @@
 package com.example.backend.dto.response;
 
+import com.example.backend.util.CheckIn;
+import lombok.*;
+
+import java.time.Instant;
+import java.time.LocalDateTime;
+
+@Builder
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class AttendeeResponse {
     private int id;
     private String fullName;
     private String email;
     private String phone;
-    private String ticketQuantity;
-    private String ticketCode;
-
+    private String qrToken;
+    private LocalDateTime paidAt;
+    private int numberOfSeats;
+    private Instant checkInTime;
+    private CheckIn checkInStatus;
 }

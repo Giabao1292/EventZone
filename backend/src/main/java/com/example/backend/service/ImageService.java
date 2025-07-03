@@ -37,15 +37,17 @@ public class ImageService {
     }
 
     public String uploadQRCodeImage(byte[] imageBytes) throws IOException {
-        String publicId = "qrcodes/" + UUID.randomUUID();
         Map uploadResult = cloudinary.uploader().upload(
-                new ByteArrayInputStream(imageBytes),
+                imageBytes,
                 ObjectUtils.asMap(
-                        "public_id", publicId,
-                        "overwrite", true,
-                        "resource_type", "image"
+                        "resource_type", "image",
+                        "folder", "uploads/qrcodes",
+                        "public_id", "qrcodes/" + UUID.randomUUID(),
+                        "overwrite", true
                 )
         );
-        return publicId;
+
+        return (String) uploadResult.get("public_id");
     }
+
 }

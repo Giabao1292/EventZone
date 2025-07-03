@@ -29,6 +29,9 @@ import java.util.UUID;
 public class QrController {
     private final Cloudinary cloudinary;
     private final BookingRepository bookingRepository;
+    private final ImageService imageService;
+    private final QrCodeService qrCodeService;
+
     @GetMapping("/{id}/qr-image")
     public void getBookingQRImage(@PathVariable Long id, HttpServletResponse response) throws IOException {
         Booking booking = bookingRepository.findById(id.intValue())

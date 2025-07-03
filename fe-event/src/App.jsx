@@ -123,12 +123,12 @@ function App() {
             <Route path="/admin/dashboard" element={<DashboardPage />} />
             <Route path="/admin/users" element={<UserManagementPage />} />
             <Route path="/admin/vouchers" element={<VoucherManagementPage />} />
-
             <Route
               path="/admin/organizers"
               element={<OrganizerManagementPage />}
             />
             <Route path="/admin/events" element={<EventManagementPage />} />
+            <Route path="/admin/profile" element={<ProfilePage />} />
           </Route>
           <Route path="/book/:showingId/*" element={<BookingPage />} />
         </Routes>
