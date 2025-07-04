@@ -14,4 +14,5 @@ public interface ShowingTimeService {
     List<ShowingTime> createMultipleShowingTimes(CreateMultipleShowingTimeRequest req);
     LayoutDTO getLayout(Integer id);
     ShowingTime updateShowingTime(int id, UpdateShowingTimeRequest req);
+    ShowingTime createShowingTime(UpdateShowingTimeRequest req);
 }

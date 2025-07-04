@@ -44,6 +44,14 @@ public class ShowingTimeController {
         return new ResponseData<>(200, "Cập nhật sự kiện thành công", updated);
     }
 
+    //thêm suất chiếu khi edit sự kiện
+    @PreAuthorize("hasRole('ORGANIZER')")
+    @PostMapping("/create-single")
+    public ResponseData<ShowingTime> createSingle(@RequestBody UpdateShowingTimeRequest req) {
+        ShowingTime created = showingTimeService.createShowingTime(req);
+        return new ResponseData<>(HttpStatus.CREATED.value(), "Tạo suất chiếu thành công", created);
+    }
+
 
 
 }

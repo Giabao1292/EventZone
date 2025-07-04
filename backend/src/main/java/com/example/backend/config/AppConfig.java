@@ -32,7 +32,7 @@ public class AppConfig implements WebMvcConfigurer , WebSecurityCustomizer {
 
     private String[] WHITE_LIST = {"/api/image","/api/auth/**", "/api/users/**",
             "/api/categories","/api/categories/**",
-            "/api/showing-times/*/layout"};
+            "/api/showing-times/*/layout", "/api/events/showing-times/*/layout", "/api/events/detail/**"};
 //    private String[] ORGANIZER_LIST = {"/api/organizer/**"};
 
     private final PreFilter preFilter;
@@ -40,7 +40,7 @@ public class AppConfig implements WebMvcConfigurer , WebSecurityCustomizer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOriginPatterns("http://localhost:5173")
+                .allowedOriginPatterns("http://localhost:5173", "http://127.0.0.1:5173")
                 .allowCredentials(true)
                 .allowedHeaders("*")
                 .allowedMethods("*")

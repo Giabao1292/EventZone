@@ -23,7 +23,6 @@ import vn.payos.type.PaymentData;
 import vn.payos.type.PaymentLinkData;
 
 
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -166,16 +165,22 @@ public class EventController {
 
     @PreAuthorize("hasRole('ORGANIZER')")
     @PutMapping("/edit/{eventId}")
-    public ResponseEntity<ResponseData<Integer>> editEvent(@PathVariable int eventId, @RequestBody @Valid EventRequest request) {
+    public ResponseEntity<ResponseData<Integer>> editEvent(
+            @PathVariable int eventId,
+            @RequestBody @Valid EventRequest request) {
+
         Event updatedEvent = eventService.editEvent(eventId, request);
+
         if (updatedEvent == null) {
             return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
                     .body(new ResponseData<>(404, "Không tìm thấy sự kiện để chỉnh sửa", null));
         }
+
         return ResponseEntity
                 .ok(new ResponseData<>(200, "Chỉnh sửa thông tin sự kiện thành công", updatedEvent.getId()));
     }
+
 
 
     @PreAuthorize("hasRole('ORGANIZER')")
@@ -201,6 +206,21 @@ public class EventController {
         );
     }
 
+
+
+    @GetMapping("/organizer/{organizerId}/status/{statusId}")
+    public ResponseEntity<ResponseData<List<EventSummaryDTO>>> getEventsByStatus(
+            @PathVariable Integer organizerId,
+            @PathVariable Integer statusId) {
+        List<Event> events = eventService.getEventsByStatus(organizerId, statusId);
+        List<EventSummaryDTO> eventDTOs = events.stream()
+                .map(EventSummaryDTO::new)
+                .toList();
+
+        return ResponseEntity.ok(
+                new ResponseData<>(200, "Lấy danh sách sự kiện theo trạng thái thành công", eventDTOs)
+        );
+    }
 
 
 

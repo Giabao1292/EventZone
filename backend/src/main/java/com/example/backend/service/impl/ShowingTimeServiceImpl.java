@@ -207,4 +207,28 @@ public  class ShowingTimeServiceImpl implements ShowingTimeService {
         // Lưu lại và trả về
         return showingTimeRepo.save(st);
     }
+
+    @Override
+    public ShowingTime createShowingTime(UpdateShowingTimeRequest req) {
+        // 1. Validate eventId (bổ sung trường eventId vào request nếu chưa có)
+        if (req.getEventId() == null) throw new IllegalArgumentException("EventId is required");
+
+        // 2. Lấy đối tượng Event
+        Event event = eventRepo.findById(req.getEventId())
+                .orElseThrow(() -> new RuntimeException("Event not found with id=" + req.getEventId()));
+
+        // 3. Tạo ShowingTime mới và gán các trường
+        ShowingTime st = new ShowingTime();
+        st.setEvent(event); // <-- ĐÚNG!
+        st.setStartTime(req.getStartTime());
+        st.setEndTime(req.getEndTime());
+        st.setSaleOpenTime(req.getSaleOpenTime());
+        st.setSaleCloseTime(req.getSaleCloseTime());
+        st.setLayoutMode(req.getLayoutMode());
+
+        // ... Set các thuộc tính khác nếu có
+
+        return showingTimeRepository.save(st);
+    }
+
 }

@@ -82,23 +82,24 @@ const EventCreationForm = () => {
   const navigate = useNavigate();
 
   const [eventData, setEventData] = useState({
-    event_title: "",
-    category_id: "",
+    eventTitle: "",
+    categoryId: "",
     description: "",
-    age_rating: "",
-    banner_text: "",
-    header_image: null,
-    poster_image: null,
-    start_time: "",
-    end_time: "",
+    ageRating: "",
+    bannerText: "",
+    headerImage: null,
+    posterImage: null,
+    startTime: "",
+    endTime: "",
     location: "",
     city: "",
     hasDesignedLayout: false,
     venueName: "",
-    max_capacity: "",
-    status_id: 1,
+    maxCapacity: "",
+    statusId: 1,
     showingTimes: [],
   });
+
   useEffect(() => {
     if (location.state?.eventData) {
       console.log("Received state:", location.state); // Debug
@@ -134,7 +135,7 @@ const EventCreationForm = () => {
   const isStepValid = () => {
     switch (currentStep) {
       case 1:
-        return !!eventData.event_title && !!eventData.category_id;
+        return !!eventData.eventTitle && !!eventData.categoryId;
       case 2:
         return (
             !!eventData.venueName &&
@@ -159,15 +160,15 @@ const EventCreationForm = () => {
       if (currentStep === 1 && !eventId) {
         const payload = {
           organizerId,
-          eventTitle: eventData.event_title,
+          eventTitle: eventData.eventTitle,
           description: eventData.description,
-          startTime: eventData?.start_time,
-          endTime: eventData?.end_time,
-          categoryId: parseInt(eventData.category_id),
-          ageRating: eventData?.age_rating,
-          bannerText: eventData?.banner_text,
-          headerImage: eventData.header_image,
-          posterImage: eventData.poster_image,
+          startTime: eventData?.startTime,
+          endTime: eventData?.endTime,
+          categoryId: parseInt(eventData.categoryId),
+          ageRating: eventData?.ageRating,
+          bannerText: eventData?.bannerText,
+          headerImage: eventData.headerImage,
+          posterImage: eventData.posterImage,
         };
 
         const res = await apiClient.post("/events/create", payload);

@@ -1,17 +1,17 @@
 package com.example.backend.service.impl;
 
 import com.example.backend.dto.request.EventRequest;
+import com.example.backend.dto.request.ShowingTimeRequest;
 import com.example.backend.dto.response.*;
 import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.model.*;
 import com.example.backend.repository.*;
 import com.example.backend.service.EventService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PutMapping;
-
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,12 +21,14 @@ import java.util.stream.Collectors;
 public class EventServiceImpl implements EventService {
 
     private final EventRepository eventRepository;
-    private final CategoryRepository categoryRepository;
+
     private final OrganizerRepository organizerRepository;
 
     private final EventStatusRepository eventStatusRepository;
 
     private final SearchCriteriaRepository searchCriteriaRepository;
+
+    private final AddressRepository addressRepository;
 
 
     @Override
@@ -38,12 +40,6 @@ public class EventServiceImpl implements EventService {
     }
 
 
-    public List<CategoryResponse> getAllCategories() {
-        return categoryRepository.findAll()
-                .stream()
-                .map(c -> new CategoryResponse(c.getCategoryId(), c.getCategoryName()))
-                .collect(Collectors.toList());
-    }
 
     @Override
     public Event createEvent(EventRequest request) {
@@ -197,9 +193,6 @@ public class EventServiceImpl implements EventService {
 
 
 
-
-
-
     @Override
     public List<EventSummaryAdmin> searchEvent(Pageable pageable, String... search) {
         Page<Event> events = search == null || search.length == 0 ? eventRepository.findAll(pageable) : searchCriteriaRepository.searchEvents(pageable, search);
@@ -262,38 +255,84 @@ public class EventServiceImpl implements EventService {
                 .build();
     }
 
-    @PutMapping("/edit/{eventId}")
+    @Override
+    @Transactional
     public Event editEvent(int eventId, EventRequest request) {
+        // 1. Lấy event hiện tại
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sự kiện"));
 
+        if (event.getStatus() == null || event.getStatus().getId() != 1) {
+            throw new RuntimeException("Chỉ được chỉnh sửa sự kiện khi trạng thái là bản nháp!");
+        }
+
+        // 2. Update các trường cơ bản
         if (request.getCategoryId() != null) {
+            // Cách chuẩn là lấy Category từ DB, nếu chắc chắn tồn tại, nếu không thì tạm như dưới:
             Category category = new Category();
             category.setCategoryId(request.getCategoryId());
             event.setCategory(category);
         }
-        event.setEventTitle(request.getEventTitle());
-        event.setDescription(request.getDescription());
-        event.setStartTime(request.getStartTime());
-        event.setEndTime(request.getEndTime());
-        event.setAgeRating(request.getAgeRating());
-        event.setBannerText(request.getBannerText());
-        event.setHeaderImage(request.getHeaderImage());
-        event.setPosterImage(request.getPosterImage());
-        event.setModifiedBy("system");
+        if (request.getEventTitle() != null)
+            event.setEventTitle(request.getEventTitle());
+        if (request.getDescription() != null)
+            event.setDescription(request.getDescription());
+        if (request.getStartTime() != null)
+            event.setStartTime(request.getStartTime());
+        if (request.getEndTime() != null)
+            event.setEndTime(request.getEndTime());
+        if (request.getAgeRating() != null)
+            event.setAgeRating(request.getAgeRating());
+        if (request.getBannerText() != null)
+            event.setBannerText(request.getBannerText());
+        if (request.getHeaderImage() != null)
+            event.setHeaderImage(request.getHeaderImage());
+        if (request.getPosterImage() != null)
+            event.setPosterImage(request.getPosterImage());
+        event.setModifiedBy("system"); // Nếu có info user thì dùng tên user
 
-        // === BỔ SUNG DÒNG NÀY ĐỂ ĐẢM BẢO LUÔN VỀ DRAFT ===
-        EventStatus draftStatus = eventStatusRepository.findByStatusName("DRAFT")
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy status DRAFT"));
-        event.setStatus(draftStatus);
+        // 3. Update status nếu FE gửi lên
+        if (request.getStatusId() != null) {
+            EventStatus status = eventStatusRepository.findById(request.getStatusId())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy status id = " + request.getStatusId()));
+            event.setStatus(status);
+        }
+        // Nếu muốn luôn về draft thì thay bằng code sau (còn nếu muốn theo FE thì giữ như trên)
+        // EventStatus draftStatus = eventStatusRepository.findByStatusName("DRAFT")
+        //        .orElseThrow(() -> new RuntimeException("Không tìm thấy status DRAFT"));
+        // event.setStatus(draftStatus);
 
+        // 4. Update address cho showingTimes nếu có
+        if (request.getShowingTimes() != null && !request.getShowingTimes().isEmpty()) {
+            for (ShowingTimeRequest stReq : request.getShowingTimes()) {
+                if (stReq.getAddressId() != null) {
+                    Address address = addressRepository.findById(stReq.getAddressId())
+                            .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy address id = " + stReq.getAddressId()));
+                    if (stReq.getVenueName() != null)
+                        address.setVenueName(stReq.getVenueName());
+                    if (stReq.getLocation() != null)
+                        address.setLocation(stReq.getLocation());
+                    if (stReq.getCity() != null)
+                        address.setCity(stReq.getCity());
+                    addressRepository.save(address);
+                }
+            }
+        }
+
+        // 5. Lưu lại event và trả về
         return eventRepository.save(event);
     }
+
 
 
     @Override
     public List<Event> findEventsByOrganizerId(int organizerId) {
         return eventRepository.findByOrganizer_Id(organizerId);
+    }
+
+    @Override
+    public List<Event> getEventsByStatus(Integer organizerId, Integer statusId) {
+        return eventRepository.findByOrganizer_IdAndStatus_Id(organizerId, statusId);
     }
 
 

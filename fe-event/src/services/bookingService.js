@@ -1,4 +1,4 @@
-// src/services/bookingService.js
+
 
 import apiClient from "../api/axios";
 
@@ -9,7 +9,7 @@ const bookingService = {
       return response.data.data; // Returns Booking object
     } catch (error) {
       throw new Error(
-        error.response?.data?.message || "Failed to hold booking"
+          error.response?.data?.message || "Failed to hold booking"
       );
     }
   },

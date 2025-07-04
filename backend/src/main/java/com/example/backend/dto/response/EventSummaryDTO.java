@@ -1,6 +1,8 @@
 package com.example.backend.dto.response;
 
+import com.example.backend.model.Address;
 import com.example.backend.model.Event;
+import com.example.backend.model.ShowingTime;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -8,26 +10,39 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 @Data
-@Getter
-@Setter
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class EventSummaryDTO {
-    private Long id;
+    private Integer id;
     private String title;
     private String description;
     private String location;
     private String date;
     private String imageUrl;
+    private String status;
+    private String category;
 
     public EventSummaryDTO(Event event) {
-        this.id = event.getId().longValue(); // Vì Event dùng Integer
-        this.title = event.getEventTitle();  // ánh xạ đúng tên
+        this.id = event.getId();
+        this.title = event.getEventTitle();
         this.description = event.getDescription();
-        this.location = "Unknown"; // Vì chưa có field location
-        this.date = formatDate(event.getStartTime()); // convert từ Instant
-        this.imageUrl = event.getPosterImage(); // dùng 1 trong 3 ảnh bạn có
+
+        // Lấy ShowingTime đầu tiên để lấy Address
+        String locationStr = "Unknown";
+        if (event.getTblShowingTimes() != null && !event.getTblShowingTimes().isEmpty()) {
+            ShowingTime st = event.getTblShowingTimes().iterator().next();
+            Address address = st.getAddress();
+            if (address != null) {
+                locationStr = address.getVenueName() + ", " + address.getLocation() + ", " + address.getCity();
+            }
+        }
+        this.location = locationStr;
+
+        this.date = formatDate(event.getStartTime());
+        this.imageUrl = event.getPosterImage();
+        this.status = event.getStatus() != null ? event.getStatus().getStatusName() : null;
+        this.category = event.getCategory() != null ? event.getCategory().getCategoryName() : null;
     }
 
     private String formatDate(LocalDateTime localDateTime) {
