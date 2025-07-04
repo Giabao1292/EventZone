@@ -104,6 +104,17 @@ public class OrganizerServiceImpl implements OrganizerService {
             // 2. Mapping thủ công từ entity sang DTO
             OrganizerResponse response = new OrganizerResponse();
             response.setId(organizer.getId());
+            response.setOrgName(organizer.getOrgName());
+            response.setTaxCode(organizer.getTaxCode());
+            response.setOrgAddress(organizer.getOrgAddress());
+            response.setWebsite(organizer.getWebsite());
+            response.setBusinessField(organizer.getBusinessField());
+            response.setOrgInfo(organizer.getOrgInfo());
+            response.setOrgLogoUrl(organizer.getOrgLogoUrl());
+            response.setIdCardFrontUrl(organizer.getIdCardFrontUrl());
+            response.setIdCardBackUrl(organizer.getIdCardBackUrl());
+            response.setBusinessLicenseUrl(organizer.getBusinessLicenseUrl());
+            response.setExperience(organizer.getExperience());
 
             return response;
 
