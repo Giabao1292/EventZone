@@ -14,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PutMapping;
 
 import java.time.Instant;
 import java.util.List;
@@ -42,14 +43,6 @@ public class EventServiceImpl implements EventService {
                 .collect(Collectors.toList());
     }
 
-
-
-    public List<CategoryResponse> getAllCategories() {
-        return categoryRepository.findAll()
-                .stream()
-                .map(c -> new CategoryResponse(c.getCategoryId(), c.getCategoryName()))
-                .collect(Collectors.toList());
-    }
     @Override
     public List<Event> getApprovedEvents() {
         return eventRepository.findByStatus_StatusName("APPROVED");
@@ -318,18 +311,11 @@ public class EventServiceImpl implements EventService {
             event.setPosterImage(request.getPosterImage());
         event.setModifiedBy("system"); // Nếu có info user thì dùng tên user
 
-        // 3. Update status nếu FE gửi lên
         if (request.getStatusId() != null) {
             EventStatus status = eventStatusRepository.findById(request.getStatusId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy status id = " + request.getStatusId()));
             event.setStatus(status);
         }
-        // Nếu muốn luôn về draft thì thay bằng code sau (còn nếu muốn theo FE thì giữ như trên)
-        // EventStatus draftStatus = eventStatusRepository.findByStatusName("DRAFT")
-        //        .orElseThrow(() -> new RuntimeException("Không tìm thấy status DRAFT"));
-        // event.setStatus(draftStatus);
-
-        // 4. Update address cho showingTimes nếu có
         if (request.getShowingTimes() != null && !request.getShowingTimes().isEmpty()) {
             for (ShowingTimeRequest stReq : request.getShowingTimes()) {
                 if (stReq.getAddressId() != null) {

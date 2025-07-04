@@ -43,7 +43,6 @@ const EventDetail = () => {
 
   if (loading)
     return (
-
       <div className="text-white bg-gray-900 min-h-screen">
         <PageLoader />
       </div>
@@ -179,7 +178,6 @@ const EventDetail = () => {
                   {st.address?.city}
                 </p>
 
-
                 {isBeforeSale && (
                   <p className="text-yellow-600 font-semibold">
                     Vé chưa mở bán. Vui lòng quay lại sau.
@@ -209,6 +207,7 @@ const EventDetail = () => {
           })}
         </div>
       </div>
+    </div>
   );
 };
 
