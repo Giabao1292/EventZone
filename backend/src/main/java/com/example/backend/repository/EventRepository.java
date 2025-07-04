@@ -21,6 +21,7 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
             "LEFT JOIN FETCH st.seats s " +
             "LEFT JOIN FETCH st.zones z " +
             "WHERE e.id = :eventId")
+
     Optional<Event> findEventDetail(@Param("eventId") Integer eventId);
 
     @EntityGraph(attributePaths = {})
@@ -29,6 +30,7 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
 
     List<Event> findByOrganizer_Id(int organizerId);
 
+    List<Event> findByOrganizer_IdAndStatus_Id(Integer organizerId, Integer statusId);
 
 
     @Query("SELECT e.id FROM Event e")

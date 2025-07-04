@@ -24,6 +24,8 @@ import DepositResult from "./components/organizer/DepositResult";
 import EventManagementPage from "./pages/admin/EventManagementPage";
 import OrganizerEventList from "./components/organizer/OrganizerEventList";
 import EditEventForm from "./components/organizer/EditEventForm";
+import EventManager from './components/organizer/EventManager';
+import { useAuth } from "./context/AuthContext";
 import VoucherManagementPage from "./pages/admin/VoucherManagementPage";
 import AdsManagement from "./pages/admin/AdsManagement";
 import AdsCreatePage from "./components/organizer/AdsCreatePage";
@@ -31,51 +33,50 @@ import PaymentAdsResultPage from "./components/organizer/PaymentAdsResult";
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() => import("./components/authentication/LoginPage"));
 const RegisterPage = lazy(() =>
-  import("./components/authentication/RegisterPage")
+    import("./components/authentication/RegisterPage")
 );
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const ChangePasswordForm = lazy(() => import("./pages/ChangePasswordPage"));
 const ForgotPassword = lazy(() =>
-  import("./components/authentication/ForgotPasswordPage")
+    import("./components/authentication/ForgotPasswordPage")
 );
 const ResetPasswordPage = lazy(() =>
-  import("./components/authentication/ResetPasswordPage")
+    import("./components/authentication/ResetPasswordPage")
 );
 const AppLayout = lazy(() => import("./ui/AppLayout"));
 
-function App() {
-  return (
-    <BrowserRouter>
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="dark"
-      />
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/verify-email" element={<VerifyEmail />} />
-          {/* Public Home Page with AppLayout */}
-          <Route element={<AppLayout />}>
-            <Route path="/" element={<Navigate to="/home" replace />} />
-            <Route path="/home" element={<Home />} />
-            <Route path="/events/:eventId" element={<EventDetail />} />
-          </Route>
+// ** KHÔNG gọi useAuth ở đây **
 
-          {/* Protected Routes for Authenticated Users */}
-          <Route element={<PrivateRoute />}>
+function App() {
+  const { user } = useAuth(); // <-- CHỈ GỌI Ở ĐÂY!
+
+  return (
+      <BrowserRouter>
+        <ToastContainer
+            position="top-right"
+            autoClose={3000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="dark"
+        />
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            {/* Public Home Page with AppLayout */}
             <Route element={<AppLayout />}>
+              <Route path="/" element={<Navigate to="/home" replace />} />
+              <Route path="/home" element={<Home />} />
+              <Route path="/events/:eventId" element={<EventDetail />} />
               <Route path="/wishlist" element={<WishlistPage />} />
               <Route path="payment" element={<PaymentPage />} />
               <Route path="/profile" element={<ProfilePage />} />
@@ -85,17 +86,71 @@ function App() {
                 element={<RegisterOrganizerForm />}
               />
             </Route>
-            <Route path="/book/:showingId" element={<BookingPage />}>
-              <Route
-                index
-                element={
-                  <SelectSeats
-                    showingId={null} // tạm null, sẽ lấy từ useParams ở BookingPage
-                  />
-                }
-              />
-              <Route path="payment" element={<Payment />} />
+
+            {/* Protected Routes for Authenticated Users */}
+            <Route element={<PrivateRoute />}>
+              <Route element={<AppLayout />}>
+                <Route path="payment" element={<PaymentPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/change-password" element={<ChangePasswordForm />} />
+                <Route
+                    path="/register-organizer"
+                    element={<RegisterOrganizerForm />}
+                />
+              </Route>
+              <Route path="/book/:showingId" element={<BookingPage />}>
+                <Route
+                    index
+                    element={
+                      <SelectSeats
+                          showingId={null} // tạm null, sẽ lấy từ useParams ở BookingPage
+                      />
+                    }
+                />
+                <Route path="payment" element={<Payment />} />
+              </Route>
+              <Route path="/payment-result" element={<PaymentResult />} />
+              <Route path="/payment-cancel" element={<PaymentCancel />} />
+              <Route path="/deposit-result" element={<DepositResult />} />
             </Route>
+
+            {/* Protected Routes for Organizers */}
+            <Route element={<PrivateRoute allowedRoles={["ORGANIZER"]} />}>
+              <Route path="/organizer/*" element={<OrganizerLayout />}>
+
+                {/* Route mặc định: hiển thị danh sách sự kiện */}
+                {/*<Route index element={<OrganizerEventList />} />*/}
+                <Route index element={<EventManager user={user} />} />
+
+
+                <Route
+                    path="layout-designer/:showingTimeId"
+                    element={<LayoutDesigner />}
+                />
+                <Route path="create-event" element={<EventCreationForm />} />
+                <Route path="edit/:id" element={<EditEventForm />} />
+              </Route>
+            </Route>
+
+            {/* Protected Routes for Admins */}
+            <Route element={<PrivateRoute allowedRoles={["ADMIN"]} />} />
+            <Route element={<AdminLayout />}>
+              <Route
+                  path="/admin"
+                  element={<Navigate to="/admin/dashboard" replace />}
+              />
+              <Route path="/admin/dashboard" element={<DashboardPage />} />
+              <Route path="/admin/users" element={<UserManagementPage />} />
+              <Route
+                  path="/admin/organizers"
+                  element={<OrganizerManagementPage />}
+              />
+              <Route path="/admin/events" element={<EventManagementPage />} />
+            </Route>
+            <Route path="/book/:showingId/*" element={<BookingPage />} />
+          </Routes>
+        </Suspense>
+      </BrowserRouter>
           </Route>
 
           {/* Protected Routes for Organizers */}

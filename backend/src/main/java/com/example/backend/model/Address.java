@@ -34,8 +34,6 @@ public class Address {
     @NotNull
     @Column(name = "city", nullable = false, length = 100)
     private String city;
-
-
     @OneToMany(cascade = CascadeType.ALL ,mappedBy = "address")
     @JsonManagedReference
     private Set<ShowingTime> tblShowingTimes = new LinkedHashSet<>();

@@ -541,4 +541,16 @@ export const getEventStats = (events) => {
       draft: 0,
     };
   }
+
 };
+
+  export async function getEventsByStatus(organizerId, statusId) {
+    try {
+      const res = await apiClient.get(`/events/organizer/${organizerId}/status/${statusId}`);
+      // Giả sử API trả về { code: 200, data: [...] }
+      return res.data.data || [];
+    } catch (error) {
+      console.error("Lỗi khi lấy sự kiện theo status:", error);
+      return [];
+    }
+  }

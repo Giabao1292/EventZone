@@ -12,13 +12,7 @@ const SettingsStep = ({ eventData, eventId }) => {
   const navigate = useNavigate();
 
   const handleEditLayout = (showingTime) => {
-    const effectiveEventId = eventId || eventData?.id; // Fallback to eventData.id
-    console.log(
-        "Navigating to LayoutDesigner with eventId:",
-        effectiveEventId,
-        "showingTimeId:",
-        showingTime.id
-    ); // Debug
+    const effectiveEventId = eventId || eventData?.id;
     if (!effectiveEventId) {
       console.error("No eventId available for navigation!");
       return;
@@ -28,10 +22,13 @@ const SettingsStep = ({ eventData, eventId }) => {
         layoutMode: showingTime.layoutMode,
         eventData,
         eventId: effectiveEventId,
-        showingTimeId: showingTime.id, // Explicitly pass showingTimeId
+        showingTimeId: showingTime.id,
+        isEdit: true,   // <-- Thêm dòng này để biết đang EDIT event
       },
     });
   };
+
+
   if (!eventData?.showingTimes?.length) {
     return (
         <motion.div
@@ -74,11 +71,15 @@ const SettingsStep = ({ eventData, eventId }) => {
                 </p>
               </div>
               <button
-                  className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition"
-                  onClick={() => handleEditLayout(st)}
+                  className={`px-4 py-2 rounded-md transition
+                      ${st.id ? "bg-green-600 text-white hover:bg-green-700" : "bg-gray-600 text-gray-300 cursor-not-allowed"}`}
+                  onClick={() => st.id && handleEditLayout(st)}
+                  disabled={!st.id}
+                  title={!st.id ? "Cần lưu sự kiện trước khi thiết kế chỗ ngồi" : ""}
               >
                 Thiết kế chỗ ngồi
               </button>
+
             </motion.div>
         ))}
       </motion.div>

@@ -10,7 +10,10 @@ export const saveShowingLayout = async (layoutData) => {
             "/events/save-layout",
             layoutData,
             {
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+
+                },
                 timeout: 15000,
             }
         );
@@ -20,6 +23,7 @@ export const saveShowingLayout = async (layoutData) => {
         throw new Error(errMsg);
     }
 };
+
 
 /**
  * Lấy lại layout đã lưu của 1 suất chiếu (showingTimeId)

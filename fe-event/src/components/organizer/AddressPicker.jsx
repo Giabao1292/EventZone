@@ -133,7 +133,12 @@ const AddressPicker = ({ onSelect, initialValue }) => {
       const location = `${ward?.name}, ${district?.name}, ${province?.name}`;
       const city = province?.name;
 
-      onSelect({ location, city });
+      // Truyền thêm address_id nếu đang edit
+      onSelect({
+        location,
+        city,
+        address_id: initialValue?.address_id ?? undefined, // Nếu có thì truyền lên
+      });
     }
     // eslint-disable-next-line
   }, [provinceCode, districtCode, wardCode]);
@@ -200,6 +205,7 @@ AddressPicker.propTypes = {
   initialValue: PropTypes.shape({
     city: PropTypes.string,
     location: PropTypes.string,
+    address_id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]), // Thêm prop này
   }),
 };
 
