@@ -24,6 +24,8 @@ import EventManagementPage from "./pages/admin/EventManagementPage";
 import OrganizerEventList from "./components/organizer/OrganizerEventList";
 import EditEventForm from "./components/organizer/EditEventForm";
 import VoucherManagementPage from "./pages/admin/VoucherManagementPage";
+import OrganizerProfile from "./components/organizer/OrganizerProfile";
+
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() => import("./components/authentication/LoginPage"));
 const RegisterPage = lazy(() =>
@@ -99,7 +101,7 @@ function App() {
           {/* Protected Routes for Organizers */}
           <Route element={<PrivateRoute allowedRoles={["ORGANIZER"]} />}>
             <Route path="/organizer/*" element={<OrganizerLayout />}>
-
+              <Route path="OrganizerProfile" element={<OrganizerProfile />} />
               {/* Route mặc định: hiển thị danh sách sự kiện */}
               <Route index element={<OrganizerEventList />} />
 
