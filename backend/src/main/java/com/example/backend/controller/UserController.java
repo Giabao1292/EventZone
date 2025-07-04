@@ -6,11 +6,14 @@ import com.example.backend.dto.request.OnCreate;
 import com.example.backend.dto.request.UserRequestDTO;
 import com.example.backend.dto.request.UserUpdateRequest;
 import com.example.backend.dto.response.*;
+import com.example.backend.model.Event;
 import com.example.backend.model.User;
+import com.example.backend.model.Wishlist;
 import com.example.backend.repository.RoleRepository;
 import com.example.backend.repository.UserRoleRepository;
 import com.example.backend.service.JwtService;
 import com.example.backend.service.UserService;
+import com.example.backend.service.WishlistService;
 import com.example.backend.util.TokenType;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -23,8 +26,11 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
@@ -37,6 +43,7 @@ public class UserController {
     private final Cloudinary cloudinary;
     private final RoleRepository roleRepository;
     private final UserRoleRepository userRoleRepository;
+    private final WishlistService wishlistService;
 
     // Helper method to extract and validate token
     private String extractToken(HttpServletRequest request) {
@@ -105,7 +112,6 @@ public class UserController {
         }
     }
 
-
     @PostMapping("/avatar")
     public ResponseData<String> updateAvatar(
             @RequestParam("file") MultipartFile file,
@@ -123,6 +129,7 @@ public class UserController {
             return new ResponseData<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Failed to upload avatar: " + e.getMessage());
         }
     }
+
     @PutMapping("/change-password")
     public ResponseData<String> changePassword(
             @RequestBody ChangePasswordRequest request,
@@ -134,56 +141,52 @@ public class UserController {
     }
 
     @PostMapping("/wishlist/{eventId}")
-    public ResponseData<String> addToWishlist(
-            @PathVariable Integer eventId) {
+    public ResponseData<String> addToWishlist(@PathVariable Integer eventId) {
         try {
             String username = SecurityContextHolder.getContext().getAuthentication().getName();
-            userService.addToWishlist(username, eventId);
-            return new ResponseData<>(HttpStatus.OK.value(), "Added to wishlist");
-        } catch (RuntimeException e) {
+            String result = wishlistService.addToWishlist(username, eventId);
+            return new ResponseData<>(HttpStatus.OK.value(), result);
+        } catch (NoSuchElementException e) {
             return new ResponseData<>(HttpStatus.NOT_FOUND.value(), e.getMessage());
         } catch (Exception e) {
             return new ResponseData<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    "Failed: " + e.getMessage());
+                    "Failed to add to wishlist: " + e.getMessage());
         }
     }
 
     @DeleteMapping("/wishlist/{eventId}")
-    public ResponseData<String> removeFromWishlist(
-            @PathVariable Integer eventId, HttpServletRequest request) {
-        // giống add nhưng gọi removeToWishlist
+    public ResponseData<String> removeFromWishlist(@PathVariable Integer eventId) {
         try {
             String username = SecurityContextHolder.getContext().getAuthentication().getName();
-            userService.removeFromWishlist(username, eventId);
-            return new ResponseData<>(HttpStatus.OK.value(), "Removed from wishlist");
-        } catch (RuntimeException e) {
+            String result = wishlistService.removeFromWishlist(username, eventId);
+            return new ResponseData<>(HttpStatus.OK.value(), result);
+        } catch (NoSuchElementException e) {
             return new ResponseData<>(HttpStatus.NOT_FOUND.value(), e.getMessage());
         } catch (Exception e) {
             return new ResponseData<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    "Failed: " + e.getMessage());
+                    "Failed to remove from wishlist: " + e.getMessage());
         }
     }
 
     @GetMapping("/wishlist")
-    public ResponseData<Set<EventSummaryDTO>> getWishlist() {
+    public ResponseData<List<EventSummaryDTO>> getWishlist() {
         try {
-            String username = SecurityContextHolder.getContext().getAuthentication().getName();      // đã hard-code hoặc lấy từ JWT
-            Set<EventSummaryDTO> wishlist = userService.getWishlist(username);
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
-            return new ResponseData<>(
-                    HttpStatus.OK.value(),
-                    "Wishlist fetched",
-                    wishlist
-            );
+            List<Wishlist> wishlists = wishlistService.getWishlist(username); // ✅ đúng kiểu
 
-        } catch (RuntimeException e) {
+            List<EventSummaryDTO> dtos = wishlists.stream()
+                    .map(Wishlist::getEvent) // Lấy Event từ Wishlist
+                    .map(EventSummaryDTO::new) // Chuyển Event sang DTO
+                    .collect(Collectors.toList());
+
+            return new ResponseData<>(HttpStatus.OK.value(), "Wishlist fetched", dtos);
+        } catch (NoSuchElementException e) {
             return new ResponseData<>(HttpStatus.NOT_FOUND.value(), e.getMessage());
-
         } catch (Exception e) {
-            return new ResponseData<>(
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    "Failed: " + e.getMessage()
-            );
+            e.printStackTrace();
+            return new ResponseData<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "Failed to fetch wishlist: " + e.getMessage());
         }
     }
 

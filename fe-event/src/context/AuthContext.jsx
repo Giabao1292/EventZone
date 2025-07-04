@@ -4,6 +4,7 @@ import { getToken, removeToken, setToken as saveToken } from "../utils/storage";
 import { getUserDetail } from "../services/userServices";
 import PageLoader from "../ui/PageLoader";
 import { getOrganizerByUserId } from "../services/organizerService";
+import { useContext } from "react";
 
 const AuthContext = createContext();
 
@@ -102,3 +103,5 @@ AuthProvider.propTypes = {
 };
 
 export default AuthContext;
+
+export const useAuth = () => useContext(AuthContext);

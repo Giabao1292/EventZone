@@ -85,7 +85,7 @@ public class Organizer {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     @JsonBackReference
     private User user;

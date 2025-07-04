@@ -94,19 +94,18 @@ public class Event {
     @Column(name = "rejection_reason")
     private String rejectionReason;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "event")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "event")
     private Set<EventVoucher> tblEventVouchers = new LinkedHashSet<>();
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "event")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "event")
     private Set<Review> tblReviews = new LinkedHashSet<>();
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,mappedBy = "event")
+    @OneToMany(cascade = CascadeType.ALL,mappedBy = "event")
     @JsonManagedReference
     private Set<ShowingTime> tblShowingTimes = new LinkedHashSet<>();
 
-    @ManyToMany(mappedBy = "wishlist", fetch = FetchType.LAZY)
-    @JsonIgnore
-    private Set<User> wishlistedUsers = new LinkedHashSet<>();
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<Wishlist> wishlistedUsers = new LinkedHashSet<>();
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

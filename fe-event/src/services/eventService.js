@@ -1,5 +1,10 @@
 import apiClient from "../api/axios";
 
+export const getHomeEvents = async () => {
+  const res = await apiClient.get("/events/home");
+  return res.data.data; // {ongoing, upcoming}
+};
+
 // Search events with pagination and filters
 export const searchEvents = async (page = 0, size = 10, searchParams = []) => {
   try {
@@ -209,6 +214,178 @@ export const updateEventStatus = async (
   }
 };
 
+// NEW: Get showing times for an event
+export const getEventShowingTimes = async (eventId) => {
+  try {
+    const response = await apiClient.get(`/events/${eventId}/showing-times`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching showing times:", error);
+    // Return mock data for development
+    return {
+      code: 200,
+      data: [
+        {
+          id: 1,
+          event_id: eventId,
+          startTime: "2024-03-15T09:00:00",
+          endTime: "2024-03-15T12:00:00",
+          saleOpenTime: "2024-03-01T00:00:00",
+          saleCloseTime: "2024-03-14T23:59:59",
+        },
+        {
+          id: 2,
+          event_id: eventId,
+          startTime: "2024-03-15T14:00:00",
+          endTime: "2024-03-15T17:00:00",
+          saleOpenTime: "2024-03-01T00:00:00",
+          saleCloseTime: "2024-03-14T23:59:59",
+        },
+        {
+          id: 3,
+          event_id: eventId,
+          startTime: "2024-03-16T09:00:00",
+          endTime: "2024-03-16T12:00:00",
+          saleOpenTime: "2024-03-01T00:00:00",
+          saleCloseTime: "2024-03-15T23:59:59",
+        },
+      ],
+      message: "Showing times fetched successfully",
+    };
+  }
+};
+
+// NEW: Get attendees for a specific event and showing time with pagination
+export const getEventAttendees = async (
+  eventId,
+  startTime,
+  page = 0,
+  size = 10,
+  search = []
+) => {
+  try {
+    const params = new URLSearchParams();
+    params.append("page", page.toString());
+    params.append("size", size.toString());
+    params.append("startTime", startTime);
+
+    // Add search parameters
+    search.forEach((param) => {
+      params.append("search", param);
+    });
+
+    const response = await apiClient.get(
+      `/events/${eventId}/attendees?${params}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching attendees:", error);
+    // Return mock data for development
+    return {
+      code: 200,
+      data: {
+        content: [
+          {
+            id: 1,
+            fullName: "Nguyễn Văn An",
+            email: "nguyenvanan@email.com",
+            phone: "0901234567",
+            qrToken: "QR001234567",
+            paidAt: "2024-01-15T10:30:00Z",
+            numberOfSeats: 2,
+            checkInTime: "2024-03-15T08:45:00Z",
+            checkInStatus: "CHECKED_IN",
+          },
+          {
+            id: 2,
+            fullName: "Trần Thị Bình",
+            email: "tranthibinh@email.com",
+            phone: "0912345678",
+            qrToken: "QR001234568",
+            paidAt: "2024-01-16T14:20:00Z",
+            numberOfSeats: 1,
+            checkInTime: null,
+            checkInStatus: "NOT_CHECKED_IN",
+          },
+          {
+            id: 3,
+            fullName: "Lê Văn Cường",
+            email: "levancuong@email.com",
+            phone: "0923456789",
+            qrToken: "QR001234569",
+            paidAt: "2024-01-17T09:15:00Z",
+            numberOfSeats: 3,
+            checkInTime: null,
+            checkInStatus: "NOT_CHECKED_IN",
+          },
+        ],
+        totalElements: 25,
+        totalPages: 3,
+        number: page,
+        size: size,
+      },
+      message: "Attendees fetched successfully",
+    };
+  }
+};
+
+// NEW: Search attendee by QR token
+export const searchAttendeeByQR = async (eventId, startTime, qrToken) => {
+  try {
+    const params = new URLSearchParams();
+    params.append("page", "0");
+    params.append("size", "1");
+    params.append("startTime", startTime);
+    params.append("search", `qrToken:${qrToken}`);
+
+    const response = await apiClient.get(
+      `/events/${eventId}/attendees?${params}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error searching attendee by QR:", error);
+    throw error;
+  }
+};
+
+// NEW: Get analytics for event
+export const getEventAnalytics = async (eventId, startTime) => {
+  try {
+    const params = new URLSearchParams();
+    params.append("startTime", startTime);
+
+    const response = await apiClient.get(
+      `/events/${eventId}/analytics?${params}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching analytics:", error);
+    // Return mock data for development
+    return {
+      code: 200,
+      data: {
+        numberOfAttendees: 0,
+        numberOfCheckIns: 0,
+        numberOfSeats: 0,
+        sale: 0,
+        averageAttendees: 0.0,
+      },
+      message: "Analytics fetched successfully",
+    };
+  }
+};
+
+// NEW: Check-in attendee
+export const checkInAttendee = async (bookingId) => {
+  try {
+    const response = await apiClient.patch(`/bookings/${bookingId}/check-in`);
+    return response.data;
+  } catch (error) {
+    console.error("Error checking in attendee:", error);
+    throw error;
+  }
+};
+
 // Helper function to build search parameters
 export const buildSearchParams = (statusName, eventTitle) => {
   const searchParams = [];
@@ -219,7 +396,7 @@ export const buildSearchParams = (statusName, eventTitle) => {
       pending: "PENDING",
       approved: "APPROVED",
       rejected: "REJECTED",
-      published: "PUBLISHED",
+      draft: "DRAFT",
     };
     const apiStatus = statusMap[statusName] || statusName.toUpperCase();
     searchParams.push(`statusName:${apiStatus}`);
@@ -304,16 +481,14 @@ export const mapApiEventDetailToComponent = (apiEventDetail) => {
 // Map API status to display status
 export const mapApiStatusToDisplay = (apiStatus) => {
   const statusMap = {
-    "Bản nháp": "pending",
+    "Bản nháp": "draft",
     "Chờ duyệt": "pending",
     "Đã duyệt": "approved",
     "Từ chối": "rejected",
-    "Đã xuất bản": "published",
-    DRAFT: "pending",
+    DRAFT: "draft",
     PENDING: "pending",
     APPROVED: "approved",
     REJECTED: "rejected",
-    PUBLISHED: "published",
   };
 
   return statusMap[apiStatus] || "pending";
@@ -325,7 +500,6 @@ export const mapDisplayStatusToApi = (displayStatus) => {
     pending: "PENDING",
     approved: "APPROVED",
     rejected: "REJECTED",
-    published: "PUBLISHED",
   };
 
   return statusMap[displayStatus] || "PENDING";
@@ -346,9 +520,6 @@ export const getEventStats = (events) => {
         rejected: events.filter(
           (e) => mapApiStatusToDisplay(e.status) === "rejected"
         ).length,
-        published: events.filter(
-          (e) => mapApiStatusToDisplay(e.status) === "published"
-        ).length,
       };
       return stats;
     }
@@ -358,7 +529,7 @@ export const getEventStats = (events) => {
       pending: 0,
       approved: 0,
       rejected: 0,
-      published: 0,
+      draft: 0,
     };
   } catch (error) {
     console.error("Error calculating event stats:", error);
@@ -367,7 +538,19 @@ export const getEventStats = (events) => {
       pending: 0,
       approved: 0,
       rejected: 0,
-      published: 0,
+      draft: 0,
     };
   }
+
 };
+
+  export async function getEventsByStatus(organizerId, statusId) {
+    try {
+      const res = await apiClient.get(`/events/organizer/${organizerId}/status/${statusId}`);
+      // Giả sử API trả về { code: 200, data: [...] }
+      return res.data.data || [];
+    } catch (error) {
+      console.error("Lỗi khi lấy sự kiện theo status:", error);
+      return [];
+    }
+  }

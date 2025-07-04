@@ -5,6 +5,7 @@ import com.example.backend.dto.request.ShowingTimeRequest;
 import com.example.backend.dto.request.UpdateShowingTimeRequest;
 import com.example.backend.dto.response.LayoutDTO;
 import com.example.backend.dto.response.SeatDTO;
+import com.example.backend.dto.response.ShowingTimeAdmin;
 import com.example.backend.dto.response.ZoneDTO;
 import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.model.*;
@@ -21,8 +22,6 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public  class ShowingTimeServiceImpl implements ShowingTimeService {
-
-    private final ShowingTimeRepository showingTimeRepo;
 
     private final ZoneRepository zoneRepo;
 
@@ -116,7 +115,7 @@ public  class ShowingTimeServiceImpl implements ShowingTimeService {
             st.setSaleCloseTime(dto.getSaleCloseTime());
             st.setLayoutMode(dto.getLayoutMode());
 
-            result.add(showingTimeRepo.save(st));
+            result.add(showingTimeRepository.save(st));
         }
 
         return result;
@@ -176,7 +175,7 @@ public  class ShowingTimeServiceImpl implements ShowingTimeService {
     @Override
     public ShowingTime updateShowingTime(int id, UpdateShowingTimeRequest req) {
         // Tìm suất chiếu cần cập nhật
-        ShowingTime st = showingTimeRepo.findById(id)
+        ShowingTime st = showingTimeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy suất chiếu id=" + id));
 
         // Validate các trường (tùy dự án, bạn có thể thêm nhiều kiểm tra hơn)
@@ -205,6 +204,43 @@ public  class ShowingTimeServiceImpl implements ShowingTimeService {
         st.setLayoutMode(req.getLayoutMode());
 
         // Lưu lại và trả về
-        return showingTimeRepo.save(st);
+        return showingTimeRepository.save(st);
     }
+
+    @Override
+    public List<ShowingTimeAdmin> getListShowingTime(int eventId) {
+        List<ShowingTime> showingTimes = eventRepo.findById(eventId).get().getTblShowingTimes().stream().toList();
+        return showingTimes.stream().map(showingTime -> ShowingTimeAdmin.builder()
+                .id(showingTime.getId())
+                .event_id(eventId)
+                .startTime(showingTime.getStartTime())
+                .endTime(showingTime.getEndTime())
+                .saleCloseTime(showingTime.getStartTime())
+                .saleOpenTime(showingTime.getSaleOpenTime())
+                .build()).toList();
+    }
+
+    @Override
+    public ShowingTime createShowingTime(UpdateShowingTimeRequest req) {
+        // 1. Validate eventId (bổ sung trường eventId vào request nếu chưa có)
+        if (req.getEventId() == null) throw new IllegalArgumentException("EventId is required");
+
+        // 2. Lấy đối tượng Event
+        Event event = eventRepo.findById(req.getEventId())
+                .orElseThrow(() -> new RuntimeException("Event not found with id=" + req.getEventId()));
+
+        // 3. Tạo ShowingTime mới và gán các trường
+        ShowingTime st = new ShowingTime();
+        st.setEvent(event); // <-- ĐÚNG!
+        st.setStartTime(req.getStartTime());
+        st.setEndTime(req.getEndTime());
+        st.setSaleOpenTime(req.getSaleOpenTime());
+        st.setSaleCloseTime(req.getSaleCloseTime());
+        st.setLayoutMode(req.getLayoutMode());
+
+        // ... Set các thuộc tính khác nếu có
+
+        return showingTimeRepository.save(st);
+    }
+
 }

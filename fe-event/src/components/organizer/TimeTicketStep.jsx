@@ -3,6 +3,7 @@ import { Calendar, MapPin, Plus, Clock, Ticket, X, Check } from "lucide-react";
 import AddressPicker from "./AddressPicker";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { createShowingTime } from "../../services/showingTime"; // Import service gọi API tạo suất chiếu mới
 
 const TimeTicketStep = ({
                           eventData = {},
@@ -18,12 +19,14 @@ const TimeTicketStep = ({
     layoutMode: "seat",
   });
   const [showAddForm, setShowAddForm] = useState(false);
+  const [adding, setAdding] = useState(false); // loading khi bấm thêm
 
   const handleInputTimeChange = (field, value) => {
     setNewShowing((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleAddShowingTime = () => {
+  // CHỈ GỌI API tạo suất chiếu mới, chỉ thêm vào mảng khi đã có id từ BE trả về!
+  const handleAddShowingTime = async () => {
     const { startTime, endTime, saleOpenTime, saleCloseTime, layoutMode } = newShowing;
     if (
         !startTime ||
@@ -69,20 +72,56 @@ const TimeTicketStep = ({
       return;
     }
 
-    const updated = [...(eventData?.showingTimes || []), newShowing];
-    handleInputChange("showingTimes", updated);
+    // CALL API
+    setAdding(true);
+    try {
+      // Gửi lên BE format chuẩn
+      const res = await createShowingTime({
+        eventId: eventId || eventData.id,
+        venueName: eventData.venueName,
+        location: eventData.location,
+        city: eventData.city,
+        // address_id: eventData.address_id, // nếu cần
+        showingTimes: [
+          {
+            startTime,
+            endTime,
+            saleOpenTime,
+            saleCloseTime,
+            layoutMode,
+          }
+        ]
+      });
 
-    setNewShowing({
-      startTime: "",
-      endTime: "",
-      saleOpenTime: "",
-      saleCloseTime: "",
-      layoutMode: "seat",
-    });
-    setShowAddForm(false);
+      // Nếu BE trả về mảng suất chiếu, lấy suất vừa tạo (phần tử cuối)
+      let createdShowing = Array.isArray(res) ? res[res.length - 1] : res;
+      // Nếu BE trả object, có thể là res?.data?.data hoặc res?.data (cái này phụ thuộc service createShowingTime bạn đang dùng)
+      if (!createdShowing?.id && (res?.data?.data || res?.data)) {
+        createdShowing = res?.data?.data || res?.data;
+      }
 
-    toast.success("Thêm xuất chiếu thành công!");
+      if (!createdShowing?.id) throw new Error("Không nhận được ID suất chiếu!");
+
+      // Thêm suất chiếu mới có id thật vào list
+      const updated = [...(eventData?.showingTimes || []), createdShowing];
+      handleInputChange("showingTimes", updated);
+
+      setNewShowing({
+        startTime: "",
+        endTime: "",
+        saleOpenTime: "",
+        saleCloseTime: "",
+        layoutMode: "seat",
+      });
+      setShowAddForm(false);
+
+      toast.success("Thêm xuất chiếu thành công!");
+    } catch (err) {
+      toast.error(err?.response?.data?.message || err.message || "Không thể tạo suất chiếu mới!");
+    }
+    setAdding(false);
   };
+
 
   const removeShowing = (index) => {
     const updated = (eventData?.showingTimes || []).filter((_, i) => i !== index);
@@ -103,8 +142,8 @@ const TimeTicketStep = ({
   return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6">
         <ToastContainer position="top-right" autoClose={3000} theme="dark" />
-
         <div className="max-w-4xl mx-auto space-y-8">
+          {/* Header */}
           <div className="text-center mb-8">
             <div className="flex items-center justify-center space-x-3 mb-4">
               <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full">
@@ -133,7 +172,7 @@ const TimeTicketStep = ({
                   disabled={loading}
               >
                 <Plus size={16} />
-                <span>Thêm xuất chiếu</span>
+                <span>Thêm suất chiếu</span>
               </button>
             </div>
 
@@ -143,7 +182,7 @@ const TimeTicketStep = ({
                     <div className="flex justify-between items-center mb-6">
                       <h4 className="text-xl text-white font-semibold flex items-center space-x-2">
                         <Ticket className="text-purple-400" size={20} />
-                        <span>Thêm xuất chiếu mới</span>
+                        <span>Thêm suất chiếu mới</span>
                       </h4>
                       <button
                           onClick={() => setShowAddForm(false)}
@@ -152,7 +191,6 @@ const TimeTicketStep = ({
                         <X className="text-gray-400" size={20} />
                       </button>
                     </div>
-
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                       {[
                         {
@@ -184,7 +222,7 @@ const TimeTicketStep = ({
                                     handleInputTimeChange(field, e.target.value)
                                 }
                                 className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white"
-                                disabled={loading}
+                                disabled={loading || adding}
                             />
                           </div>
                       ))}
@@ -200,7 +238,7 @@ const TimeTicketStep = ({
                                 handleInputTimeChange("layoutMode", e.target.value)
                             }
                             className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white"
-                            disabled={loading}
+                            disabled={loading || adding}
                         >
                           <option value="seat">Ghế</option>
                           <option value="zone">Khu vực</option>
@@ -208,7 +246,6 @@ const TimeTicketStep = ({
                         </select>
                       </div>
                     </div>
-
                     <div className="flex justify-end space-x-3">
                       <button
                           onClick={() => setShowAddForm(false)}
@@ -219,9 +256,10 @@ const TimeTicketStep = ({
                       <button
                           onClick={handleAddShowingTime}
                           className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl"
+                          disabled={adding}
                       >
                         <Check size={16} />
-                        <span>Thêm</span>
+                        <span>{adding ? "Đang thêm..." : "Thêm"}</span>
                       </button>
                     </div>
                   </div>
@@ -233,7 +271,7 @@ const TimeTicketStep = ({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {eventData.showingTimes.map((showing, index) => (
                       <div
-                          key={index}
+                          key={showing.id || index}
                           className="relative bg-gray-800/80 p-6 rounded-xl border border-gray-600 shadow-md group"
                       >
                         <button
@@ -319,20 +357,17 @@ const TimeTicketStep = ({
                   Địa chỉ *
                 </label>
                 <AddressPicker
-                    onSelect={({ location, city }) => {
+                    onSelect={({ location, city, address_id }) => {
                       handleInputChange("location", location);
                       handleInputChange("city", city);
+                      if (address_id) handleInputChange("address_id", address_id);
                     }}
                     initialValue={{
                       city: eventData?.city,
                       location: eventData?.location,
+                      address_id: eventData?.address_id,
                     }}
                 />
-                {/*{(eventData.location || eventData.city) && (*/}
-                {/*    <div className="mt-2 text-green-300 text-sm">*/}
-                {/*      Đã chọn: {eventData.location} - {eventData.city}*/}
-                {/*    </div>*/}
-                {/*)}*/}
               </div>
             </div>
           </div>

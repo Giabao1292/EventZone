@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import PropTypes from "prop-types";
 import { Upload } from "lucide-react";
 import { toast } from "react-toastify";
@@ -16,16 +16,11 @@ const EventInfoStep = ({
   const [posterLoading, setPosterLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // DEBUG: Xem dữ liệu truyền vào
-  useEffect(() => {
-    // Xoá dòng này nếu bạn đã ổn định
-    console.log("EventInfoStep - eventData:", eventData);
-  }, [eventData]);
-
-  // Đảm bảo category_id là string để select hoạt động tốt
-  const categoryValue = eventData.category_id !== undefined && eventData.category_id !== null
-      ? String(eventData.category_id)
-      : "";
+  // Đảm bảo categoryId là string để select hoạt động tốt
+  const categoryValue =
+      eventData.categoryId !== undefined && eventData.categoryId !== null
+          ? String(eventData.categoryId)
+          : "";
 
   const handleFileUpload = async (field, file) => {
     if (!file) return;
@@ -60,7 +55,7 @@ const EventInfoStep = ({
           {/* Header Image Upload */}
           <div className="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center bg-gray-800/50">
             <div className="space-y-2">
-              {!eventData.header_image ? (
+              {!eventData.headerImage ? (
                   <>
                     <Upload className="mx-auto text-gray-500" size={32} />
                     <p className="text-sm text-gray-400">Header Image</p>
@@ -68,7 +63,7 @@ const EventInfoStep = ({
                   </>
               ) : (
                   <img
-                      src={eventData.header_image}
+                      src={eventData.headerImage}
                       alt="Header Preview"
                       className="w-full h-32 object-cover rounded-md mx-auto mb-2"
                   />
@@ -77,7 +72,7 @@ const EventInfoStep = ({
                   type="file"
                   accept="image/*"
                   onChange={(e) =>
-                      handleFileUpload("header_image", e.target.files[0])
+                      handleFileUpload("headerImage", e.target.files[0])
                   }
                   className="hidden"
                   id="header-upload"
@@ -85,9 +80,10 @@ const EventInfoStep = ({
               />
               <label
                   htmlFor="header-upload"
-                  className={`cursor-pointer ${loading || headerLoading
-                      ? "text-gray-500"
-                      : "text-blue-400 hover:text-blue-300"
+                  className={`cursor-pointer ${
+                      loading || headerLoading
+                          ? "text-gray-500"
+                          : "text-blue-400 hover:text-blue-300"
                   }`}
               >
                 {headerLoading ? "Đang tải..." : "Chọn file"}
@@ -98,7 +94,7 @@ const EventInfoStep = ({
           {/* Poster Image Upload */}
           <div className="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center bg-gray-800/50">
             <div className="space-y-2">
-              {!eventData.poster_image ? (
+              {!eventData.posterImage ? (
                   <>
                     <Upload className="mx-auto text-gray-500" size={32} />
                     <p className="text-sm text-gray-400">Poster Image</p>
@@ -106,7 +102,7 @@ const EventInfoStep = ({
                   </>
               ) : (
                   <img
-                      src={eventData.poster_image}
+                      src={eventData.posterImage}
                       alt="Poster Preview"
                       className="w-full h-32 object-cover rounded-md mx-auto mb-2"
                   />
@@ -115,7 +111,7 @@ const EventInfoStep = ({
                   type="file"
                   accept="image/*"
                   onChange={(e) =>
-                      handleFileUpload("poster_image", e.target.files[0])
+                      handleFileUpload("posterImage", e.target.files[0])
                   }
                   className="hidden"
                   id="poster-upload"
@@ -123,9 +119,10 @@ const EventInfoStep = ({
               />
               <label
                   htmlFor="poster-upload"
-                  className={`cursor-pointer ${loading || posterLoading
-                      ? "text-gray-500"
-                      : "text-blue-400 hover:text-blue-300"
+                  className={`cursor-pointer ${
+                      loading || posterLoading
+                          ? "text-gray-500"
+                          : "text-blue-400 hover:text-blue-300"
                   }`}
               >
                 {posterLoading ? "Đang tải..." : "Chọn file"}
@@ -143,9 +140,10 @@ const EventInfoStep = ({
             </label>
             <input
                 type="text"
-                value={eventData.event_title || ""}
-                onChange={(e) => handleInputChange("event_title", e.target.value)}
-                className={`w-full px-3 py-2 bg-gray-800 border ${errors.eventTitle ? "border-red-500" : "border-gray-600"
+                value={eventData.eventTitle || ""}
+                onChange={(e) => handleInputChange("eventTitle", e.target.value)}
+                className={`w-full px-3 py-2 bg-gray-800 border ${
+                    errors.eventTitle ? "border-red-500" : "border-gray-600"
                 } rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-white placeholder-gray-400`}
                 placeholder="Nhập tên sự kiện"
                 disabled={loading}
@@ -156,24 +154,19 @@ const EventInfoStep = ({
           </div>
 
           {/* Danh mục */}
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Danh mục *
-            </label>
-            <select
-                value={categoryValue}
-                onChange={(e) => handleInputChange("category_id", e.target.value)}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-white"
-                disabled={loading}
-            >
-              <option value="">Chọn danh mục</option>
-              {categories.map((cat) => (
-                  <option key={cat.categoryId} value={String(cat.categoryId)}>
-                    {cat.categoryName}
-                  </option>
-              ))}
-            </select>
-          </div>
+          <select
+              value={categoryValue}
+              onChange={(e) => handleInputChange("categoryId", e.target.value)}
+              className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-white"
+              disabled={loading}
+          >
+            <option value="">Chọn danh mục</option>
+            {categories.map((cat) => (
+                <option key={cat.categoryId} value={String(cat.categoryId)}>
+                  {cat.categoryName}
+                </option>
+            ))}
+          </select>
 
           {/* Mô tả sự kiện */}
           <div>
@@ -198,11 +191,12 @@ const EventInfoStep = ({
               </label>
               <input
                   type="datetime-local"
-                  value={eventData.start_time || ""}
+                  value={eventData.startTime || ""}
                   onChange={(e) =>
-                      handleInputChange("start_time", e.target.value)
+                      handleInputChange("startTime", e.target.value)
                   }
-                  className={`w-full px-3 py-2 bg-gray-800 border ${errors.startTime ? "border-red-500" : "border-gray-600"
+                  className={`w-full px-3 py-2 bg-gray-800 border ${
+                      errors.startTime ? "border-red-500" : "border-gray-600"
                   } rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-white`}
                   disabled={loading}
               />
@@ -216,9 +210,10 @@ const EventInfoStep = ({
               </label>
               <input
                   type="datetime-local"
-                  value={eventData.end_time || ""}
-                  onChange={(e) => handleInputChange("end_time", e.target.value)}
-                  className={`w-full px-3 py-2 bg-gray-800 border ${errors.endTime ? "border-red-500" : "border-gray-600"
+                  value={eventData.endTime || ""}
+                  onChange={(e) => handleInputChange("endTime", e.target.value)}
+                  className={`w-full px-3 py-2 bg-gray-800 border ${
+                      errors.endTime ? "border-red-500" : "border-gray-600"
                   } rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-white`}
                   disabled={loading}
               />
@@ -235,9 +230,9 @@ const EventInfoStep = ({
                 Độ tuổi
               </label>
               <select
-                  value={eventData.age_rating || ""}
+                  value={eventData.ageRating || ""}
                   onChange={(e) =>
-                      handleInputChange("age_rating", e.target.value)
+                      handleInputChange("ageRating", e.target.value)
                   }
                   className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-white"
                   disabled={loading}
@@ -255,9 +250,9 @@ const EventInfoStep = ({
               </label>
               <input
                   type="text"
-                  value={eventData.banner_text || ""}
+                  value={eventData.bannerText || ""}
                   onChange={(e) =>
-                      handleInputChange("banner_text", e.target.value)
+                      handleInputChange("bannerText", e.target.value)
                   }
                   className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-white placeholder-gray-400"
                   placeholder="Text hiển thị trên banner"
@@ -273,16 +268,17 @@ const EventInfoStep = ({
 // Kiểu dữ liệu props
 EventInfoStep.propTypes = {
   eventData: PropTypes.shape({
-    event_title: PropTypes.string,
-    category_id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    eventTitle: PropTypes.string,
+    categoryId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     description: PropTypes.string,
-    age_rating: PropTypes.string,
-    banner_text: PropTypes.string,
-    header_image: PropTypes.string,
-    poster_image: PropTypes.string,
-    start_time: PropTypes.string,
-    end_time: PropTypes.string,
+    ageRating: PropTypes.string,
+    bannerText: PropTypes.string,
+    headerImage: PropTypes.string,
+    posterImage: PropTypes.string,
+    startTime: PropTypes.string,
+    endTime: PropTypes.string,
   }).isRequired,
+
   handleInputChange: PropTypes.func.isRequired,
   onNextStep: PropTypes.func,
   categories: PropTypes.arrayOf(
