@@ -4,15 +4,14 @@ import com.example.backend.model.Address;
 import com.example.backend.model.Event;
 import com.example.backend.model.ShowingTime;
 import lombok.*;
-
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class EventSummaryDTO {
     private Integer id;
     private String title;

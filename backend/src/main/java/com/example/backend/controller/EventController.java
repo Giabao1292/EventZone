@@ -1,13 +1,18 @@
 
 package com.example.backend.controller;
 
+import com.example.backend.dto.request.EventHomeDTO;
 import com.example.backend.dto.request.EventRequest;
+import com.example.backend.dto.request.UpdateStatusEvent;
 import com.example.backend.dto.response.*;
 import com.example.backend.model.Event;
 import com.example.backend.model.Organizer;
+import com.example.backend.model.Seat;
+import com.example.backend.model.ShowingTime;
 import com.example.backend.service.EventService;
 import com.example.backend.service.OrganizerService;
 import com.example.backend.service.VNPayService;
+import com.example.backend.service.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +28,10 @@ import vn.payos.type.PaymentData;
 import vn.payos.type.PaymentLinkData;
 
 
+
+import java.time.LocalDateTime;
+
+import java.util.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +45,50 @@ public class EventController {
     private final VNPayService vnpayService;
     private final PayOS payOS;
     private final OrganizerService organizerService;
+    private final BookingService bookingService;
+    private final ShowingTimeService showingTimeService;
 
+    @GetMapping("/home")
+    public ResponseEntity<ResponseData<Map<String, List<EventHomeDTO>>>> getHomeEvents() {
+        List<Event> events = eventService.getApprovedEvents();
+        List<EventHomeDTO> ongoingEvents = new ArrayList<>();
+        List<EventHomeDTO> upcomingEvents = new ArrayList<>();
+        LocalDateTime now = LocalDateTime.now();
+
+        for (Event event : events) {
+            Set<ShowingTime> showings = event.getTblShowingTimes();
+            if (showings == null || showings.isEmpty()) continue;
+
+            boolean isOngoing = showings.stream()
+                    .anyMatch(st -> st.getSaleOpenTime() != null && st.getSaleCloseTime() != null &&
+                            !now.isBefore(st.getSaleOpenTime()) && !now.isAfter(st.getSaleCloseTime()));
+
+            boolean isUpcoming = showings.stream()
+                    .allMatch(st -> st.getSaleOpenTime() != null && now.isBefore(st.getSaleOpenTime()));
+
+            OptionalDouble lowestPriceOpt = showings.stream()
+                    .flatMap(st -> st.getSeats().stream())
+                    .mapToDouble(seat -> seat.getPrice().doubleValue())
+                    .min();
+
+            double lowestPrice = lowestPriceOpt.orElse(0);
+            EventHomeDTO dto = new EventHomeDTO(event, lowestPrice);
+
+            if (isOngoing) {
+                ongoingEvents.add(dto);
+            } else if (isUpcoming) {
+                upcomingEvents.add(dto);
+            }
+        }
+
+        Map<String, List<EventHomeDTO>> result = new HashMap<>();
+        result.put("ongoing", ongoingEvents);
+        result.put("upcoming", upcomingEvents);
+
+        return ResponseEntity.ok(
+                new ResponseData<>(200, "Lấy sự kiện trang chủ thành công", result)
+        );
+    }
 
     @PreAuthorize("hasRole('ORGANIZER')")
     @PostMapping("/create")
@@ -144,8 +196,8 @@ public class EventController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    public ResponseData<List<EventSummaryAdmin>> searchEvent(Pageable pageable, @RequestParam(name = "search", required = false) String... search) {
-        List<EventSummaryAdmin> listEvents = eventService.searchEvent(pageable, search);
+    public ResponseData<PageResponse<EventSummaryAdmin>> searchEvent(Pageable pageable, @RequestParam(name = "search", required = false) String... search) {
+        PageResponse<EventSummaryAdmin> listEvents = eventService.searchEvent(pageable, search);
         return new ResponseData<>(HttpStatus.OK.value(), "Get list of events", listEvents);
     }
 
@@ -157,10 +209,10 @@ public class EventController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/{id}")
-    public ResponseData<?> updateEvent(@PathVariable("id") int eventId, @RequestParam("status") String status) {
-//        eventService.updateStatus();
-        return null;
+    @PatchMapping("/{id}/status")
+    public ResponseData<?> updateEvent(@PathVariable("id") int eventId, @RequestBody UpdateStatusEvent status) {
+        eventService.updateStatus(status, eventId);
+        return new ResponseData<>(HttpStatus.OK.value(), "Update status succesfully");
     }
 
     @PreAuthorize("hasRole('ORGANIZER')")
@@ -200,12 +252,10 @@ public class EventController {
         List<EventSummaryDTO> eventDTOs = events.stream()
                 .map(EventSummaryDTO::new) // sử dụng constructor EventSummaryDTO(Event event)
                 .toList();
-
         return ResponseEntity.ok(
                 new ResponseData<>(200, "Lấy danh sách sự kiện thành công", eventDTOs)
         );
     }
-
 
 
     @GetMapping("/organizer/{organizerId}/status/{statusId}")
@@ -222,9 +272,22 @@ public class EventController {
         );
     }
 
-
-
-
-
-
+    @PreAuthorize("hasAnyRole({'ORGANIZER', 'ADMIN'})")
+    @GetMapping("/{eventId}/attendees")
+    public ResponseData<PageResponse<AttendeeResponse>> searchAttendee(Pageable pageable, @PathVariable("eventId") int eventId, @RequestParam("startTime") LocalDateTime startTime, String... search) {
+        PageResponse<AttendeeResponse> response = bookingService.searchAttendees(pageable, eventId, startTime, search);
+        return new ResponseData<>(HttpStatus.OK.value(), "Get list attendees successful", response);
+    }
+    @PreAuthorize("hasAnyRole({'ORGANIZER', 'ADMIN'})")
+    @GetMapping("/{eventId}/analytics")
+    public ResponseData<AnalyticAttendeesResponse> getAnalytics(@PathVariable("eventId") int eventId, @RequestParam("startTime") LocalDateTime startTime) {
+        AnalyticAttendeesResponse response = bookingService.getAnalytics(eventId, startTime);
+        return new ResponseData<>(HttpStatus.OK.value(), "Get list attendees successful", response);
+    }
+    @PreAuthorize("hasAnyRole({'ORGANIZER', 'ADMIN'})")
+    @GetMapping("/{eventId}/showing-times")
+    public ResponseData<List<ShowingTimeAdmin>> getShowingTime(@PathVariable int eventId){
+        List<ShowingTimeAdmin> showingTimeAdminList = showingTimeService.getListShowingTime(eventId);
+        return new ResponseData<>(HttpStatus.OK.value(), "Get list showing time successful", showingTimeAdminList);
+    }
 }

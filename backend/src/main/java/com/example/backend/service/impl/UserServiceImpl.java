@@ -16,6 +16,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -38,6 +39,7 @@ public class UserServiceImpl implements UserService {
     private final SearchCriteriaRepository searchCriteriaRepository;
     private final UserValidator userValidator;
     private final UserRoleRepository userRoleRepository;
+    private final WishlistRepository wishlistRepository;
 
     @Override
     public User findByUsername(String email) {
@@ -104,14 +106,26 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void addToWishlist(String username, Integer eventId) {
-        User user = userRepository.findByEmail(username).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        Event event = eventRepository.findById(eventId).orElseThrow(() -> new ResourceNotFoundException("Event not found"));
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
 
-        if (user.getWishlist().add(event)) {
-            userRepository.save(user);
+        // Kiểm tra đã tồn tại trong wishlist chưa
+        if (wishlistRepository.existsByUserAndEvent(user, event)) {
+            throw new IllegalStateException("Event already in wishlist");
         }
+
+        // Tạo Wishlist mới
+        Wishlist wishlistItem = Wishlist.builder()
+                .user(user)
+                .event(event)
+                .build();
+
+        wishlistRepository.save(wishlistItem);
     }
+
 
     @Override
     public void removeFromWishlist(String username, Integer eventId) {
@@ -126,22 +140,32 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Set<EventSummaryDTO> getWishlist(String email) {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        return user.getWishlist().stream().map(EventSummaryDTO::new).collect(Collectors.toCollection(LinkedHashSet::new));
+        return user.getWishlist().stream()
+                .map(Wishlist::getEvent)                  // Lấy Event từ Wishlist
+                .map(EventSummaryDTO::new)                // Tạo DTO từ Event
+                .collect(Collectors.toCollection(LinkedHashSet::new)); // Trả về Set
     }
-
+    private Page<User> findAllUser(Pageable pageable) {
+        Page<Long> listUserIds = userRepository.findAllUserIds(pageable);
+        return new PageImpl<User>(userRepository.findUsersToSearch(listUserIds.getContent()), pageable, listUserIds.getTotalElements());
+    }
     @Override
     public PageResponse<UserResponseDTO> getListUser(Pageable pageable, String... search) {
-        Page<User> users;
-        if (search == null || search.length == 0) {
-            users = userRepository.findAll(pageable);
-        } else {
-            users = searchCriteriaRepository.searchUsers(pageable, search);
-        }
+        Page<User> users = search != null && search.length != 0 ? searchCriteriaRepository.searchUsers(pageable, search) : findAllUser(pageable);
         List<UserResponseDTO> userResponse = users.getContent().stream().map(user -> {
-            UserResponseDTO userDTO = UserResponseDTO.builder().id(user.getId()).fullName(user.getFullName()).phone(user.getPhone()).dateOfBirth(user.getDateOfBirth()).email(user.getEmail()).score(user.getScore()).status(user.getStatus()).roles(user.getTblUserRoles().stream().map(userRole -> userRole.getRole().getRoleName()).collect(Collectors.toSet())).build();
-            return userDTO;
+            return UserResponseDTO.builder()
+                    .id(user.getId())
+                    .fullName(user.getFullName())
+                    .phone(user.getPhone())
+                    .dateOfBirth(user.getDateOfBirth())
+                    .email(user.getEmail())
+                    .score(user.getScore())
+                    .status(user.getStatus())
+                    .roles(user.getTblUserRoles().stream().map(userRole -> userRole.getRole().getRoleName()).collect(Collectors.toSet()))
+                    .build();
         }).collect(Collectors.toList());
         return PageResponse.<UserResponseDTO>builder().content(userResponse).size(users.getSize()).number(users.getNumber()).totalPages(users.getTotalPages()).totalElements((int) users.getTotalElements()).build();
     }
@@ -211,6 +235,9 @@ public class UserServiceImpl implements UserService {
     }
     @Override
     public List<RoleResponseDTO> getListRole(){
-        return roleRepository.findAll().stream().map(role -> RoleResponseDTO.builder().roleName(role.getRoleName()).build()).toList();
+        return roleRepository.findAll().stream()
+                .map(role -> RoleResponseDTO.builder()
+                        .roleName(role.getRoleName()).build()).toList();
     }
+
 }

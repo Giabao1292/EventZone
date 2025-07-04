@@ -1,5 +1,6 @@
 package com.example.backend.model;
 
+import com.example.backend.util.CheckIn;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
@@ -10,6 +11,7 @@ import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -34,10 +36,9 @@ public class Booking {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "voucher_id")
-    private com.example.backend.model.Voucher voucher;
+    private Voucher voucher;
 
     @NotNull
     @Column(name = "original_price", nullable = false, precision = 10, scale = 2)
@@ -68,15 +69,26 @@ public class Booking {
     @Column(name = "created_datetime")
     private LocalDateTime createdDatetime;
 
-    @Lob
-    @Column(name = "qr_code_data")
-    private String qrCodeData;
+    @Column(name = "qr_token")
+    private String qrToken;
+
+    /*Không lưu đường dẫn vì như này bảo mật tốt hơn và khi bị lỗ hỏng sql thì sẽ không
+    truy vấn ra hình ảnh được bởi vì phân tích qua backend nên hacker không thể biết
+    được đường dẫn cụ thể nằm ở folder nào*/
+    @Column(name = "qr_publicId")
+    private String qrPublicId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "checkin_status")
+    private CheckIn checkinStatus;
+
+    @Column(name = "checkin_time")
+    private Instant checkinTime;
 
     @OneToMany(
             mappedBy = "booking",
             cascade = CascadeType.ALL,
-            orphanRemoval = true,
-            fetch = FetchType.LAZY // nên để LAZY, tránh load thừa khi không cần
+            orphanRemoval = true
     )
     @JsonManagedReference
     private Set<BookingSeat> tblBookingSeats = new LinkedHashSet<>();

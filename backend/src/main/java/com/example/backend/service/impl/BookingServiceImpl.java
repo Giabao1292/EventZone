@@ -1,9 +1,21 @@
 package com.example.backend.service.impl;
 
 import com.example.backend.dto.request.BookingRequest;
+import com.example.backend.dto.response.AnalyticAttendeesResponse;
+import com.example.backend.dto.response.AttendeeResponse;
+import com.example.backend.dto.response.PageResponse;
+import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.model.*;
 import com.example.backend.repository.*;
 import com.example.backend.service.BookingService;
+import com.example.backend.service.ImageService;
+import com.example.backend.service.QrCodeService;
+import com.example.backend.util.CheckIn;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import org.springframework.boot.context.config.AnsiOutputApplicationListener;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import vn.payos.PayOS;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -11,12 +23,16 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
+
+import static com.example.backend.util.CheckIn.CHECKED_IN;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +43,9 @@ public class BookingServiceImpl implements BookingService {
     private final SeatRepository seatRepository;
     private final ZoneRepository zoneRepository;
     private final BookingSeatRepository bookingSeatRepository;
+    private final ImageService imageService;
+    private final QrCodeService qrCodeService;
+    private final SearchCriteriaRepository searchCriteriaRepository;
 
     @Override
     public Booking holdBooking(BookingRequest request, User user) {
@@ -92,17 +111,20 @@ public class BookingServiceImpl implements BookingService {
     }
     @Override
     @Transactional
-    public Booking confirmBooking(Integer bookingId, String paymentMethod) {
+    public Booking confirmBooking(Integer bookingId, String paymentMethod) throws IOException {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy booking"));
 
         if (!"PENDING".equals(booking.getPaymentStatus())) {
             throw new RuntimeException("Booking không hợp lệ để xác nhận");
         }
+        String token = UUID.randomUUID().toString();
+        String publicId = imageService.uploadQRCodeImage(qrCodeService.generateQRCodeImage(token));
+        booking.setQrToken("TK" + token);
+        booking.setQrPublicId(publicId);
         booking.setPaymentMethod(paymentMethod);
         booking.setPaymentStatus("CONFIRMED");
         booking.setPaidAt(LocalDateTime.now());
-
         booking.getTblBookingSeats().forEach(bs -> bs.setStatus("BOOKED"));
         bookingSeatRepository.saveAll(booking.getTblBookingSeats());
 
@@ -126,5 +148,58 @@ public class BookingServiceImpl implements BookingService {
         }
 
         bookingRepository.deleteAll(expired);
+    }
+    private Page<Booking> findAll(Pageable pageable,int eventId, LocalDateTime startTime) {
+        Page<Long> ids = bookingRepository.findBookingIdByEventId(eventId, startTime, pageable);
+        List<Booking> bookings = bookingRepository.findBookingById(ids.getContent());
+        return new PageImpl<>(bookings, pageable, ids.getTotalElements());
+    }
+    @Override
+    public PageResponse<AttendeeResponse> searchAttendees(Pageable pageable, int eventId, LocalDateTime startTime, String[] search) {
+        Page<Booking> bookingPage = search != null && search.length != 0 ?  searchCriteriaRepository.searchAttendees(pageable, eventId, startTime, search) : findAll(pageable, eventId, startTime);
+        List<AttendeeResponse> attendeeResponseList = bookingPage.getContent().stream().map(
+                booking -> {
+                    return AttendeeResponse.builder()
+                            .id(booking.getId().intValue())
+                            .phone(booking.getUser().getPhone())
+                            .email(booking.getUser().getEmail())
+                            .fullName(booking.getUser().getFullName())
+                            .checkInStatus(booking.getCheckinStatus())
+                            .checkInTime(booking.getCheckinTime())
+                            .numberOfSeats(booking.getTblBookingSeats().size())
+                            .paidAt(booking.getPaidAt())
+                            .qrToken(booking.getQrToken())
+                            .build();
+                }
+        ).toList();
+        return PageResponse.<AttendeeResponse>builder()
+                .totalElements((int)bookingPage.getTotalElements())
+                .number(bookingPage.getNumber())
+                .size(bookingPage.getSize())
+                .totalPages(bookingPage.getTotalPages())
+                .content(attendeeResponseList)
+                .build();
+    }
+
+    @Override
+    public void checkIn(Integer id) {
+        Booking booking = bookingRepository.findById(id).orElseThrow(()-> new ResourceNotFoundException("Attendee not found"));
+        booking.setCheckinStatus(CHECKED_IN);
+        booking.setCheckinTime(Instant.now());
+        bookingRepository.save(booking);
+    }
+
+    @Override
+    public AnalyticAttendeesResponse getAnalytics(int eventId, LocalDateTime startTime) {
+        List<Booking> bookings = bookingRepository.findByShowingTimeStartTimeAndShowingTimeEventId(startTime, eventId);
+        int numberOfCheckIns = (int)bookings.stream().filter(booking->booking.getCheckinStatus().equals(CHECKED_IN)).count();
+        double averageAttendees = numberOfCheckIns * 100.0 / bookings.size();
+        return AnalyticAttendeesResponse.builder()
+                .numberOfCheckIns(numberOfCheckIns)
+                .numberOfSeats(bookings.stream().mapToInt(booking -> booking.getTblBookingSeats().size()).sum())
+                .sale(bookings.stream().mapToLong(booking-> booking.getFinalPrice().longValue()).sum())
+                .averageAttendees(averageAttendees)
+                .numberOfAttendees(bookings.size())
+                .build();
     }
 }
