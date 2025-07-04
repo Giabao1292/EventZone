@@ -24,6 +24,8 @@ import EventManagementPage from "./pages/admin/EventManagementPage";
 import OrganizerEventList from "./components/organizer/OrganizerEventList";
 import EditEventForm from "./components/organizer/EditEventForm";
 import VoucherManagementPage from "./pages/admin/VoucherManagementPage";
+import OrganizerProfile from "./components/organizer/OrganizerProfile";
+
 import AdsManagement from "./pages/admin/AdsManagement";
 import AdsCreatePage from "./components/organizer/AdsCreatePage";
 import PaymentAdsResultPage from "./components/organizer/PaymentAdsResult";
@@ -100,6 +102,7 @@ function App() {
           {/* Protected Routes for Organizers */}
           <Route element={<PrivateRoute allowedRoles={["ORGANIZER"]} />}>
             <Route path="/organizer/*" element={<OrganizerLayout />}>
+              <Route path="OrganizerProfile" element={<OrganizerProfile />} />
               {/* Route mặc định: hiển thị danh sách sự kiện */}
               <Route index element={<EventManager />} />
               <Route path="ads/create/:eventId" element={<AdsCreatePage />} />

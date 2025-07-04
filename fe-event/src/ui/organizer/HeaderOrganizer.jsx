@@ -43,7 +43,7 @@ const HeaderOrganizer = () => {
             style={{ animation: "fadeIn 0.3s ease-in-out forwards" }}
           >
             <a
-              href="/profile"
+              href="/organizer/OrganizerProfile"
               className="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-700/70 cursor-pointer"
             >
               Thông tin tài khoản
