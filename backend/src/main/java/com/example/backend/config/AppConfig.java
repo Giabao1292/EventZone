@@ -60,6 +60,7 @@ public class AppConfig implements WebMvcConfigurer , WebSecurityCustomizer {
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
                         .requestMatchers(WHITE_LIST).permitAll()
                         .requestMatchers(ORGANIZER_LIST).hasAnyRole("ORGANIZER")
+                        .requestMatchers("/api/bookings/history").hasAnyRole("USER", "ADMIN", "ORGANIZER")
                         .anyRequest().authenticated())
                 .authenticationProvider(provider()).addFilterBefore(preFilter, UsernamePasswordAuthenticationFilter.class)
                 .sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
