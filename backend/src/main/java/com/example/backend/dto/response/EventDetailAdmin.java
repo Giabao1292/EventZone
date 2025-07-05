@@ -23,9 +23,11 @@ public class EventDetailAdmin {
     private Instant createdAt;
     private Instant updatedAt;
     private String status;
+    private String rejectionReason;
 
     private Integer organizerId;
     private String organizerName;
+    private String organizerEmail;
     private String address;
     private String orgLogoUrl;
 

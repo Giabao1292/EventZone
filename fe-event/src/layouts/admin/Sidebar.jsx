@@ -23,8 +23,8 @@ export default function SidebarNavigation() {
     <>
       {/* Start Vertical Layout Sidebar */}
       <div className="p-4">
-        <a href="#" className="text-nowrap">
-          <img src="/assets/images/logos/logo-light.svg" alt="Logo-Dark" />
+        <a href="/admin/dashboard" className="text-nowrap">
+          <img src="/eventlogo.png" alt="Logo-Dark" />
         </a>
       </div>
       <div className="scroll-sidebar overflow-y-auto">
@@ -84,7 +84,19 @@ export default function SidebarNavigation() {
                 <span>Organizer Management</span>
               </a>
             </li>
-
+            <li className="sidebar-item">
+              <a
+                className={`sidebar-link gap-3 py-2.5 my-1 text-base flex items-center relative rounded-md w-full ${
+                  pathname === "/components/buttons"
+                    ? "text-blue-600 bg-blue-50"
+                    : "text-gray-500"
+                }`}
+                href="/admin/ads"
+              >
+                <i className="ti ti-user-circle ps-2 text-yellow-500 text-2xl"></i>{" "}
+                <span>Ads Management</span>
+              </a>
+            </li>
             <li className="sidebar-item">
               <a
                 className={`sidebar-link gap-3 py-2.5 my-1 text-base flex items-center relative rounded-md w-full ${
@@ -96,6 +108,20 @@ export default function SidebarNavigation() {
               >
                 <i className="ti ti-ticket ps-2 text-2xl text-red-500"></i>{" "}
                 <span>Event Management</span>
+              </a>
+            </li>
+
+            <li className="sidebar-item">
+              <a
+                className={`sidebar-link gap-3 py-2.5 my-1 text-base flex items-center relative rounded-md w-full ${
+                  pathname === "/components/alerts"
+                    ? "text-blue-600 bg-blue-50"
+                    : "text-gray-500"
+                }`}
+                href="/admin/vouchers"
+              >
+                <i className="ti ti-discount-2 ps-2 text-2xl text-red-500"></i>{" "}
+                <span>Voucher Management</span>
               </a>
             </li>
 

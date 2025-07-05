@@ -1,5 +1,10 @@
 import apiClient from "../api/axios";
 
+export const getHomeEvents = async () => {
+  const res = await apiClient.get("/events/home");
+  return res.data.data; // {ongoing, upcoming}
+};
+
 // Search events with pagination and filters
 export const searchEvents = async (page = 0, size = 10, searchParams = []) => {
   try {
@@ -22,29 +27,29 @@ export const searchEvents = async (page = 0, size = 10, searchParams = []) => {
 
 export const getEvents = async (page, pageSize, searchParams = []) => {
   try {
-    // Convert searchParams array to search format if needed
     const formattedSearchParams = Array.isArray(searchParams)
-        ? searchParams
-        : [];
+      ? searchParams
+      : [];
 
     const params = new URLSearchParams();
     params.append("page", page.toString());
     params.append("size", pageSize.toString());
 
-    // Add search parameters in format: search=field:value
     formattedSearchParams.forEach((param) => {
       params.append("search", param);
     });
 
-    const response = await apiClient.get(`/events/search?${params}`);
+    const response = await apiClient.get("/events", {
+      params: Object.fromEntries(params),
+    });
+
     const data = response.data;
 
-    // Map response to expected format
-    if (data.code === 200 && data.data) {
+    if (data.code === 200 && data.data && data.data.content) {
       return {
         code: 200,
         data: {
-          content: data.data.map((event) => ({
+          content: data.data.content.map((event) => ({
             eventId: event.id,
             eventName: event.eventTitle,
             category: event.categoryName,
@@ -53,13 +58,14 @@ export const getEvents = async (page, pageSize, searchParams = []) => {
             startDate: event.startTime ? event.startTime.split("T")[0] : "",
             status: event.status,
             description: event.description,
-            headerImage: event.headerImage,
+            posterImage: event.posterImage,
             ageRating: event.ageRating,
             endTime: event.endTime,
           })),
-          totalElements: data.data.length,
-          totalPages: Math.ceil(data.data.length / pageSize),
-          number: page,
+          totalElements: data.data.totalElements,
+          totalPages: data.data.totalPages,
+          number: data.data.number,
+          size: data.data.size,
         },
         message: "Events fetched successfully",
       };
@@ -68,35 +74,10 @@ export const getEvents = async (page, pageSize, searchParams = []) => {
     return data;
   } catch (error) {
     console.error("Error fetching events:", error);
-    // Return fallback data on error
     return {
-      code: 200,
-      data: {
-        content: [
-          {
-            eventId: 1,
-            eventName: "Tech Conference 2024",
-            category: "Technology",
-            organizerName: "Tech Corp",
-            location: "Ho Chi Minh City",
-            startDate: "2024-03-15",
-            status: "PENDING",
-          },
-          {
-            eventId: 2,
-            eventName: "Music Festival",
-            category: "Entertainment",
-            organizerName: "Music Events Ltd",
-            location: "Hanoi",
-            startDate: "2024-04-20",
-            status: "APPROVED",
-          },
-        ],
-        totalElements: 2,
-        totalPages: 1,
-        number: page,
-      },
-      message: "Events fetched successfully",
+      code: 500,
+      data: null,
+      message: "Failed to fetch events",
     };
   }
 };
@@ -119,11 +100,11 @@ export const getEventDetails = async (eventId) => {
           startDate: event.startTime ? event.startTime.split("T")[0] : "",
           endDate: event.endTime ? event.endTime.split("T")[0] : "",
           startTime: event.startTime
-              ? event.startTime.split("T")[1]?.substring(0, 5)
-              : "",
+            ? event.startTime.split("T")[1]?.substring(0, 5)
+            : "",
           endTime: event.endTime
-              ? event.endTime.split("T")[1]?.substring(0, 5)
-              : "",
+            ? event.endTime.split("T")[1]?.substring(0, 5)
+            : "",
           location: event.address,
           address: event.address,
           maxParticipants: 500, // Not provided in API
@@ -137,8 +118,10 @@ export const getEventDetails = async (eventId) => {
             { url: event.orgLogoUrl || "/placeholder.svg" },
           ],
           // Additional fields from API
+          rejectionReason: event.rejectionReason || "",
           ageRating: event.ageRating,
           organizerName: event.organizerName,
+          organizerEmail: event.organizerEmail,
           categoryName: event.categoryName,
           status: event.status,
           bannerText: event.bannerText,
@@ -160,7 +143,7 @@ export const getEventDetails = async (eventId) => {
         thumbnailUrl: "/placeholder.svg",
         bannerUrl: "/placeholder.svg",
         description:
-            "A comprehensive technology conference featuring the latest innovations and trends.",
+          "A comprehensive technology conference featuring the latest innovations and trends.",
         startDate: "2024-03-15",
         endDate: "2024-03-16",
         startTime: "09:00",
@@ -173,7 +156,7 @@ export const getEventDetails = async (eventId) => {
         contactEmail: "contact@techconf.com",
         contactPhone: "+84 123 456 789",
         requirements:
-            "Participants should bring their own laptops and business cards.",
+          "Participants should bring their own laptops and business cards.",
         galleryImages: [
           { url: "/placeholder.svg" },
           { url: "/placeholder.svg" },
@@ -210,9 +193,9 @@ export const getEventCategories = async () => {
 };
 
 export const updateEventStatus = async (
-    eventId,
-    status,
-    rejectionReason = null
+  eventId,
+  status,
+  rejectionReason = null
 ) => {
   try {
     const body = {
@@ -220,15 +203,186 @@ export const updateEventStatus = async (
       ...(rejectionReason && { rejectionReason }),
     };
 
-    const response = await apiClient.put(`/events/${eventId}/status`, body);
+    const response = await apiClient.patch(`/events/${eventId}/status`, body);
     return response.data;
   } catch (error) {
-    console.error("Error updating event status:", error);
-    // Return fallback response on error
+    console.error(
+      "Error updating event status:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
+
+// NEW: Get showing times for an event
+export const getEventShowingTimes = async (eventId) => {
+  try {
+    const response = await apiClient.get(`/events/${eventId}/showing-times`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching showing times:", error);
+    // Return mock data for development
     return {
       code: 200,
-      message: `Event status updated to ${status} successfully`,
+      data: [
+        {
+          id: 1,
+          event_id: eventId,
+          startTime: "2024-03-15T09:00:00",
+          endTime: "2024-03-15T12:00:00",
+          saleOpenTime: "2024-03-01T00:00:00",
+          saleCloseTime: "2024-03-14T23:59:59",
+        },
+        {
+          id: 2,
+          event_id: eventId,
+          startTime: "2024-03-15T14:00:00",
+          endTime: "2024-03-15T17:00:00",
+          saleOpenTime: "2024-03-01T00:00:00",
+          saleCloseTime: "2024-03-14T23:59:59",
+        },
+        {
+          id: 3,
+          event_id: eventId,
+          startTime: "2024-03-16T09:00:00",
+          endTime: "2024-03-16T12:00:00",
+          saleOpenTime: "2024-03-01T00:00:00",
+          saleCloseTime: "2024-03-15T23:59:59",
+        },
+      ],
+      message: "Showing times fetched successfully",
     };
+  }
+};
+
+// NEW: Get attendees for a specific event and showing time with pagination
+export const getEventAttendees = async (
+  eventId,
+  startTime,
+  page = 0,
+  size = 10,
+  search = []
+) => {
+  try {
+    const params = new URLSearchParams();
+    params.append("page", page.toString());
+    params.append("size", size.toString());
+    params.append("startTime", startTime);
+
+    // Add search parameters
+    search.forEach((param) => {
+      params.append("search", param);
+    });
+
+    const response = await apiClient.get(
+      `/events/${eventId}/attendees?${params}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching attendees:", error);
+    // Return mock data for development
+    return {
+      code: 200,
+      data: {
+        content: [
+          {
+            id: 1,
+            fullName: "Nguyễn Văn An",
+            email: "nguyenvanan@email.com",
+            phone: "0901234567",
+            qrToken: "QR001234567",
+            paidAt: "2024-01-15T10:30:00Z",
+            numberOfSeats: 2,
+            checkInTime: "2024-03-15T08:45:00Z",
+            checkInStatus: "CHECKED_IN",
+          },
+          {
+            id: 2,
+            fullName: "Trần Thị Bình",
+            email: "tranthibinh@email.com",
+            phone: "0912345678",
+            qrToken: "QR001234568",
+            paidAt: "2024-01-16T14:20:00Z",
+            numberOfSeats: 1,
+            checkInTime: null,
+            checkInStatus: "NOT_CHECKED_IN",
+          },
+          {
+            id: 3,
+            fullName: "Lê Văn Cường",
+            email: "levancuong@email.com",
+            phone: "0923456789",
+            qrToken: "QR001234569",
+            paidAt: "2024-01-17T09:15:00Z",
+            numberOfSeats: 3,
+            checkInTime: null,
+            checkInStatus: "NOT_CHECKED_IN",
+          },
+        ],
+        totalElements: 25,
+        totalPages: 3,
+        number: page,
+        size: size,
+      },
+      message: "Attendees fetched successfully",
+    };
+  }
+};
+
+// NEW: Search attendee by QR token
+export const searchAttendeeByQR = async (eventId, startTime, qrToken) => {
+  try {
+    const params = new URLSearchParams();
+    params.append("page", "0");
+    params.append("size", "1");
+    params.append("startTime", startTime);
+    params.append("search", `qrToken:${qrToken}`);
+
+    const response = await apiClient.get(
+      `/events/${eventId}/attendees?${params}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error searching attendee by QR:", error);
+    throw error;
+  }
+};
+
+// NEW: Get analytics for event
+export const getEventAnalytics = async (eventId, startTime) => {
+  try {
+    const params = new URLSearchParams();
+    params.append("startTime", startTime);
+
+    const response = await apiClient.get(
+      `/events/${eventId}/analytics?${params}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching analytics:", error);
+    // Return mock data for development
+    return {
+      code: 200,
+      data: {
+        numberOfAttendees: 0,
+        numberOfCheckIns: 0,
+        numberOfSeats: 0,
+        sale: 0,
+        averageAttendees: 0.0,
+      },
+      message: "Analytics fetched successfully",
+    };
+  }
+};
+
+// NEW: Check-in attendee
+export const checkInAttendee = async (bookingId) => {
+  try {
+    const response = await apiClient.patch(`/bookings/${bookingId}/check-in`);
+    return response.data;
+  } catch (error) {
+    console.error("Error checking in attendee:", error);
+    throw error;
   }
 };
 
@@ -242,7 +396,7 @@ export const buildSearchParams = (statusName, eventTitle) => {
       pending: "PENDING",
       approved: "APPROVED",
       rejected: "REJECTED",
-      published: "PUBLISHED",
+      draft: "DRAFT",
     };
     const apiStatus = statusMap[statusName] || statusName.toUpperCase();
     searchParams.push(`statusName:${apiStatus}`);
@@ -258,24 +412,20 @@ export const buildSearchParams = (statusName, eventTitle) => {
 // Map API response to component format
 export const mapApiEventToComponent = (apiEvent) => {
   return {
-    id: apiEvent.eventId?.toString() || apiEvent.id?.toString() || "",
-    title: apiEvent.eventName || apiEvent.eventTitle || "",
+    id: apiEvent.id?.toString() || "",
+    title: apiEvent.eventTitle || "",
     description: apiEvent.description || "",
-    startDate:
-        apiEvent.startDate ||
-        (apiEvent.startTime ? apiEvent.startTime.split("T")[0] : ""),
-    endDate:
-        apiEvent.endDate ||
-        (apiEvent.endTime ? apiEvent.endTime.split("T")[0] : ""),
+    startDate: apiEvent.startTime ? apiEvent.startTime.split("T")[0] : "",
+    endDate: apiEvent.endTime ? apiEvent.endTime.split("T")[0] : "",
     time: apiEvent.startTime
-        ? apiEvent.startTime.split("T")[1]?.substring(0, 5)
-        : "",
-    location: apiEvent.location || apiEvent.address || "",
+      ? apiEvent.startTime.split("T")[1]?.substring(0, 5)
+      : "",
+    location: apiEvent.address || "",
     price: 0,
     maxTickets: 0,
     soldTickets: 0,
-    category: apiEvent.category || apiEvent.categoryName || "",
-    imageUrl: apiEvent.headerImage || "/placeholder.svg?height=200&width=300",
+    category: apiEvent.categoryName || "",
+    imageUrl: apiEvent.posterImage || "/placeholder.svg?height=200&width=300",
     organizerId: "",
     organizerName: apiEvent.organizerName || "",
     organizerEmail: "",
@@ -296,25 +446,26 @@ export const mapApiEventDetailToComponent = (apiEventDetail) => {
     title: apiEventDetail.eventName || apiEventDetail.eventTitle || "",
     description: apiEventDetail.description || "",
     date:
-        apiEventDetail.startDate ||
-        (apiEventDetail.startTime ? apiEventDetail.startTime.split("T")[0] : ""),
+      apiEventDetail.startDate ||
+      (apiEventDetail.startTime ? apiEventDetail.startTime.split("T")[0] : ""),
     time: apiEventDetail.startTime || "",
     endDate:
-        apiEventDetail.endDate ||
-        (apiEventDetail.endTime ? apiEventDetail.endTime.split("T")[0] : ""),
+      apiEventDetail.endDate ||
+      (apiEventDetail.endTime ? apiEventDetail.endTime.split("T")[0] : ""),
     endTime: apiEventDetail.endTime || "",
     location: apiEventDetail.location || apiEventDetail.address || "",
     price: apiEventDetail.price || 0,
     maxTickets: apiEventDetail.maxParticipants || 0,
     soldTickets: 0,
     category: apiEventDetail.categoryName || "",
+    rejectionReason: apiEventDetail.rejectionReason || "",
     imageUrl:
-        apiEventDetail.thumbnailUrl ||
-        apiEventDetail.bannerUrl ||
-        "/placeholder.svg?height=200&width=300",
+      apiEventDetail.thumbnailUrl ||
+      apiEventDetail.bannerUrl ||
+      "/placeholder.svg?height=200&width=300",
     organizerId: "",
     organizerName: apiEventDetail.organizerName || "",
-    organizerEmail: apiEventDetail.contactEmail || "",
+    organizerEmail: apiEventDetail.organizerEmail || "",
     status: mapApiStatusToDisplay(apiEventDetail.status),
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -330,15 +481,14 @@ export const mapApiEventDetailToComponent = (apiEventDetail) => {
 // Map API status to display status
 export const mapApiStatusToDisplay = (apiStatus) => {
   const statusMap = {
-    "Bản nháp": "pending",
+    "Bản nháp": "draft",
     "Chờ duyệt": "pending",
     "Đã duyệt": "approved",
     "Từ chối": "rejected",
-    "Đã xuất bản": "published",
+    DRAFT: "draft",
     PENDING: "pending",
     APPROVED: "approved",
     REJECTED: "rejected",
-    PUBLISHED: "published",
   };
 
   return statusMap[apiStatus] || "pending";
@@ -350,32 +500,25 @@ export const mapDisplayStatusToApi = (displayStatus) => {
     pending: "PENDING",
     approved: "APPROVED",
     rejected: "REJECTED",
-    published: "PUBLISHED",
   };
 
   return statusMap[displayStatus] || "PENDING";
 };
 
 // Get event statistics
-export const getEventStats = async () => {
+export const getEventStats = (events) => {
   try {
-    const allEvents = await getEvents(0, 1000, []);
-
-    if (allEvents.code === 200 && allEvents.data && allEvents.data.content) {
-      const events = allEvents.data.content;
+    if (events && events.length > 0) {
       const stats = {
         total: events.length,
         pending: events.filter(
-            (e) => mapApiStatusToDisplay(e.status) === "pending"
+          (e) => mapApiStatusToDisplay(e.status) === "pending"
         ).length,
         approved: events.filter(
-            (e) => mapApiStatusToDisplay(e.status) === "approved"
+          (e) => mapApiStatusToDisplay(e.status) === "approved"
         ).length,
         rejected: events.filter(
-            (e) => mapApiStatusToDisplay(e.status) === "rejected"
-        ).length,
-        published: events.filter(
-            (e) => mapApiStatusToDisplay(e.status) === "published"
+          (e) => mapApiStatusToDisplay(e.status) === "rejected"
         ).length,
       };
       return stats;
@@ -386,16 +529,28 @@ export const getEventStats = async () => {
       pending: 0,
       approved: 0,
       rejected: 0,
-      published: 0,
+      draft: 0,
     };
   } catch (error) {
-    console.error("Error fetching event stats:", error);
+    console.error("Error calculating event stats:", error);
     return {
       total: 0,
       pending: 0,
       approved: 0,
       rejected: 0,
-      published: 0,
+      draft: 0,
     };
   }
+
 };
+
+  export async function getEventsByStatus(organizerId, statusId) {
+    try {
+      const res = await apiClient.get(`/events/organizer/${organizerId}/status/${statusId}`);
+      // Giả sử API trả về { code: 200, data: [...] }
+      return res.data.data || [];
+    } catch (error) {
+      console.error("Lỗi khi lấy sự kiện theo status:", error);
+      return [];
+    }
+  }

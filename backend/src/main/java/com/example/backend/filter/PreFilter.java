@@ -2,6 +2,7 @@ package com.example.backend.filter;
 
 import com.example.backend.model.User;
 import com.example.backend.service.JwtService;
+import com.example.backend.service.UserService;
 import com.example.backend.service.impl.UserDetailService;
 import com.example.backend.util.TokenType;
 import io.micrometer.common.util.StringUtils;
@@ -38,11 +39,11 @@ public class PreFilter extends OncePerRequestFilter {
         final String token = authorization.substring(7);
         final String userName = jwtService.extractUsername(token, TokenType.ACCESS_TOKEN);
         if (StringUtils.isNotEmpty(userName) && SecurityContextHolder.getContext().getAuthentication() == null) {
-            User user = (User) userDetailService.loadUserByUsername(userName);
+            UserDetails user = userDetailService.loadUserByUsername(userName);
             if (user != null) {
                 SecurityContext context = SecurityContextHolder.createEmptyContext();
                 UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities()); // set chính object User
+                        new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 context.setAuthentication(authentication);
                 SecurityContextHolder.setContext(context);

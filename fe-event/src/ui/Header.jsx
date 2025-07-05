@@ -187,6 +187,13 @@ const Header = () => {
                     Tài khoản của tôi
                   </Link>
                   <Link
+                    to="/wishlist"
+                    className="block px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-orange-500 text-sm font-medium rounded-t-xl transition"
+                    onClick={() => setDropdownOpen(false)}
+                  >
+                    Sự kiện yêu thích
+                  </Link>
+                  <Link
                     to="/change-password"
                     className="block px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-orange-500 text-sm font-medium transition"
                     onClick={() => setDropdownOpen(false)}
@@ -292,6 +299,13 @@ const Header = () => {
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Tài khoản của tôi
+                  </Link>
+                  <Link
+                    to="/wishlist"
+                    className="text-gray-300 hover:text-orange-400 text-sm font-semibold transition cursor-pointer no-underline"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Sự kiện yêu thích
                   </Link>
                   <Link
                     to="/change-password"

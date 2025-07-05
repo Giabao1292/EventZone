@@ -12,7 +12,10 @@ import {
   Edit,
   Users,
 } from "lucide-react";
-import { saveShowingLayout } from "../../services/layoutService";
+import {
+  saveShowingLayout,
+  getLayoutByShowingTime,
+} from "../../services/layoutService";
 
 const GRID_SIZE = 30;
 
@@ -37,30 +40,25 @@ export default function LayoutDesigner({ onSave }) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Lấy eventId từ location.state hoặc params (bắt buộc phải có)
   const eventId = location.state?.eventId || location.state?.eventData?.id;
-  const showingTimeId =
+  let showingTimeId =
     location.state?.showingTimeId || location.pathname.split("/").pop();
+
+  if (
+    !showingTimeId ||
+    showingTimeId === "undefined" ||
+    isNaN(Number(showingTimeId))
+  ) {
+    alert("Không xác định được suất chiếu (showingTimeId)!");
+    navigate("/organizer");
+    return null;
+  }
+
+  showingTimeId = Number(showingTimeId);
+
   const [layoutMode, setLayoutMode] = useState(
     location.state?.layoutMode || "both"
   );
-
-  console.log("LayoutDesigner state:", {
-    eventId,
-    showingTimeId,
-    locationState: location.state,
-  });
-
-  // Nếu không có eventId => không cho thao tác, show lỗi
-  useEffect(() => {
-    if (!eventId) {
-      console.error("Missing eventId in LayoutDesigner:", location.state);
-      alert("Không xác định được sự kiện! Bạn cần tạo sự kiện trước.");
-      navigate("/organizer/create-event");
-    }
-  }, [eventId, navigate]);
-
-  // States
   const [seats, setSeats] = useState([]);
   const [zones, setZones] = useState([]);
   const [currentType, setCurrentType] = useState(DEFAULT_SEAT_TYPES[0]);
@@ -82,14 +80,36 @@ export default function LayoutDesigner({ onSave }) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingProperties, setEditingProperties] = useState({});
 
-  // Định dạng tiền
+  useEffect(() => {
+    console.log("Location State:", location.state); // Debug log
+    if (!eventId) {
+      alert("Không xác định được sự kiện! Bạn cần tạo sự kiện trước.");
+      navigate("/organizer/create-event");
+    }
+  }, [eventId, navigate]);
+
+  useEffect(() => {
+    if (!showingTimeId) return;
+    (async () => {
+      try {
+        const layout = await getLayoutByShowingTime(showingTimeId);
+        if (layout) {
+          setSeats(layout.seats || []);
+          setZones(layout.zones || []);
+          if (layout.layout_mode) setLayoutMode(layout.layout_mode);
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy layout cũ:", error);
+      }
+    })();
+  }, [showingTimeId]);
+
   const formatPrice = (price) =>
     new Intl.NumberFormat("vi-VN", {
       style: "currency",
       currency: "VND",
     }).format(price);
 
-  // Toast đơn giản
   const showToast = (message, type) => {
     const toast = document.createElement("div");
     toast.className = `fixed top-4 right-4 px-4 py-2 rounded text-white font-medium z-50 ${
@@ -104,7 +124,6 @@ export default function LayoutDesigner({ onSave }) {
     setTimeout(() => toast.remove(), 3000);
   };
 
-  // Thêm ghế nhanh
   const quickAddSeats = () => {
     if (!quickAddName.trim())
       return showToast("Vui lòng nhập tên ghế!", "warning");
@@ -127,7 +146,6 @@ export default function LayoutDesigner({ onSave }) {
     setQuickAddName("");
   };
 
-  // Thêm khu vực nhanh
   const addZone = () => {
     if (!quickAddName.trim())
       return showToast("Vui lòng nhập tên khu vực!", "warning");
@@ -149,7 +167,6 @@ export default function LayoutDesigner({ onSave }) {
     setQuickAddName("");
   };
 
-  // Xóa item được chọn
   const deleteSelected = () => {
     setSeats((prev) =>
       prev.filter((s) => !selectedItems.includes(`seat-${s.id}`))
@@ -161,7 +178,6 @@ export default function LayoutDesigner({ onSave }) {
     showToast("Đã xóa!", "success");
   };
 
-  // Modal edit
   const openEditModal = (item, type) => {
     setEditingItem({ ...item, itemType: type });
     setEditingProperties({
@@ -209,78 +225,9 @@ export default function LayoutDesigner({ onSave }) {
     showToast("Đã cập nhật thành công!", "success");
   };
 
-  // Lưu layout
-  const handleSave = async () => {
-    const seatsToSend = seats.map(({ id, ...rest }) => ({
-      ...rest,
-      id: typeof id === "string" && id.startsWith("s-") ? null : id,
-    }));
-    const zonesToSend = zones.map(({ id, ...rest }) => ({
-      ...rest,
-      id: typeof id === "string" && id.startsWith("z-") ? null : id,
-    }));
-
-    const dataToSend = {
-      event_id: eventId,
-      showing_time_id: showingTimeId,
-      layout_mode: layoutMode,
-      seats: seatsToSend,
-      zones: zonesToSend,
-    };
-
-    if (!eventId) {
-      showToast(
-        "Không xác định được sự kiện! Vui lòng tạo sự kiện trước.",
-        "error"
-      );
-      return;
-    }
-    try {
-      await saveShowingLayout(dataToSend);
-      showToast("Đã lưu thành công!", "success");
-      navigate("/organizer/create-event", {
-        state: {
-          returnStep: 3,
-          eventData: {
-            ...location.state?.eventData,
-            hasDesignedLayout: true,
-            id: eventId, // Ensure id is set
-            showingTimes: location.state?.eventData?.showingTimes.map((st) =>
-              st.id === showingTimeId ? { ...st, hasDesignedLayout: true } : st
-            ),
-          },
-          eventId,
-        },
-      });
-      onSave?.(dataToSend);
-    } catch (error) {
-      showToast(error.message, "error");
-    }
-  };
-
-  // Thêm loại ghế mới
-  const addNewSeatType = () => {
-    if (!newSeatType.name.trim()) {
-      showToast("Vui lòng nhập tên loại!", "warning");
-      return;
-    }
-    const newType = { ...newSeatType };
-    setSeatTypes((prev) => [...prev, newType]);
-    setCurrentType(newType);
-    setShowAddTypeModal(false);
-    setNewSeatType({
-      name: "",
-      color: "bg-emerald-500",
-      price: 80000,
-      capacity: 1,
-    });
-    showToast(`Đã thêm loại "${newSeatType.name}"!`, "success");
-  };
-
   const getSeatTypeData = (typeName) =>
     seatTypes.find((t) => t.name === typeName) || seatTypes[0];
 
-  // Render
   const renderSeat = (seat) => {
     const typeData = getSeatTypeData(seat.type);
     const isSelected = selectedItems.includes(`seat-${seat.id}`);
@@ -407,7 +354,84 @@ export default function LayoutDesigner({ onSave }) {
     );
   };
 
-  // UI
+  const addNewSeatType = () => {
+    if (!newSeatType.name.trim()) {
+      showToast("Vui lòng nhập tên loại!", "warning");
+      return;
+    }
+    const newType = { ...newSeatType };
+    setSeatTypes((prev) => [...prev, newType]);
+    setCurrentType(newType);
+    setShowAddTypeModal(false);
+    setNewSeatType({
+      name: "",
+      color: "bg-emerald-500",
+      price: 80000,
+      capacity: 1,
+    });
+    showToast(`Đã thêm loại "${newType.name}"!`, "success");
+  };
+
+  const handleSave = async () => {
+    const seatsToSend = seats.map(({ id, ...rest }) => ({
+      ...rest,
+      id: typeof id === "string" && id.startsWith("s-") ? null : id,
+    }));
+    const zonesToSend = zones.map(({ id, ...rest }) => ({
+      ...rest,
+      id: typeof id === "string" && id.startsWith("z-") ? null : id,
+    }));
+
+    const dataToSend = {
+      event_id: Number(eventId),
+      showing_time_id: Number(showingTimeId),
+      layout_mode: layoutMode,
+      seats: seatsToSend,
+      zones: zonesToSend,
+    };
+
+    if (!eventId) {
+      showToast(
+        "Không xác định được sự kiện! Vui lòng tạo sự kiện trước.",
+        "error"
+      );
+      return;
+    }
+
+    try {
+      await saveShowingLayout(dataToSend);
+      showToast("Đã lưu thành công!", "success");
+
+      // Determine if this is part of the create or edit flow
+      const isEdit = location.pathname.includes("/edit-event");
+      const targetRoute = isEdit
+        ? `/organizer/edit-event/${eventId}`
+        : "/organizer/create-event";
+
+      navigate(targetRoute, {
+        state: {
+          returnStep: 3,
+          eventData: {
+            ...location.state?.eventData,
+            id: eventId,
+            showingTimes:
+              location.state?.eventData?.showingTimes?.map((st) =>
+                st.id === showingTimeId
+                  ? { ...st, hasDesignedLayout: true }
+                  : st
+              ) || [],
+          },
+          eventId,
+        },
+      });
+
+      onSave?.(dataToSend);
+    } catch (error) {
+      showToast(error.message, "error");
+      console.error("Lỗi khi lưu layout:", error, dataToSend);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-900 text-white">
       {/* Header */}
@@ -628,9 +652,9 @@ export default function LayoutDesigner({ onSave }) {
                 className="absolute inset-0 opacity-20"
                 style={{
                   backgroundImage: `
-                  linear-gradient(to right, #475569 1px, transparent 1px),
-                  linear-gradient(to bottom, #475569 1px, transparent 1px)
-                `,
+                    linear-gradient(to right, #475569 1px, transparent 1px),
+                    linear-gradient(to bottom, #475569 1px, transparent 1px)
+                  `,
                   backgroundSize: `${GRID_SIZE}px ${GRID_SIZE}px`,
                   transform: `scale(${zoom})`,
                   transformOrigin: "0 0",
@@ -653,170 +677,170 @@ export default function LayoutDesigner({ onSave }) {
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Add Type Modal */}
-      {showAddTypeModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-slate-800 rounded p-4 w-full max-w-md">
-            <h3 className="text-lg font-bold mb-3">Thêm loại mới</h3>
-            <div className="space-y-3">
-              <input
-                type="text"
-                placeholder="Tên loại"
-                className="w-full p-2 bg-slate-700 border border-slate-600 rounded"
-                value={newSeatType.name}
-                onChange={(e) =>
-                  setNewSeatType({ ...newSeatType, name: e.target.value })
-                }
-              />
-              <select
-                className="w-full p-2 bg-slate-700 border border-slate-600 rounded"
-                value={newSeatType.color}
-                onChange={(e) =>
-                  setNewSeatType({ ...newSeatType, color: e.target.value })
-                }
-              >
-                {COLOR_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="number"
-                placeholder="Giá vé"
-                min="10000"
-                step="10000"
-                className="w-full p-2 bg-slate-700 border border-slate-600 rounded"
-                value={newSeatType.price}
-                onChange={(e) =>
-                  setNewSeatType({
-                    ...newSeatType,
-                    price: parseInt(e.target.value) || 0,
-                  })
-                }
-              />
-              <input
-                type="number"
-                placeholder="Sức chứa"
-                min="1"
-                max="999"
-                className="w-full p-2 bg-slate-700 border border-slate-600 rounded"
-                value={newSeatType.capacity}
-                onChange={(e) =>
-                  setNewSeatType({
-                    ...newSeatType,
-                    capacity: parseInt(e.target.value) || 1,
-                  })
-                }
-              />
-            </div>
-            <div className="flex justify-end gap-2 mt-4">
-              <button
-                onClick={() => setShowAddTypeModal(false)}
-                className="px-3 py-2 bg-slate-600 hover:bg-slate-500 rounded"
-              >
-                Hủy
-              </button>
-              <button
-                onClick={addNewSeatType}
-                className="px-3 py-2 bg-blue-500 hover:bg-blue-600 rounded"
-              >
-                Thêm
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Properties Modal */}
-      {showEditModal && editingItem && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-slate-800 rounded p-4 w-full max-w-md">
-            <h3 className="text-lg font-bold mb-3">
-              Chỉnh sửa {editingItem.itemType === "seat" ? "ghế" : "khu vực"}
-            </h3>
-            <div className="space-y-3">
-              <input
-                type="text"
-                placeholder={
-                  editingItem.itemType === "seat" ? "Tên ghế" : "Tên khu vực"
-                }
-                className="w-full p-2 bg-slate-700 border border-slate-600 rounded"
-                value={editingProperties.label || ""}
-                onChange={(e) =>
-                  setEditingProperties({
-                    ...editingProperties,
-                    label: e.target.value,
-                  })
-                }
-              />
-              <select
-                className="w-full p-2 bg-slate-700 border border-slate-600 rounded"
-                value={editingProperties.type}
-                onChange={(e) =>
-                  setEditingProperties({
-                    ...editingProperties,
-                    type: e.target.value,
-                  })
-                }
-              >
-                {seatTypes.map((type) => (
-                  <option key={type.name} value={type.name}>
-                    {type.name}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="number"
-                placeholder="Giá vé"
-                min="10000"
-                step="10000"
-                className="w-full p-2 bg-slate-700 border border-slate-600 rounded"
-                value={editingProperties.price || 0}
-                onChange={(e) =>
-                  setEditingProperties({
-                    ...editingProperties,
-                    price: parseInt(e.target.value) || 0,
-                  })
-                }
-              />
-              <div className="flex items-center gap-2">
-                <Users size={16} className="text-slate-400" />
+        {/* Add Type Modal */}
+        {showAddTypeModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-slate-800 rounded p-4 w-full max-w-md">
+              <h3 className="text-lg font-bold mb-3">Thêm loại mới</h3>
+              <div className="space-y-3">
+                <input
+                  type="text"
+                  placeholder="Tên loại"
+                  className="w-full p-2 bg-slate-700 border border-slate-600 rounded"
+                  value={newSeatType.name}
+                  onChange={(e) =>
+                    setNewSeatType({ ...newSeatType, name: e.target.value })
+                  }
+                />
+                <select
+                  className="w-full p-2 bg-slate-700 border border-slate-600 rounded"
+                  value={newSeatType.color}
+                  onChange={(e) =>
+                    setNewSeatType({ ...newSeatType, color: e.target.value })
+                  }
+                >
+                  {COLOR_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="number"
+                  placeholder="Giá vé"
+                  min="10000"
+                  step="10000"
+                  className="w-full p-2 bg-slate-700 border border-slate-600 rounded"
+                  value={newSeatType.price}
+                  onChange={(e) =>
+                    setNewSeatType({
+                      ...newSeatType,
+                      price: parseInt(e.target.value) || 0,
+                    })
+                  }
+                />
                 <input
                   type="number"
                   placeholder="Sức chứa"
                   min="1"
                   max="999"
-                  className="flex-1 p-2 bg-slate-700 border border-slate-600 rounded"
-                  value={editingProperties.capacity || 1}
+                  className="w-full p-2 bg-slate-700 border border-slate-600 rounded"
+                  value={newSeatType.capacity}
                   onChange={(e) =>
-                    setEditingProperties({
-                      ...editingProperties,
+                    setNewSeatType({
+                      ...newSeatType,
                       capacity: parseInt(e.target.value) || 1,
                     })
                   }
                 />
               </div>
-            </div>
-            <div className="flex justify-end gap-2 mt-4">
-              <button
-                onClick={() => setShowEditModal(false)}
-                className="px-3 py-2 bg-slate-600 hover:bg-slate-500 rounded"
-              >
-                Hủy
-              </button>
-              <button
-                onClick={saveItemProperties}
-                className="px-3 py-2 bg-blue-500 hover:bg-blue-600 rounded"
-              >
-                Lưu
-              </button>
+              <div className="flex justify-end gap-2 mt-4">
+                <button
+                  onClick={() => setShowAddTypeModal(false)}
+                  className="px-3 py-2 bg-slate-600 hover:bg-slate-500 rounded"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={addNewSeatType}
+                  className="px-3 py-2 bg-blue-500 hover:bg-blue-600 rounded"
+                >
+                  Thêm
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Edit Properties Modal */}
+        {showEditModal && editingItem && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-slate-800 rounded p-4 w-full max-w-md">
+              <h3 className="text-lg font-bold mb-3">
+                Chỉnh sửa {editingItem.itemType === "seat" ? "ghế" : "khu vực"}
+              </h3>
+              <div className="space-y-3">
+                <input
+                  type="text"
+                  placeholder={
+                    editingItem.itemType === "seat" ? "Tên ghế" : "Tên khu vực"
+                  }
+                  className="w-full p-2 bg-slate-700 border border-slate-600 rounded"
+                  value={editingProperties.label || ""}
+                  onChange={(e) =>
+                    setEditingProperties({
+                      ...editingProperties,
+                      label: e.target.value,
+                    })
+                  }
+                />
+                <select
+                  className="w-full p-2 bg-slate-700 border border-slate-600 rounded"
+                  value={editingProperties.type}
+                  onChange={(e) =>
+                    setEditingProperties({
+                      ...editingProperties,
+                      type: e.target.value,
+                    })
+                  }
+                >
+                  {seatTypes.map((type) => (
+                    <option key={type.name} value={type.name}>
+                      {type.name}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="number"
+                  placeholder="Giá vé"
+                  min="10000"
+                  step="10000"
+                  className="w-full p-2 bg-slate-700 border border-slate-600 rounded"
+                  value={editingProperties.price || 0}
+                  onChange={(e) =>
+                    setEditingProperties({
+                      ...editingProperties,
+                      price: parseInt(e.target.value) || 0,
+                    })
+                  }
+                />
+                <div className="flex items-center gap-2">
+                  <Users size={16} className="text-slate-400" />
+                  <input
+                    type="number"
+                    placeholder="Sức chứa"
+                    min="1"
+                    max="999"
+                    className="flex-1 p-2 bg-slate-700 border border-slate-600 rounded"
+                    value={editingProperties.capacity || 1}
+                    onChange={(e) =>
+                      setEditingProperties({
+                        ...editingProperties,
+                        capacity: parseInt(e.target.value) || 1,
+                      })
+                    }
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 mt-4">
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="px-3 py-2 bg-slate-600 hover:bg-slate-500 rounded"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={saveItemProperties}
+                  className="px-3 py-2 bg-blue-500 hover:bg-blue-600 rounded"
+                >
+                  Lưu
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

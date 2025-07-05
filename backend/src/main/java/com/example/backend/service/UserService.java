@@ -35,4 +35,5 @@ public interface UserService {
     void createRole(String role);
 
     List<RoleResponseDTO> getListRole();
+
 }

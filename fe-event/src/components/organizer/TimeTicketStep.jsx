@@ -70,9 +70,14 @@ const TimeTicketStep = ({
       return;
     }
 
-    const updated = [...(eventData?.showingTimes || []), newShowing];
+    // Add new showing time locally with a temporary ID
+    const newShowingWithTempId = {
+      ...newShowing,
+    };
+    const updated = [...(eventData?.showingTimes || []), newShowingWithTempId];
     handleInputChange("showingTimes", updated);
 
+    // Reset form and close
     setNewShowing({
       startTime: "",
       endTime: "",
@@ -81,8 +86,7 @@ const TimeTicketStep = ({
       layoutMode: "seat",
     });
     setShowAddForm(false);
-
-    toast.success("Thêm xuất chiếu thành công!");
+    toast.success("Đã thêm xuất chiếu vào danh sách tạm thời!");
   };
 
   const removeShowing = (index) => {
@@ -93,6 +97,7 @@ const TimeTicketStep = ({
   };
 
   const formatDateTime = (dateStr) => {
+    if (!dateStr) return "";
     return new Date(dateStr).toLocaleString("vi-VN", {
       day: "2-digit",
       month: "2-digit",
@@ -105,8 +110,8 @@ const TimeTicketStep = ({
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6">
       <ToastContainer position="top-right" autoClose={3000} theme="dark" />
-
       <div className="max-w-4xl mx-auto space-y-8">
+        {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center space-x-3 mb-4">
             <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full">
@@ -135,7 +140,7 @@ const TimeTicketStep = ({
               disabled={loading}
             >
               <Plus size={16} />
-              <span>Thêm xuất chiếu</span>
+              <span>Thêm suất chiếu</span>
             </button>
           </div>
 
@@ -145,7 +150,7 @@ const TimeTicketStep = ({
                 <div className="flex justify-between items-center mb-6">
                   <h4 className="text-xl text-white font-semibold flex items-center space-x-2">
                     <Ticket className="text-purple-400" size={20} />
-                    <span>Thêm xuất chiếu mới</span>
+                    <span>Thêm suất chiếu mới</span>
                   </h4>
                   <button
                     onClick={() => setShowAddForm(false)}
@@ -154,7 +159,6 @@ const TimeTicketStep = ({
                     <X className="text-gray-400" size={20} />
                   </button>
                 </div>
-
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   {[
                     {
@@ -190,7 +194,6 @@ const TimeTicketStep = ({
                       />
                     </div>
                   ))}
-                  {/* Layout Mode */}
                   <div className="space-y-2 col-span-1">
                     <label className="flex items-center text-sm text-gray-300 space-x-2">
                       <Ticket size={16} className="text-blue-400" />
@@ -210,7 +213,6 @@ const TimeTicketStep = ({
                     </select>
                   </div>
                 </div>
-
                 <div className="flex justify-end space-x-3">
                   <button
                     onClick={() => setShowAddForm(false)}
@@ -221,6 +223,7 @@ const TimeTicketStep = ({
                   <button
                     onClick={handleAddShowingTime}
                     className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl"
+                    disabled={loading}
                   >
                     <Check size={16} />
                     <span>Thêm</span>
@@ -235,7 +238,7 @@ const TimeTicketStep = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {eventData.showingTimes.map((showing, index) => (
                 <div
-                  key={index}
+                  key={showing.id || index}
                   className="relative bg-gray-800/80 p-6 rounded-xl border border-gray-600 shadow-md group"
                 >
                   <button
@@ -321,9 +324,15 @@ const TimeTicketStep = ({
                 Địa chỉ *
               </label>
               <AddressPicker
-                onSelect={({ location, city }) => {
+                onSelect={({ location, city, address_id }) => {
                   handleInputChange("location", location);
                   handleInputChange("city", city);
+                  if (address_id) handleInputChange("address_id", address_id);
+                }}
+                initialValue={{
+                  city: eventData?.city,
+                  location: eventData?.location,
+                  address_id: eventData?.address_id,
                 }}
               />
             </div>

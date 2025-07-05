@@ -18,7 +18,7 @@ public class EventSummaryAdmin {
     private String description;
     private String organizerName;
     private String categoryName;
-    private String headerImage;
+    private String posterImage;
     private String status;
     private String address;
 }
