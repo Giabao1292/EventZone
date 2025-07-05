@@ -2,6 +2,7 @@ package com.example.backend.repository;
 
 
 import com.example.backend.model.Booking;
+import com.example.backend.model.PaymentStatus;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,7 +16,19 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface BookingRepository extends JpaRepository<Booking, Integer> {
+    @EntityGraph(attributePaths = {
+            "showingTime",
+            "showingTime.event",
+            "showingTime.address"
+    })
     List<Booking> findByUserId(Integer userId);
+
+    @EntityGraph(attributePaths = {
+            "showingTime",
+            "showingTime.event",
+            "showingTime.address"
+    })
+    List<Booking> findByUserEmail(String email);
 
     default void deleteExpiredHolds(LocalDateTime expirationTime) {
         List<Booking> expiredBookings = findAllByPaymentStatusAndCreatedDatetimeBefore("HOLD", expirationTime);
@@ -43,4 +56,7 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
 
     @EntityGraph(attributePaths = {"tblBookingSeats"})
     List<Booking> findByShowingTimeStartTimeAndShowingTimeEventId(LocalDateTime startTime, int eventId);
+
+    List<Booking> findByUserEmailAndPaymentStatus(String email, PaymentStatus paymentStatus);
+
 }
