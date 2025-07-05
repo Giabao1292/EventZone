@@ -6,9 +6,7 @@ import com.example.backend.dto.request.OnCreate;
 import com.example.backend.dto.request.UserRequestDTO;
 import com.example.backend.dto.request.UserUpdateRequest;
 import com.example.backend.dto.response.*;
-import com.example.backend.model.Event;
 import com.example.backend.model.User;
-import com.example.backend.model.Wishlist;
 import com.example.backend.repository.RoleRepository;
 import com.example.backend.repository.UserRoleRepository;
 import com.example.backend.service.JwtService;
@@ -26,15 +24,9 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-
-import java.util.List;
-
 import java.io.IOException;
-
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")

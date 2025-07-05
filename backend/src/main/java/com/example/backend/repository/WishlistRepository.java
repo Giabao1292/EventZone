@@ -20,4 +20,5 @@ public interface WishlistRepository extends JpaRepository<Wishlist, Integer> {
 
     // Tìm toàn bộ wishlist của user
     List<Wishlist> findAllByUser(User user);
+
 }
