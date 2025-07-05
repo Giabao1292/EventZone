@@ -2,14 +2,17 @@ package com.example.backend.controller;
 
 
 import com.example.backend.dto.request.BookingRequest;
+import com.example.backend.dto.response.BookingHistoryDTO;
 import com.example.backend.dto.response.ResponseData;
 import com.example.backend.model.Booking;
 import com.example.backend.model.User;
 import com.example.backend.repository.BookingRepository;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.service.BookingService;
+import com.example.backend.service.JwtService;
 import com.example.backend.service.UserService;
 import com.example.backend.service.VNPayService;
+import com.example.backend.util.TokenType;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,12 +28,14 @@ import vn.payos.type.PaymentData;
 import vn.payos.type.PaymentLinkData;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/bookings")
 @RequiredArgsConstructor
 public class BookingController {
+    private final JwtService jwtService;
     private final BookingService bookingService;
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
@@ -118,4 +123,20 @@ public class BookingController {
         bookingService.checkIn(bookingId);
         return new ResponseData<>(HttpStatus.OK.value(), "Check in successful");
     }
+
+    @GetMapping("/history")
+    public ResponseData<List<BookingHistoryDTO>> getBookingHistory(HttpServletRequest request) {
+        try {
+            String username = jwtService.extractUsername(
+                    request.getHeader("Authorization").substring(7),
+                    TokenType.ACCESS_TOKEN
+            );
+
+            List<BookingHistoryDTO> history = bookingService.getBookingHistory(username);
+            return new ResponseData<>(HttpStatus.OK.value(), "Booking history fetched", history);
+        } catch (Exception e) {
+            return new ResponseData<>(500, "Error: " + e.getMessage(), null);
+        }
+    }
+
 }
