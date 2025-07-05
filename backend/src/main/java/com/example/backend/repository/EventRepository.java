@@ -1,5 +1,6 @@
 package com.example.backend.repository;
 
+import com.example.backend.dto.projection.EventMinPriceProjection;
 import com.example.backend.model.Event;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,8 +24,8 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
             "WHERE e.id = :eventId")
     Optional<Event> findEventDetail(@Param("eventId") Integer eventId);
 
-    @EntityGraph(attributePaths = {})
-    Page<Event> findAll(Pageable pageable);
+    @EntityGraph(attributePaths = {"status", "category"})
+    List<Event> findAll();
 
 
     List<Event> findByOrganizer_Id(int organizerId);
@@ -41,4 +42,27 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
             " LEFT JOIN FETCH tst.address a" +
             " LEFT JOIN FETCH o.orgType ot")
     List<Event> findAllEventByIds(List<Integer> ids);
+
+    @Query(value = """
+    SELECT 
+        e.event_id AS eventId,
+        LEAST(
+            COALESCE((
+                SELECT MIN(s.price)
+                FROM tbl_showing_time st
+                JOIN tbl_seat s ON st.showing_time_id = s.showing_time_id
+                WHERE st.event_id = e.event_id
+            ), 9999999999),
+
+            COALESCE((
+                SELECT MIN(z.price)
+                FROM tbl_showing_time st
+                JOIN tbl_zone z ON st.showing_time_id = z.showing_time_id
+                WHERE st.event_id = e.event_id
+            ), 9999999999)
+        ) AS minPrice
+    FROM tbl_event e
+    WHERE e.event_id IN (:eventIds)
+    """, nativeQuery = true)
+    List<EventMinPriceProjection> findMinPriceByEventIds(List<Long> eventIds);
 }

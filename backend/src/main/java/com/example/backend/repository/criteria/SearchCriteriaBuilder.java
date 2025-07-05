@@ -9,6 +9,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.function.Consumer;
@@ -43,18 +44,26 @@ public class SearchCriteriaBuilder implements Consumer<SearchCriteria> {
     }
 
     private Predicate buildLessThan(Path<?> path, Class<?> type, Object value) {
+        String trimmed = value.toString().trim();
         if (type.equals(LocalDate.class)) {
-            return criteriaBuilder.lessThan(cast(path), LocalDate.parse(value.toString().trim(), DATE_FORMATTER));
+            return criteriaBuilder.lessThan(cast(path), LocalDate.parse(trimmed, DATE_FORMATTER));
+        }
+        else if (type.equals(LocalDateTime.class)) {
+            return criteriaBuilder.lessThan(cast(path), LocalDate.parse(trimmed, DATE_FORMATTER).atStartOfDay());
         }
         return criteriaBuilder.lessThan(cast(path), value.toString());
     }
 
     private Predicate buildGreaterThan(Path<?> path, Class<?> type, Object value) {
+        String trimmed = value.toString().trim();
         if (type.equals(LocalDate.class)) {
-            return criteriaBuilder.greaterThan(cast(path), LocalDate.parse(value.toString().trim(), DATE_FORMATTER));
+            return criteriaBuilder.greaterThan(cast(path), LocalDate.parse(trimmed, DATE_FORMATTER));
+        } else if (type.equals(LocalDateTime.class)) {
+            return criteriaBuilder.greaterThan(cast(path), LocalDate.parse(trimmed, DATE_FORMATTER).atStartOfDay());
         }
-        return criteriaBuilder.greaterThan(cast(path), value.toString());
+        return criteriaBuilder.greaterThan(cast(path), trimmed);
     }
+
 
     private Predicate buildEqualsOrLike(Path<?> path, Class<?> type, Object value) {
         if (type.equals(String.class)) {

@@ -3,6 +3,7 @@ package com.example.backend.config;
 import com.example.backend.filter.PreFilter;
 import com.example.backend.service.impl.UserDetailService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -32,9 +33,10 @@ public class AppConfig implements WebMvcConfigurer , WebSecurityCustomizer {
 
     private String[] WHITE_LIST = {"/api/image","/api/auth/**", "/api/users/**",
             "/api/categories","/api/categories/**",
-            "/api/showing-times/*/layout","/api/event-ads/active-today","/api/events/detail/{eventId}","/api/events/home"};
+            "/api/showing-times/*/layout","/api/event-ads/active-today","/api/events/detail/{eventId}","/api/events/home", "/api/events/public"};
     private String[] ORGANIZER_LIST = {"/api/organizer/**","/api/event-ads/*"};
 
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final PreFilter preFilter;
     private final UserDetailService userDetailService;
     @Override
@@ -56,6 +58,9 @@ public class AppConfig implements WebMvcConfigurer , WebSecurityCustomizer {
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         return httpSecurity.cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint) // Đăng ký AuthenticationEntryPoint
+                )
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
                         .requestMatchers(WHITE_LIST).permitAll()
                         .requestMatchers(ORGANIZER_LIST).hasAnyRole("ORGANIZER")

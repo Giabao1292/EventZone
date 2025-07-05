@@ -57,7 +57,7 @@ public class JwtServiceImpl implements JwtService {
                 .setClaims(claims)
                 .claim("roles", userDetails.getAuthorities())
                 .setSubject(userDetails.getUsername())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000L * 60 * limitTime))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000L * 60 * 60 * limitTime))
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .signWith(getKey(type), SignatureAlgorithm.HS512)
                 .compact();
@@ -78,12 +78,14 @@ public class JwtServiceImpl implements JwtService {
             return Jwts.parserBuilder()
                     .setSigningKey(getKey(type))
                     .build()
-                    .parseClaimsJws(token)
+                    .parseClaimsJws(token) // sẽ tự ném ExpiredJwtException nếu token hết hạn
                     .getBody();
-        } catch (JwtException e) {
-            return null;
+        }
+        catch (Exception e) {
+            throw new JwtException("Invalid JWT token");
         }
     }
+
 
     private <T> T extractClaimsFromToken(String token, Function<Claims, T> claimsResolver, TokenType type) {
         final Claims claims = getClaimsFromToken(token, type);

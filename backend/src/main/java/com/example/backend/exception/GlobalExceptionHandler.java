@@ -1,5 +1,6 @@
 package com.example.backend.exception;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
@@ -67,11 +68,6 @@ public class GlobalExceptionHandler {
     public ErrorResponse handleBadCredentials(Exception ex, WebRequest request) {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, "Bad Credentials", "Wrong username or password", request);
     }
-    @ExceptionHandler(JwtException.class)
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public ErrorResponse handleJwtException(JwtException ex, WebRequest request) {
-        return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Access denied", ex.getMessage(), request);
-    }
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleIllegalArgument(IllegalArgumentException ex, WebRequest request) {
@@ -89,6 +85,12 @@ public class GlobalExceptionHandler {
             default -> "Account not found";
         };
         return buildErrorResponse(HttpStatus.FORBIDDEN, "Authentication Error", message, request);
+    }
+
+    @ExceptionHandler(JwtException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ErrorResponse handleJwtException(JwtException ex, WebRequest request) {
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Invalid token", ex.getMessage(), request);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
