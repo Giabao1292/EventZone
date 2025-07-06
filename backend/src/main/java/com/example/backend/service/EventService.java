@@ -1,5 +1,6 @@
 package com.example.backend.service;
 
+import com.example.backend.dto.request.EventHomeDTO;
 import com.example.backend.dto.request.EventRequest;
 import com.example.backend.dto.request.UpdateStatusEvent;
 import com.example.backend.dto.response.*;
@@ -30,4 +31,5 @@ public interface EventService {
 
 
     Event findById(Integer id);
+    List<EventHomeDTO> userSearchEvent(String[] search);
 }

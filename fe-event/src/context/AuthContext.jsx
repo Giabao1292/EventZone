@@ -1,6 +1,6 @@
 import { createContext, useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { getToken, removeToken, setToken as saveToken } from "../utils/storage";
+import { getToken, removeToken, saveToken } from "../utils/storage";
 import { getUserDetail } from "../services/userServices";
 import PageLoader from "../ui/PageLoader";
 import { getOrganizerByUserId } from "../services/organizerService";
@@ -9,7 +9,7 @@ import { useContext } from "react";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(getToken());
+  const [token, saveToken] = useState(getToken());
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -54,7 +54,7 @@ export const AuthProvider = ({ children }) => {
     const { accessToken, ...userData } = data;
 
     saveToken(accessToken);
-    setToken(accessToken);
+    saveToken(accessToken);
 
     const roles = userData.roles || [];
     localStorage.setItem("userRoles", JSON.stringify(roles));
@@ -72,7 +72,7 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.clear();
     removeToken();
-    setToken(null);
+    saveToken(null);
     setUser(null);
     setIsAuthenticated(false);
   };

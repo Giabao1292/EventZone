@@ -1,5 +1,8 @@
+
 package com.example.backend.service.impl;
 
+import com.example.backend.dto.projection.EventMinPriceProjection;
+import com.example.backend.dto.request.EventHomeDTO;
 import com.example.backend.dto.request.EventRequest;
 import com.example.backend.dto.request.ShowingTimeRequest;
 import com.example.backend.dto.request.UpdateStatusEvent;
@@ -17,7 +20,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PutMapping;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -368,4 +373,18 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found with id = " + id));
     }
 
+    public List<EventHomeDTO> userSearchEvent(String[] search) {
+
+        List<Event> events = search != null &&  search.length != 0 ? searchCriteriaRepository.userSearchEvent(search) : eventRepository.findAll();
+
+        List<Event> filteredEvents = events.stream().filter(event ->
+        {
+            return event.getStatus().getStatusName().equals("APPROVED") && ((event.getEndTime() != null && !event.getEndTime().isBefore(LocalDateTime.now())) || (event.getStartTime() != null && !event.getStartTime().isBefore(LocalDateTime.now())));
+        }).toList();
+        List<EventMinPriceProjection> minPriceProjections = eventRepository.findMinPriceByEventIds(filteredEvents.stream().map(event -> event.getId().longValue()).toList());
+
+        //Map giúp tìm kiếm lowestPrice với O(1)
+        Map<Long, Double> priceMap = minPriceProjections.stream().collect(Collectors.toMap(EventMinPriceProjection::getEventId, EventMinPriceProjection::getMinPrice));
+        return filteredEvents.stream().map(event-> new EventHomeDTO(event, priceMap.get(event.getId().longValue()))).toList();
+    }
 }

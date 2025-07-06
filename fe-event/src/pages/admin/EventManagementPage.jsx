@@ -621,20 +621,6 @@ const EventManagementPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="p-6">
-        {/* Navigation */}
-        {currentView !== "list" && (
-          <div className="mb-6">
-            <Button
-              variant="outline"
-              onClick={() => setCurrentView("list")}
-              className="mb-4"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Quay lại danh sách
-            </Button>
-          </div>
-        )}
-
         {/* Render different views based on currentView state */}
         {currentView === "list" && renderEventList()}
 

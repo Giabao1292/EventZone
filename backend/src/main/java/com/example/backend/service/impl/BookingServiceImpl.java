@@ -3,6 +3,7 @@ package com.example.backend.service.impl;
 import com.example.backend.dto.request.BookingRequest;
 import com.example.backend.dto.response.AnalyticAttendeesResponse;
 import com.example.backend.dto.response.AttendeeResponse;
+import com.example.backend.dto.response.BookingHistoryDTO;
 import com.example.backend.dto.response.PageResponse;
 import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.model.*;
@@ -39,6 +40,7 @@ import static com.example.backend.util.CheckIn.CHECKED_IN;
 public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
+    private final UserRepository userRepository;
     private final ShowingTimeRepository showingTimeRepository;
     private final SeatRepository seatRepository;
     private final ZoneRepository zoneRepository;
@@ -202,4 +204,15 @@ public class BookingServiceImpl implements BookingService {
                 .numberOfAttendees(bookings.size())
                 .build();
     }
+
+    @Override
+    public List<BookingHistoryDTO> getBookingHistory(String username) {
+        List<Booking> bookings = bookingRepository.findByUserEmail(username);
+
+        return bookings.stream()
+                .map(BookingHistoryDTO::new)
+                .toList();
+    }
+
+
 }
