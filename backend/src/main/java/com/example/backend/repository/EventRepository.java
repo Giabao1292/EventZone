@@ -43,4 +43,6 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
             " LEFT JOIN FETCH tst.address a" +
             " LEFT JOIN FETCH o.orgType ot")
     List<Event> findAllEventByIds(List<Integer> ids);
+
+
 }

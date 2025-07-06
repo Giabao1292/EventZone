@@ -362,4 +362,10 @@ public class EventServiceImpl implements EventService {
         }
         eventRepository.save(event);
     }
+    @Override
+    public Event findById(Integer id) {
+        return eventRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found with id = " + id));
+    }
+
 }

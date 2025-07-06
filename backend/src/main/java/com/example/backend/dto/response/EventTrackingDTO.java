@@ -1,4 +1,10 @@
 package com.example.backend.dto.response;
 
-public class EventTrackingDTO {
-}
+import java.time.LocalDateTime;
+
+public record EventTrackingDTO(
+        Integer eventId,
+        String eventTitle,
+        LocalDateTime startTime,
+        String posterImage
+) {}

@@ -27,4 +27,7 @@ public interface EventService {
     List<Event> findEventsByOrganizerId(int organizerId);
     List<Event> getEventsByStatus(Integer organizerId, Integer statusId);
     void updateStatus(UpdateStatusEvent status, int eventId);
+
+
+    Event findById(Integer id);
 }

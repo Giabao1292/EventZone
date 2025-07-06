@@ -112,4 +112,7 @@ public class Event {
     @JoinColumn(name = "status_id", nullable = false)
     @JsonBackReference
     private EventStatus status;
+
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<TrackingEventUpcoming> trackingUsers = new LinkedHashSet<>();
 }
