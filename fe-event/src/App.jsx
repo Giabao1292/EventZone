@@ -24,6 +24,9 @@ import VoucherManagementPage from "./pages/admin/VoucherManagementPage";
 import AdsManagement from "./pages/admin/AdsManagement";
 import RegisterOrganizerForm from "./components/organizer/OrganizerRegistration";
 import PaymentAdsResultPage from "./components/organizer/PaymentAdsResult";
+import PaymentResult from "./components/booking/Payment-result";
+import PaymentCancel from "./components/booking/Payment-cancel";
+import DepositResult from "./components/organizer/DepositResult";
 import SearchPage from "./pages/SearchPage";
 import VerifyEmail from "./pages/VerifyEmail";
 import PageLoader from "./ui/PageLoader";
@@ -80,6 +83,11 @@ function App() {
             <Route element={<AppLayout />}>
               <Route path="/wishlist" element={<WishlistPage />} />
               <Route path="payment" element={<PaymentPage />} />
+
+              <Route path="/payment-result" element={<PaymentResult />} />
+              <Route path="/payment-cancel" element={<PaymentCancel />} />
+              <Route path="/deposit-result" element={<DepositResult />} />
+
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/change-password" element={<ChangePasswordForm />} />
               <Route
