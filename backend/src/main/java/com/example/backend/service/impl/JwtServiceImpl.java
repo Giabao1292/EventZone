@@ -42,13 +42,13 @@ public class JwtServiceImpl implements JwtService {
     }
 
     @Override
-    public String generateToken(UserDetails userDetails){
+    public String generateToken(UserDetails userDetails) {
         return generateToken(new HashMap<>(), userDetails, limitHour, ACCESS_TOKEN);
     }
 
     @Override
-    public String generateRefreshToken(UserDetails userDetails){
-        return generateToken(new HashMap<>(), userDetails, limitDay, REFRESH_TOKEN);
+    public String generateRefreshToken(UserDetails userDetails) {
+        return generateToken(new HashMap<>(), userDetails, limitDay * 24, REFRESH_TOKEN);
     }
 
     public String generateToken(Map<String, Object> claims, UserDetails userDetails, Integer limitTime, TokenType type) {
@@ -63,35 +63,29 @@ public class JwtServiceImpl implements JwtService {
     }
 
     public Key getKey(TokenType type) {
-        byte[] encodedKey= null;
-        if(ACCESS_TOKEN.equals(type)){
+        byte[] encodedKey = null;
+        if (ACCESS_TOKEN.equals(type)) {
             encodedKey = Decoders.BASE64.decode(secretKey);
-        }
-        else{
+        } else {
             encodedKey = Decoders.BASE64.decode(refreshKey);
         }
         return Keys.hmacShaKeyFor(encodedKey);
     }
 
     private Claims getClaimsFromToken(String token, TokenType type) {
-        try {
-            return Jwts.parserBuilder()
-                    .setSigningKey(getKey(type))
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody();
-        } catch (Exception e) {
-            return null;
-        }
-    }
+        return Jwts.parserBuilder()
+                .setSigningKey(getKey(type))
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
 
+    }
 
     private <T> T extractClaimsFromToken(String token, Function<Claims, T> claimsResolver, TokenType type) {
         final Claims claims = getClaimsFromToken(token, type);
-        if(claims != null){
+        if (claims != null) {
             return claimsResolver.apply(claims);
         }
         return null;
     }
-
 }

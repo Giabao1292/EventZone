@@ -1,32 +1,37 @@
 import { Suspense, lazy } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
-import PageLoader from "./ui/PageLoader";
-import VerifyEmail from "./pages/VerifyEmail";
-import PrivateRoute from "./ui/PrivateRoute";
-import RegisterOrganizerForm from "./components/organizer/OrganizerRegistration";
-import OrganizerLayout from "./ui/organizer/OrganizerLayout";
+import {
+  default as Payment,
+  default as PaymentPage,
+} from "./components/booking/Payment";
+import SelectSeats from "./components/booking/SelectSeats";
+import AdsCreatePage from "./components/organizer/AdsCreatePage";
+import EditEventForm from "./components/organizer/EditEventForm";
 import EventCreationForm from "./components/organizer/EventCreationForm";
 import LayoutDesigner from "./components/organizer/LayoutDesigner";
-import AdminLayout from "./layouts/admin/AdminLayout";
-import DashboardPage from "./pages/admin/DashboardPage";
-import UserManagementPage from "./pages/admin/UserManagementPage";
-import EventDetail from "./pages/EventDetail";
-import BookingPage from "./pages/BookingPage";
-import OrganizerManagementPage from "./pages/admin/OrganizerManagementPage";
-import PaymentPage from "./components/booking/Payment";
-import SelectSeats from "./components/booking/SelectSeats";
-import Payment from "./components/booking/Payment";
-import WishlistPage from "./pages/WishListPage";
 import EventManager from "./components/organizer/EventManager";
-import EventManagementPage from "./pages/admin/EventManagementPage";
-import EditEventForm from "./components/organizer/EditEventForm";
-import VoucherManagementPage from "./pages/admin/VoucherManagementPage";
 import OrganizerProfile from "./components/organizer/OrganizerProfile";
-
+import AdminLayout from "./layouts/admin/AdminLayout";
+import BookingPage from "./pages/BookingPage";
+import EventDetail from "./pages/EventDetail";
+import WishlistPage from "./pages/WishListPage";
+import DashboardPage from "./pages/admin/DashboardPage";
+import EventManagementPage from "./pages/admin/EventManagementPage";
+import OrganizerManagementPage from "./pages/admin/OrganizerManagementPage";
+import UserManagementPage from "./pages/admin/UserManagementPage";
+import VoucherManagementPage from "./pages/admin/VoucherManagementPage";
 import AdsManagement from "./pages/admin/AdsManagement";
-import AdsCreatePage from "./components/organizer/AdsCreatePage";
+import RegisterOrganizerForm from "./components/organizer/OrganizerRegistration";
 import PaymentAdsResultPage from "./components/organizer/PaymentAdsResult";
+import PaymentResult from "./components/booking/Payment-result";
+import PaymentCancel from "./components/booking/Payment-cancel";
+import DepositResult from "./components/organizer/DepositResult";
+import SearchPage from "./pages/SearchPage";
+import VerifyEmail from "./pages/VerifyEmail";
+import PageLoader from "./ui/PageLoader";
+import PrivateRoute from "./ui/PrivateRoute";
+import OrganizerLayout from "./ui/organizer/OrganizerLayout";
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() => import("./components/authentication/LoginPage"));
 const RegisterPage = lazy(() =>
@@ -70,6 +75,7 @@ function App() {
             <Route path="/" element={<Navigate to="/home" replace />} />
             <Route path="/home" element={<Home />} />
             <Route path="/events/:eventId" element={<EventDetail />} />
+            <Route path="/search" element={<SearchPage />} />
           </Route>
 
           {/* Protected Routes for Authenticated Users */}
@@ -77,6 +83,11 @@ function App() {
             <Route element={<AppLayout />}>
               <Route path="/wishlist" element={<WishlistPage />} />
               <Route path="payment" element={<PaymentPage />} />
+
+              <Route path="/payment-result" element={<PaymentResult />} />
+              <Route path="/payment-cancel" element={<PaymentCancel />} />
+              <Route path="/deposit-result" element={<DepositResult />} />
+
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/change-password" element={<ChangePasswordForm />} />
               <Route

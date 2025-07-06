@@ -3,9 +3,9 @@ import { removeToken, saveToken } from "../utils/storage";
 
 export const login = async (credentials) => {
   const res = await apiClient.post("auth/login", credentials);
-  const { accessToken, roles } = res.data.data;
+  const { accessToken, refreshToken, roles } = res.data.data;
 
-  saveToken(accessToken);
+  saveToken(accessToken, refreshToken);
 
   return { accessToken, roles };
 };
@@ -22,9 +22,9 @@ export const verifyRegisterApi = async (verifyToken) => {
   const res = await apiClient.get(
     `/auth/verify-email?verifyToken=${verifyToken}`
   );
-  const { accessToken } = res.data.data || {};
+  const { accessToken, refreshToken } = res.data.data || {};
   if (accessToken) {
-    saveToken(accessToken);
+    saveToken(accessToken, refreshToken);
   }
   return res.data.data;
 };
@@ -34,9 +34,9 @@ export const logout = async () => {
 };
 export const loginWithGoogle = async ({ idToken }) => {
   const res = await apiClient.post("auth/google", { idToken });
-  const { accessToken, roles } = res.data.data;
+  const { accessToken, refreshToken, roles } = res.data.data;
 
-  saveToken(accessToken);
+  saveToken(accessToken, refreshToken);
 
   return { accessToken, roles };
 };

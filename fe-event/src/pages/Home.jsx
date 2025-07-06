@@ -1,10 +1,11 @@
+"use client";
+
 import { useState, useEffect } from "react";
-import { useLocation, Link } from "react-router-dom";
+import { useLocation, Link, useNavigate } from "react-router-dom";
 import Slider from "react-slick";
 import { toast } from "react-toastify";
 import { saveToken } from "../utils/storage";
 import CategoryNav from "../ui/CategoryNav";
-import EventCard from "../ui/EventCard";
 import { wishlistService } from "../services/wishlistServices";
 import {
   getCategories,
@@ -14,6 +15,8 @@ import { getActiveAdsToday } from "../services/adsService";
 import { getHomeEvents } from "../services/eventService";
 import AdEventCard from "../ui/AdEventCard";
 import BackgroundEffect from "../ui/BackGround";
+import SearchBar from "../components/home/SearchBar";
+import EventCard from "../ui/EventCard";
 import backGround from "../assets/images/background/background.png";
 
 import "slick-carousel/slick/slick.css";
@@ -26,12 +29,12 @@ const getQueryParam = (name, search) => {
 
 export default function Home() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [notification, setNotification] = useState(null);
   const [trendingAds, setTrendingAds] = useState([]);
   const [categories, setCategories] = useState([]);
   const [eventsByCategory, setEventsByCategory] = useState({});
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
-  const [searchQuery, setSearchQuery] = useState("");
   const [featuredEvents, setFeaturedEvents] = useState({
     ongoing: [],
     upcoming: [],
@@ -89,7 +92,6 @@ export default function Home() {
         console.error("Lỗi tải danh mục:", error);
       }
     };
-
     fetchHomeData();
     fetchCategories();
   }, []);
@@ -127,9 +129,11 @@ export default function Home() {
     }
   };
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    console.log("Tìm kiếm:", searchQuery);
+  // Updated search handler to use 'search' param instead of 'q'
+  const handleSearch = (query) => {
+    if (query && query.trim()) {
+      navigate(`/search?search=eventTitle:${encodeURIComponent(query.trim())}`);
+    }
   };
 
   const adSliderSettings = {
@@ -178,30 +182,7 @@ export default function Home() {
         <p className="text-base md:text-lg mt-4 mb-10 text-gray-300 font-light">
           Sự kiện tuyệt vời đang chờ bạn
         </p>
-        <div className="max-w-xl mx-auto px-4">
-          <form onSubmit={handleSearch} className="relative">
-            <svg
-              className="absolute left-5 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-            <input
-              type="text"
-              placeholder="Bạn muốn xem gì?"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 text-sm rounded-full bg-gray-800/80 border border-gray-600/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white/20"
-            />
-          </form>
-        </div>
+        <SearchBar onSearch={handleSearch} />
       </div>
 
       {/* 🔥 Sự kiện nổi bật */}
@@ -272,7 +253,7 @@ export default function Home() {
       {/* Sự kiện theo danh mục */}
       {selectedCategoryId && (
         <div className="relative z-10 w-full max-w-7xl mx-auto px-4 py-8">
-          <div className="flex flex-wrap justify-center gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {eventsByCategory[selectedCategoryId]?.map((event) => (
               <EventCard
                 key={event.id}

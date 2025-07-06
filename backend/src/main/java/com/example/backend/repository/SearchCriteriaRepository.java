@@ -88,6 +88,7 @@ public class SearchCriteriaRepository {
         log.info("End count users search...");
         return count;
     }
+
     private Predicate getSearchPredicate(List<From<?,?>> from, CriteriaBuilder criteriaBuilder, String... search){
         Predicate predicate = criteriaBuilder.conjunction();
         List<SearchCriteria> searchCriteriaList = new ArrayList<>();
@@ -194,5 +195,41 @@ public class SearchCriteriaRepository {
         Long count = entityManager.createQuery(countQuery).getSingleResult();
         log.info("End count Attendees search...");
         return count;
+    }
+    public List<Event> userSearchEvent(String... search){
+        log.info("User start search Event search...");
+        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Event> criteriaQuery = criteriaBuilder.createQuery(Event.class);
+        Root<Event> eventRoot = criteriaQuery.from(Event.class);
+
+        Fetch<Event, ShowingTime> fetchShowingTime = eventRoot.fetch("tblShowingTimes", JoinType.LEFT);
+        fetchShowingTime.fetch("address", JoinType.LEFT);
+
+        Join<Event, ShowingTime> joinShowingTime = eventRoot.join("tblShowingTimes", JoinType.LEFT);
+        Join<ShowingTime, Address> joinAddress = joinShowingTime.join("address", JoinType.LEFT);
+        Join<Event, Category> joinCategory = eventRoot.join("category", JoinType.LEFT);
+        Join<ShowingTime, Seat> joinSeat = joinShowingTime.join("seats", JoinType.LEFT);
+        Join<ShowingTime, Zone> joinZone = joinShowingTime.join("zones", JoinType.LEFT);
+
+        ArrayList<String> price = new ArrayList<>();
+        ArrayList<String> other = new ArrayList<>();
+        for(String s : search){
+            Pattern pattern = Pattern.compile("^(\\w+)([<>:])(.*)$");
+            Matcher matcher = pattern.matcher(s);
+            if(matcher.find()){
+                if(matcher.group(1).equalsIgnoreCase("price")){
+                    price.add(s);
+                }
+                else{
+                    other.add(s);
+                }
+            }
+        }
+        Predicate predicate = getSearchPredicate(List.of(eventRoot, joinShowingTime, joinAddress, joinCategory), criteriaBuilder, other.toArray(new String[0]));
+        Predicate predicatePriceSeat = getSearchPredicate(List.of(joinSeat), criteriaBuilder, price.toArray(new String[0]));
+        Predicate predicatePriceZone = getSearchPredicate(List.of(joinZone), criteriaBuilder, price.toArray(new String[0]));
+        criteriaQuery.select(eventRoot).where(criteriaBuilder.and(predicate, criteriaBuilder.or(predicatePriceSeat, predicatePriceZone)));
+        log.info("User end search Event search...");
+        return entityManager.createQuery(criteriaQuery).getResultList();
     }
 }
