@@ -110,7 +110,7 @@ const Header = () => {
             Liên hệ
           </Link>
           <Link
-            to="/home"
+            to="/booking-history"
             className="flex items-center text-gray-300 hover:text-white text-sm font-semibold transition-colors"
           >
             <svg
@@ -266,7 +266,7 @@ const Header = () => {
                 Liên hệ
               </Link>
               <Link
-                to="/home"
+                to="/bookinf-history"
                 className="flex items-center text-gray-300 hover:text-orange-400 text-sm font-semibold transition cursor-pointer no-underline"
                 onClick={() => setMobileMenuOpen(false)}
               >

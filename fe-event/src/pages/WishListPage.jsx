@@ -13,6 +13,15 @@ export default function WishlistPage() {
   const [wishlist, setWishlist] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const handleToggleWishlist = async (eventId) => {
+    try {
+      await wishlistService.removeFromWishlist(eventId); // Xoá trên server
+      setWishlist((prev) => prev.filter((ev) => ev.id !== eventId)); // Xoá local
+    } catch (err) {
+      console.error("Lỗi khi xoá khỏi wishlist:", err.message);
+    }
+  };
+
 
   useEffect(() => {
     const loadWishlist = async () => {
@@ -23,6 +32,7 @@ export default function WishlistPage() {
           eventTitle: ev.title,
           posterImage: ev.imageUrl,
           startTime: ev.date,
+          isFavorite: true,
         }));
         setWishlist(formatted);
       } catch (err) {
@@ -114,7 +124,12 @@ export default function WishlistPage() {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredWishlist.map((event) => (
-              <EventCard key={event.id} event={event} />
+              <EventCard
+                key={event.id}
+                event={event}
+                isFavorite={event.isFavorite}
+                onToggleFavorite={handleToggleWishlist}
+              />
             ))}
           </div>
         )}
