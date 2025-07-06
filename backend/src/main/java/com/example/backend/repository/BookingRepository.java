@@ -17,6 +17,9 @@ import java.util.List;
 
 public interface BookingRepository extends JpaRepository<Booking, Integer> {
     @EntityGraph(attributePaths = {
+            "tblBookingSeats",
+            "tblBookingSeats.seat",          // ⚠️ PHẢI CÓ DÒNG NÀY
+            "tblBookingSeats.zone",          // nếu có zone
             "showingTime",
             "showingTime.event",
             "showingTime.address"
