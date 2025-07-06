@@ -56,7 +56,7 @@ public class JwtServiceImpl implements JwtService {
                 .setClaims(claims)
                 .claim("roles", userDetails.getAuthorities())
                 .setSubject(userDetails.getUsername())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000L * 60 * limitTime))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000L * 60 * 60 * limitTime))
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .signWith(getKey(type), SignatureAlgorithm.HS512)
                 .compact();
@@ -76,7 +76,7 @@ public class JwtServiceImpl implements JwtService {
         return Jwts.parserBuilder()
                 .setSigningKey(getKey(type))
                 .build()
-                .parseClaimsJws(token) // sẽ tự ném ExpiredJwtException nếu token hết hạn
+                .parseClaimsJws(token)
                 .getBody();
 
     }

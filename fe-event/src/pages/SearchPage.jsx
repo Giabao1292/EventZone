@@ -1063,37 +1063,38 @@ export default function SearchPage() {
         </div>
       </div>
 
+      <style>{`
+  .slider-thumb::-webkit-slider-thumb {
+    appearance: none;
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background: #10b981;
+    border: 2px solid #ffffff;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  }
+
+  .slider-thumb::-moz-range-thumb {
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background: #10b981;
+    border: 2px solid #ffffff;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  }
+
+  .slider-thumb::-webkit-slider-track {
+    background: transparent;
+  }
+
+  .slider-thumb::-moz-range-track {
+    background: transparent;
+  }
+`}</style>
+
       {/* Custom CSS for range slider */}
-      <style jsx>{`
-        .slider-thumb::-webkit-slider-thumb {
-          appearance: none;
-          height: 20px;
-          width: 20px;
-          border-radius: 50%;
-          background: #10b981;
-          border: 2px solid #ffffff;
-          cursor: pointer;
-          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-        }
-
-        .slider-thumb::-moz-range-thumb {
-          height: 20px;
-          width: 20px;
-          border-radius: 50%;
-          background: #10b981;
-          border: 2px solid #ffffff;
-          cursor: pointer;
-          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-        }
-
-        .slider-thumb::-webkit-slider-track {
-          background: transparent;
-        }
-
-        .slider-thumb::-moz-range-track {
-          background: transparent;
-        }
-      `}</style>
     </div>
   );
 }

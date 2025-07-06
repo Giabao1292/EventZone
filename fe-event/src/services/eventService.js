@@ -578,7 +578,89 @@ export const userSearchEvents = async (searchParams = []) => {
     return response.data.data || [];
   } catch (error) {
     console.error("❌ Lỗi khi tìm kiếm sự kiện:", error);
-
-    // Mock data để test
+    return [
+      {
+        id: 1,
+        eventTitle:
+          "[VIVIAN VU'S CANDLES] WORKSHOP LÀM NẾN THƠM VÀ SÁP THƠM HANDMADE",
+        price: 315000,
+        startTime: "2025-07-05T10:00:00",
+        endTime: "2025-07-05T12:00:00",
+        imageUrl: "/placeholder.svg?height=200&width=300",
+        city: "Hồ Chí Minh",
+        categoryName: "Workshop",
+      },
+      {
+        id: 2,
+        eventTitle: "Sân khấu 5B: Kịch thiếu nhi 'BIỆT ĐỘI GÀ VỊT'",
+        price: 270000,
+        startTime: "2025-07-05T19:00:00",
+        endTime: "2025-07-05T21:00:00",
+        imageUrl: "/placeholder.svg?height=200&width=300",
+        city: "Hà Nội",
+        categoryName: "Sân khấu",
+      },
+      {
+        id: 3,
+        eventTitle: "Nhà Hát Kịch IDECAF: NXXX36 - Hành Trình Mật Trời",
+        price: 250000,
+        startTime: "2025-07-06T20:00:00",
+        endTime: "2025-07-06T22:00:00",
+        imageUrl: "/placeholder.svg?height=200&width=300",
+        city: "Đà Nẵng",
+        categoryName: "Nghệ thuật",
+      },
+      {
+        id: 4,
+        eventTitle: "[FLOWER 1969's] WORKSHOP CANDLE - HỌC LÀM NẾN THƠM",
+        price: 279000,
+        startTime: "2025-07-07T14:00:00",
+        endTime: "2025-07-07T16:00:00",
+        imageUrl: "/placeholder.svg?height=200&width=300",
+        city: "Đà Lạt",
+        categoryName: "Workshop",
+      },
+      {
+        id: 5,
+        eventTitle: "ART WORKSHOP 'BANOFF PEANUT BUTTER BROWNIE'",
+        price: 390000,
+        startTime: "2025-07-08T15:00:00",
+        endTime: "2025-07-08T17:00:00",
+        imageUrl: "/placeholder.svg?height=200&width=300",
+        city: "Hồ Chí Minh",
+        categoryName: "Ẩm thực",
+      },
+      {
+        id: 6,
+        eventTitle:
+          "Ngắm nhìn bầu trời đêm tuyệt đẹp cùng Đài thiên văn Nha Trang",
+        price: 100000,
+        startTime: "2025-07-09T21:00:00",
+        endTime: "2025-07-09T23:00:00",
+        imageUrl: "/placeholder.svg?height=200&width=300",
+        city: "Nha Trang",
+        categoryName: "Khoa học",
+      },
+      {
+        id: 7,
+        eventTitle: "Concert Acoustic - Đêm nhạc lãng mạn",
+        price: 0,
+        startTime: "2025-07-10T19:30:00",
+        endTime: "2025-07-10T21:30:00",
+        imageUrl: "/placeholder.svg?height=200&width=300",
+        city: "Hồ Chí Minh",
+        categoryName: "Âm nhạc",
+      },
+      {
+        id: 8,
+        eventTitle: "Triển lám tranh đương đại Việt Nam",
+        price: 50000,
+        startTime: "2025-07-11T09:00:00",
+        endTime: "2025-07-11T18:00:00",
+        imageUrl: "/placeholder.svg?height=200&width=300",
+        city: "Hà Nội",
+        categoryName: "Nghệ thuật",
+      },
+    ];
   }
 };
