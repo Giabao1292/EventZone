@@ -1,4 +1,4 @@
-import React from "react";
+"use client";
 import { useNavigate } from "react-router-dom";
 import { Heart } from "lucide-react"; // ✅ Dùng icon trái tim
 
@@ -6,12 +6,16 @@ const formatDate = (isoDate) => {
   if (!isoDate) return "Chưa rõ ngày";
   const date = new Date(isoDate);
   if (isNaN(date)) return "Ngày không hợp lệ";
-
   return date.toLocaleDateString("vi-VN", {
     day: "2-digit",
     month: "long",
     year: "numeric",
   });
+};
+
+const formatPrice = (price) => {
+  if (!price || price === 0) return "Miễn phí";
+  return `From ${price.toLocaleString()}đ`;
 };
 
 /**
@@ -36,7 +40,7 @@ const EventCard = ({ event, isFavorite = false, onToggleFavorite }) => {
   return (
     <div
       onClick={handleClick}
-      className="relative cursor-pointer w-[360px] rounded-xl overflow-hidden shadow-md bg-black transition-all duration-300 transform hover:-translate-y-2 hover:shadow-xl"
+      className="relative cursor-pointer w-[300px] rounded-xl overflow-hidden shadow-md bg-black transition-all duration-300 transform hover:-translate-y-2 hover:shadow-xl"
     >
       {/* Icon yêu thích */}
       <button
@@ -52,12 +56,20 @@ const EventCard = ({ event, isFavorite = false, onToggleFavorite }) => {
       </button>
 
       <img
-        src={event.posterImage}
+        src={event.posterImage || event.imageUrl}
         alt={event.eventTitle}
         className="w-full h-[200px] object-cover"
       />
+
       <div className="text-white px-4 py-3 text-sm font-semibold">
         {event.eventTitle}
+
+        {/* Giá vé */}
+        <p className="text-green-400 font-bold text-sm mt-2">
+          {formatPrice(event.lowestPrice || event.price)}
+        </p>
+
+        {/* Ngày */}
         <p className="text-gray-300 text-xs mt-1">
           {formatDate(event.startTime)}
         </p>

@@ -29,6 +29,7 @@ public class FlywayConfig {
                 .locations(flywayLocations)
                 .baselineOnMigrate(true)
                 .baselineVersion("0")
+                .outOfOrder(true)
                 .load();
         flyway.migrate();
         System.out.println("Flyway migration finished");

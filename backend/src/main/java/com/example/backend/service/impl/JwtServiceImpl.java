@@ -42,13 +42,13 @@ public class JwtServiceImpl implements JwtService {
     }
 
     @Override
-    public String generateToken(UserDetails userDetails){
+    public String generateToken(UserDetails userDetails) {
         return generateToken(new HashMap<>(), userDetails, limitHour, ACCESS_TOKEN);
     }
 
     @Override
-    public String generateRefreshToken(UserDetails userDetails){
-        return generateToken(new HashMap<>(), userDetails, limitDay, REFRESH_TOKEN);
+    public String generateRefreshToken(UserDetails userDetails) {
+        return generateToken(new HashMap<>(), userDetails, limitDay * 24, REFRESH_TOKEN);
     }
 
     public String generateToken(Map<String, Object> claims, UserDetails userDetails, Integer limitTime, TokenType type) {
@@ -56,42 +56,36 @@ public class JwtServiceImpl implements JwtService {
                 .setClaims(claims)
                 .claim("roles", userDetails.getAuthorities())
                 .setSubject(userDetails.getUsername())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000L * 60 * 60 * limitTime))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000L * 60 * limitTime))
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .signWith(getKey(type), SignatureAlgorithm.HS512)
                 .compact();
     }
 
     public Key getKey(TokenType type) {
-        byte[] encodedKey= null;
-        if(ACCESS_TOKEN.equals(type)){
+        byte[] encodedKey = null;
+        if (ACCESS_TOKEN.equals(type)) {
             encodedKey = Decoders.BASE64.decode(secretKey);
-        }
-        else{
+        } else {
             encodedKey = Decoders.BASE64.decode(refreshKey);
         }
         return Keys.hmacShaKeyFor(encodedKey);
     }
 
     private Claims getClaimsFromToken(String token, TokenType type) {
-        try {
-            return Jwts.parserBuilder()
-                    .setSigningKey(getKey(type))
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody();
-        } catch (Exception e) {
-            return null;
-        }
-    }
+        return Jwts.parserBuilder()
+                .setSigningKey(getKey(type))
+                .build()
+                .parseClaimsJws(token) // sẽ tự ném ExpiredJwtException nếu token hết hạn
+                .getBody();
 
+    }
 
     private <T> T extractClaimsFromToken(String token, Function<Claims, T> claimsResolver, TokenType type) {
         final Claims claims = getClaimsFromToken(token, type);
-        if(claims != null){
+        if (claims != null) {
             return claimsResolver.apply(claims);
         }
         return null;
     }
-
 }

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import PageLoader from "../ui/PageLoader";
 import { Calendar, MapPin, ArrowRight } from "lucide-react";
+import { isEventTracked, trackEvent, untrackEvent } from "../services/trackingService";
 
 const formatDateTime = (isoDate) => {
   if (!isoDate) return "-";
@@ -22,6 +23,8 @@ const EventDetail = () => {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isTracked, setIsTracked] = useState(false);
+  const [trackingLoading, setTrackingLoading] = useState(false);
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -41,6 +44,29 @@ const EventDetail = () => {
     fetchDetail();
   }, [eventId]);
 
+  useEffect(() => {
+  if (event?.id) {
+    isEventTracked(event.id).then(setIsTracked).catch(() => setIsTracked(false));
+  }
+  }, [event?.id]);
+
+  const handleTrackToggle = async () => {
+  if (!event?.id) return;
+  setTrackingLoading(true);
+  try {
+    if (isTracked) {
+      await untrackEvent(event.id);
+      setIsTracked(false);
+    } else {
+      await trackEvent(event.id);
+      setIsTracked(true);
+    }
+  } catch (err) {
+    // Xử lý lỗi nếu cần
+  } finally {
+    setTrackingLoading(false);
+  }
+};
   if (loading)
     return (
       <div className="text-white bg-gray-900 min-h-screen">
@@ -113,7 +139,20 @@ const EventDetail = () => {
                   <p className="text-gray-300 whitespace-pre-line">
                     {event.description}
                   </p>
-                </div>
+                {/* Nút theo dõi sự kiện */}
+                <button
+                className={`mt-4 px-6 py-2 rounded-lg font-semibold transition
+                  ${isTracked ? "bg-yellow-400 text-black" : "bg-gray-600 text-white hover:bg-gray-700"}
+                  ${trackingLoading ? "opacity-60 cursor-wait" : ""}
+                `}
+                type="button"
+                onClick={handleTrackToggle}
+                disabled={trackingLoading}
+              >
+                {isTracked ? "Đã theo dõi" : "Theo dõi sự kiện"}
+              </button>
+  
+              </div>
               </div>
 
               {/* Bottom Section */}
