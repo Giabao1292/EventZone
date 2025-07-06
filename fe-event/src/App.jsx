@@ -27,6 +27,9 @@ import OrganizerProfile from "./components/organizer/OrganizerProfile";
 import AdsManagement from "./pages/admin/AdsManagement";
 import AdsCreatePage from "./components/organizer/AdsCreatePage";
 import PaymentAdsResultPage from "./components/organizer/PaymentAdsResult";
+import PaymentResult from "./components/booking/Payment-result";
+import PaymentCancel from "./components/booking/Payment-cancel";
+import DepositResult from "./components/organizer/DepositResult";
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() => import("./components/authentication/LoginPage"));
 const RegisterPage = lazy(() =>
@@ -77,6 +80,11 @@ function App() {
             <Route element={<AppLayout />}>
               <Route path="/wishlist" element={<WishlistPage />} />
               <Route path="payment" element={<PaymentPage />} />
+
+              <Route path="/payment-result" element={<PaymentResult />} />
+              <Route path="/payment-cancel" element={<PaymentCancel />} />
+              <Route path="/deposit-result" element={<DepositResult />} />
+
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/change-password" element={<ChangePasswordForm />} />
               <Route
