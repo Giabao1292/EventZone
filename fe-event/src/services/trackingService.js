@@ -1,3 +1,4 @@
+// src/services/trackingService.js
 import apiClient from "../api/axios";
 
 export const trackEvent = async (eventId) => {
@@ -10,8 +11,12 @@ export const untrackEvent = async (eventId) => {
   return res.data;
 };
 
-// Sử dụng API mới để kiểm tra trạng thái tracking
 export const isEventTracked = async (eventId) => {
   const res = await apiClient.get(`/tracking/is-tracking/${eventId}`);
   return res.data === true;
+};
+
+export const getTrackedEvents = async () => {
+  const res = await apiClient.get(`/tracking/my-events`);
+  return res.data;
 };

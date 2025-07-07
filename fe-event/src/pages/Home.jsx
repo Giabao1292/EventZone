@@ -1,5 +1,4 @@
-"use client";
-
+// src/pages/Home.jsx
 import { useState, useEffect } from "react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import Slider from "react-slick";
@@ -7,6 +6,7 @@ import { toast } from "react-toastify";
 import { saveToken } from "../utils/storage";
 import CategoryNav from "../ui/CategoryNav";
 import { wishlistService } from "../services/wishlistServices";
+import { getTrackedEvents } from "../services/trackingService";
 import {
   getCategories,
   getEventsByCategory,
@@ -40,6 +40,7 @@ export default function Home() {
     upcoming: [],
   });
   const [wishlistEventIds, setWishlistEventIds] = useState(new Set());
+  const [trackedEventIds, setTrackedEventIds] = useState(new Set());
 
   useEffect(() => {
     const verifyStatus = getQueryParam("verifyStatus", location.search);
@@ -92,22 +93,31 @@ export default function Home() {
         console.error("Lỗi tải danh mục:", error);
       }
     };
-    fetchHomeData();
-    fetchCategories();
-  }, []);
 
-  useEffect(() => {
     const fetchWishlist = async () => {
       try {
         const wishlist = await wishlistService.getWishlist();
         const ids = new Set(wishlist.map((event) => event.id));
         setWishlistEventIds(ids);
-      } catch (err) {
-        console.error("Error loading wishlist:", err.message);
+      } catch (error) {
+        console.error("Lỗi tải danh sách yêu thích:", error.message);
       }
     };
 
+    const fetchTrackedEvents = async () => {
+      try {
+        const trackedEvents = await getTrackedEvents();
+        const ids = new Set(trackedEvents.map((event) => event.id));
+        setTrackedEventIds(ids);
+      } catch (error) {
+        console.error("Lỗi tải danh sách sự kiện đã theo dõi:", error.message);
+      }
+    };
+
+    fetchHomeData();
+    fetchCategories();
     fetchWishlist();
+    fetchTrackedEvents();
   }, []);
 
   const toggleFavorite = async (eventId) => {
@@ -129,7 +139,16 @@ export default function Home() {
     }
   };
 
-  // Updated search handler to use 'search' param instead of 'q'
+  const toggleTrack = async (eventId, isTracking) => {
+    const updatedSet = new Set(trackedEventIds);
+    if (isTracking) {
+      updatedSet.add(eventId);
+    } else {
+      updatedSet.delete(eventId);
+    }
+    setTrackedEventIds(updatedSet);
+  };
+
   const handleSearch = (query) => {
     if (query && query.trim()) {
       navigate(`/search?search=eventTitle:${encodeURIComponent(query.trim())}`);
@@ -218,6 +237,7 @@ export default function Home() {
                 event={ev}
                 isFavorite={wishlistEventIds.has(ev.id)}
                 onToggleFavorite={toggleFavorite}
+                isUpcoming={false}
               />
             ))}
           </div>
@@ -234,7 +254,9 @@ export default function Home() {
                 key={ev.id}
                 event={ev}
                 isFavorite={wishlistEventIds.has(ev.id)}
+                isUpcoming={true}
                 onToggleFavorite={toggleFavorite}
+                onToggleTrack={toggleTrack}
               />
             ))}
           </div>
@@ -260,6 +282,7 @@ export default function Home() {
                 event={event}
                 isFavorite={wishlistEventIds.has(event.id)}
                 onToggleFavorite={toggleFavorite}
+                isUpcoming={false}
               />
             ))}
           </div>
