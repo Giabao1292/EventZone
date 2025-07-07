@@ -1,5 +1,6 @@
 package com.example.backend.scheduler;
 
+import com.example.backend.dto.projection.ReminderInfo;
 import com.example.backend.model.Event;
 import com.example.backend.model.TrackingEventUpcoming;
 import com.example.backend.model.User;
@@ -24,37 +25,40 @@ public class TrackingReminderScheduler {
     private final MailService mailService;
 
     // 5 phuts quet 1 lan
-    @Scheduled(fixedRate = 5 * 60 * 1000)
+    @Scheduled(fixedRate = 1 * 60 * 1000)
     public void checkAndSendReminders() {
-        List<TrackingEventUpcoming> allTracking = trackingRepo.findAll();
+        log.info("=== Bắt đầu quét reminder ===");
+        List<ReminderInfo> allTracking = trackingRepo.getReminderInfo();
+        log.info(">>> Tổng tracking: {}", allTracking.size());
+
         LocalDateTime now = LocalDateTime.now();
 
-        for (TrackingEventUpcoming tracking : allTracking) {
-            Event event = tracking.getEvent();
-            User user = tracking.getUser();
+        for (ReminderInfo info : allTracking) {
+            String eventTitle = info.getEventTitle();
+            String email = info.getUserEmail();
+            LocalDateTime startTime = info.getStartTime();
+            LocalDateTime saleOpenTime = info.getSaleOpenTime();
 
-            Set<ShowingTime> showingTimes = event.getTblShowingTimes();
-            Optional<ShowingTime> first = showingTimes.stream()
-                    .sorted(Comparator.comparing(ShowingTime::getStartTime))
-                    .findFirst();
+            log.info(">>> Đang check: {} - startTime: {}, saleOpenTime: {}", eventTitle, startTime, saleOpenTime);
 
-            if (first.isEmpty()) continue;
-
-            ShowingTime st = first.get();
-            sendReminderIfMatched(user, event, st.getSaleOpenTime(), now, "bán vé");
-            sendReminderIfMatched(user, event, st.getStartTime(), now, "diễn ra");
+            sendReminderIfMatched(email, eventTitle, saleOpenTime, now, "bán vé");
+            sendReminderIfMatched(email, eventTitle, startTime, now, "diễn ra");
         }
     }
+    private void sendReminderIfMatched(String email, String eventTitle, LocalDateTime targetTime, LocalDateTime now, String type) {
+        long minutesUntil = ChronoUnit.MINUTES.between(now, targetTime);
+        log.info(">>> Còn {} phút đến {} của sự kiện '{}'", minutesUntil, type, eventTitle);
 
-    private void sendReminderIfMatched(User user, Event event, LocalDateTime targetTime, LocalDateTime now, String type) {
-        long hoursUntil = ChronoUnit.HOURS.between(now, targetTime);
-        if (hoursUntil == 72 || hoursUntil == 24 || hoursUntil == 6) {
+        if (minutesUntil == 1 || minutesUntil == 2) {
             try {
-                mailService.sendReminderTrackingEventEmail(user, event, type, targetTime);
-                log.info(" Gửi nhắc {} sự kiện '{}' cho {}", type, event.getEventTitle(), user.getEmail());
+                mailService.sendSimpleReminder(email, eventTitle, type, targetTime);
+                log.info(">>> Gửi nhắc {} sự kiện '{}' cho {}", type, eventTitle, email);
             } catch (Exception e) {
-                log.error(" Lỗi gửi nhắc nhở: " + e.getMessage());
+                log.error(">>> Lỗi gửi nhắc nhở: " + e.getMessage());
             }
         }
     }
+
+
+
 }

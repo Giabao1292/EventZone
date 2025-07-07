@@ -102,26 +102,25 @@ public class MailService {
         mailSender.send(message);
         log.info("Đã gửi email thông báo theo dõi sự kiện cho {}", user.getEmail());
     }
-    public void sendReminderTrackingEventEmail(User user, Event event, String type, LocalDateTime time) throws MessagingException {
+    public void sendSimpleReminder(String email, String eventTitle, String type, LocalDateTime time) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
         Context context = new Context();
         Map<String, Object> properties = new HashMap<>();
-        properties.put("fullName", user.getFullName());
-        properties.put("eventTitle", event.getEventTitle());
+        properties.put("fullName", "bạn"); // fallback nếu không có tên user
+        properties.put("eventTitle", eventTitle);
         properties.put("reminderType", type.equals("bán vé") ? "mở bán vé" : "diễn ra");
         properties.put("reminderTime", time.format(DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy")));
-
         context.setVariables(properties);
 
-        helper.setTo(user.getEmail());
+        helper.setTo(email);
         helper.setFrom(emailFrom);
-        helper.setSubject(" Nhắc bạn sự kiện sắp " + (type.equals("bán vé") ? "mở bán vé" : "diễn ra"));
+        helper.setSubject("Nhắc bạn sự kiện sắp " + (type.equals("bán vé") ? "mở bán vé" : "diễn ra"));
         helper.setText(templateEngine.process("reminder-follow-event.html", context), true);
 
         mailSender.send(message);
     }
 
 
-    }
+}

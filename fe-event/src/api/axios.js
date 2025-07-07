@@ -15,13 +15,18 @@ const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     const token = getToken();
-    if (token) {
+    const noAuthPaths = ["/auth/login", "/auth/register", "/auth/refresh-token"];
+
+    // ❌ Không gắn token cho các request login/register/refresh-token
+    if (token && !noAuthPaths.some((path) => config.url.includes(path))) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
     return config;
   },
   (error) => Promise.reject(error)
 );
+
 
 apiClient.interceptors.response.use(
   (response) => response,

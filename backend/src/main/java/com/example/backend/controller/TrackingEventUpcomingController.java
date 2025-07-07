@@ -88,7 +88,6 @@ public class TrackingEventUpcomingController {
         return ResponseEntity.ok(dtos);
     }
 
-    // === Helper method để tách riêng ===
     private EventTrackingDTO convertToEventTrackingDTO(Event event) {
         return new EventTrackingDTO(
                 event.getId(),

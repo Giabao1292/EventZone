@@ -33,6 +33,7 @@ import PageLoader from "./ui/PageLoader";
 import PrivateRoute from "./ui/PrivateRoute";
 import OrganizerLayout from "./ui/organizer/OrganizerLayout";
 import ReviewPage from "./components/review/ReviewPage";
+import ViewBookingHistory from "./pages/ViewBookingHistory"; 
 
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() => import("./components/authentication/LoginPage"));
@@ -85,6 +86,7 @@ function App() {
           <Route element={<PrivateRoute />}>
             <Route element={<AppLayout />}>
               <Route path="/wishlist" element={<WishlistPage />} />
+              <Route path="/booking-history" element={<ViewBookingHistory />} />
               <Route path="payment" element={<PaymentPage />} />
 
               <Route path="/payment-result" element={<PaymentResult />} />
