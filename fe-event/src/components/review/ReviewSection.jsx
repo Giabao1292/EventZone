@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import reviewService from "../../services/reviewService";
-import { Star, MessageSquareText, Smile } from "lucide-react";
+import { Star, MessageSquareText, Smile, Edit, Trash2, X, Check } from "lucide-react";
 import StarRating from "./StarRating";
 import Picker from "@emoji-mart/react";
 import data from "@emoji-mart/data";
@@ -23,6 +23,13 @@ const ReviewSection = ({ showingTimeId, canReview, user }) => {
     const [submitting, setSubmitting] = useState(false);
     const [showEmoji, setShowEmoji] = useState(false);
     const [filterStar, setFilterStar] = useState(0);
+
+    // Sửa/Xóa
+    const [editId, setEditId] = useState(null);
+    const [editContent, setEditContent] = useState("");
+    const [editRating, setEditRating] = useState(0);
+    const [deleting, setDeleting] = useState(false);
+
     const emojiPickerRef = useRef(null);
 
     useEffect(() => {
@@ -41,14 +48,20 @@ const ReviewSection = ({ showingTimeId, canReview, user }) => {
     }, [showEmoji]);
 
     useEffect(() => {
+        fetchReviews();
+        // eslint-disable-next-line
+    }, [showingTimeId]);
+
+    const fetchReviews = () => {
         setLoading(true);
         reviewService
             .getReviews(showingTimeId)
             .then((data) => setReviews(data))
             .catch(() => setReviews([]))
             .finally(() => setLoading(false));
-    }, [showingTimeId]);
+    };
 
+    // Gửi review mới
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!content || rating === 0) return;
@@ -61,8 +74,7 @@ const ReviewSection = ({ showingTimeId, canReview, user }) => {
             );
             setContent("");
             setRating(0);
-            const newReviews = await reviewService.getReviews(showingTimeId);
-            setReviews(newReviews);
+            fetchReviews();
         } catch {
             alert("Gửi đánh giá thất bại!");
         } finally {
@@ -70,11 +82,66 @@ const ReviewSection = ({ showingTimeId, canReview, user }) => {
         }
     };
 
+    // Thêm emoji
     const addEmoji = (emoji) => {
         setContent((prev) => prev + emoji.native);
         setShowEmoji(false);
     };
 
+    // Edit: Bấm Sửa
+    const startEdit = (review) => {
+        setEditId(review.reviewId);
+        setEditContent(review.comment);
+        setEditRating(review.rating);
+    };
+
+    // Edit: Lưu
+    const handleEditSubmit = async (e, reviewId) => {
+        e.preventDefault();
+        if (!editContent || editRating === 0) return;
+        setSubmitting(true);
+        try {
+            await reviewService.updateReview(
+                reviewId,
+                {
+                    comment: editContent,
+                    rating: editRating,
+                },
+                user.id // Đảm bảo truyền user.id
+            );
+            setEditId(null);
+            setEditContent("");
+            setEditRating(0);
+            fetchReviews();
+        } catch {
+            alert("Sửa bình luận thất bại!");
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    // Edit: Hủy
+    const cancelEdit = () => {
+        setEditId(null);
+        setEditContent("");
+        setEditRating(0);
+    };
+
+    // Xóa bình luận
+    const handleDelete = async (reviewId) => {
+        if (!window.confirm("Bạn có chắc chắn muốn xóa bình luận này không?")) return;
+        setDeleting(true);
+        try {
+            await reviewService.deleteReview(reviewId, user.id); // Đảm bảo truyền user.id
+            fetchReviews();
+        } catch {
+            alert("Xóa bình luận thất bại!");
+        } finally {
+            setDeleting(false);
+        }
+    };
+
+    // Tính điểm trung bình
     const avgRating =
         reviews.length > 0
             ? (
@@ -82,6 +149,7 @@ const ReviewSection = ({ showingTimeId, canReview, user }) => {
             ).toFixed(1)
             : null;
 
+    // Lọc review theo số sao
     const filteredReviews =
         filterStar === 0 ? reviews : reviews.filter((r) => r.rating === filterStar);
 
@@ -177,10 +245,72 @@ const ReviewSection = ({ showingTimeId, canReview, user }) => {
                                             {r.createdAt &&
                                                 new Date(r.createdAt).toLocaleString("vi-VN")}
                                         </span>
+                                        {/* Nút Sửa/Xóa chỉ hiện với bình luận của user hiện tại */}
+                                        {user && user.id === r.userId && editId !== r.reviewId && (
+                                            <div className="flex gap-2 ml-auto">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => startEdit(r)}
+                                                    title="Sửa bình luận"
+                                                    className="text-blue-500 hover:bg-blue-50 rounded-full p-1"
+                                                >
+                                                    <Edit size={20} />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDelete(r.reviewId)}
+                                                    title="Xóa bình luận"
+                                                    className="text-red-500 hover:bg-red-50 rounded-full p-1"
+                                                    disabled={deleting}
+                                                >
+                                                    <Trash2 size={20} />
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
-                                    <div className="text-[17px] text-gray-800 font-normal break-words">
-                                        {r.comment}
-                                    </div>
+                                    {/* Nếu đang edit bình luận này */}
+                                    {editId === r.reviewId ? (
+                                        <form
+                                            className="flex flex-col gap-2 mt-2"
+                                            onSubmit={(e) => handleEditSubmit(e, r.reviewId)}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <StarRating
+                                                    value={editRating}
+                                                    onChange={setEditRating}
+                                                    size={28}
+                                                    color="#fde047"
+                                                />
+                                            </div>
+                                            <textarea
+                                                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-emerald-300 focus:ring-emerald-300 resize-none text-base shadow"
+                                                value={editContent}
+                                                onChange={(e) => setEditContent(e.target.value)}
+                                                required
+                                                rows={2}
+                                            />
+                                            <div className="flex gap-3 justify-end">
+                                                <button
+                                                    type="button"
+                                                    className="flex items-center gap-1 px-4 py-2 text-base font-semibold rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                                    onClick={cancelEdit}
+                                                >
+                                                    <X className="w-5 h-5" /> Hủy
+                                                </button>
+                                                <button
+                                                    type="submit"
+                                                    className="flex items-center gap-1 px-4 py-2 text-base font-semibold rounded-full bg-emerald-500 text-white shadow hover:bg-emerald-600 transition"
+                                                    disabled={submitting || !editContent || editRating === 0}
+                                                >
+                                                    <Check className="w-5 h-5" /> Lưu
+                                                </button>
+                                            </div>
+                                        </form>
+                                    ) : (
+                                        <div className="text-[17px] text-gray-800 font-normal break-words">
+                                            {r.comment}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         ))
