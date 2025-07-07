@@ -215,4 +215,21 @@ public class BookingServiceImpl implements BookingService {
     }
 
 
+    @Override
+    public List<Integer> getShowingTimeIdsByUserId(Integer userId) {
+        return bookingRepository.findConfirmedShowingTimeIdsByUserId(userId);
+    }
+
+    @Override
+    public List<Booking> findByUserIdAndPaymentStatus(Integer userId, String paymentStatus) {
+        return bookingRepository.findByUserIdAndPaymentStatus(userId, paymentStatus);
+    }
+
+
+    @Override
+    public List<Integer> getConfirmedShowingTimeIdsByUserId(Integer userId) {
+        return bookingRepository.findConfirmedShowingTimeIdsByUserId(userId);
+    }
+
+
 }

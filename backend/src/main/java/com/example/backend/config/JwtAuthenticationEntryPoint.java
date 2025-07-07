@@ -22,9 +22,6 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
                          AuthenticationException authException) throws IOException, ServletException {
-        // Log lỗi để debug
-        System.err.println("Authentication error: " + authException.getMessage());
-        authException.printStackTrace();
 
         // Xây dựng phản hồi lỗi tùy chỉnh
         ErrorResponse errorResponse = new ErrorResponse();
