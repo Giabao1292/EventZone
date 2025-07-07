@@ -29,6 +29,7 @@ import OrganizerProfile from "./components/organizer/OrganizerProfile";
 import AdsManagement from "./pages/admin/AdsManagement";
 import AdsCreatePage from "./components/organizer/AdsCreatePage";
 import PaymentAdsResultPage from "./components/organizer/PaymentAdsResult";
+import StatisticsSeatsPage from "./pages/StatisticsSeatsPage";
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() => import("./components/authentication/LoginPage"));
 const RegisterPage = lazy(() =>
@@ -117,6 +118,7 @@ function App() {
 
               <Route path="create-event" element={<EventCreationForm />} />
               <Route path="edit/:id" element={<EditEventForm />} />
+              <Route path="statistics-seats" element={<StatisticsSeatsPage />} />
             </Route>
           </Route>
 
