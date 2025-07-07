@@ -9,6 +9,7 @@ import com.example.backend.model.Event;
 import com.example.backend.model.Organizer;
 import com.example.backend.model.Seat;
 import com.example.backend.model.ShowingTime;
+import com.example.backend.repository.EventRepository;
 import com.example.backend.service.EventService;
 import com.example.backend.service.OrganizerService;
 import com.example.backend.service.VNPayService;
@@ -35,6 +36,7 @@ import java.util.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 
 @RestController
@@ -47,6 +49,7 @@ public class EventController {
     private final OrganizerService organizerService;
     private final BookingService bookingService;
     private final ShowingTimeService showingTimeService;
+    private final EventRepository eventRepository;
 
     @GetMapping("/home")
     public ResponseEntity<ResponseData<Map<String, List<EventHomeDTO>>>> getHomeEvents() {
@@ -297,4 +300,5 @@ public class EventController {
         List<EventHomeDTO> listEvents = eventService.userSearchEvent(search);
         return new ResponseData<>(HttpStatus.OK.value(), "Get list of events", listEvents);
     }
+
 }

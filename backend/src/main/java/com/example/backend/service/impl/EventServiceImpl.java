@@ -353,9 +353,6 @@ public class EventServiceImpl implements EventService {
         return eventRepository.findByOrganizer_IdAndStatus_Id(organizerId, statusId);
     }
 
-
-
-
     @Override
     public void updateStatus(UpdateStatusEvent status, int eventId) {
         Event event = eventRepository.findById(eventId).orElseThrow(() -> new ResourceNotFoundException("Event not found"));
@@ -381,4 +378,46 @@ public class EventServiceImpl implements EventService {
         Map<Long, Double> priceMap = minPriceProjections.stream().collect(Collectors.toMap(EventMinPriceProjection::getEventId, EventMinPriceProjection::getMinPrice));
         return filteredEvents.stream().map(event-> new EventHomeDTO(event, priceMap.get(event.getId().longValue()))).toList();
     }
+
+    @Override
+    public FeaturedEventResponse getFeaturedEventsForHome() {
+        LocalDateTime now = LocalDateTime.now();
+        List<Event> allEvents = eventRepository.findApprovedEventsWithShowingsAndSeats();
+
+        // Lọc ongoing
+        List<EventHomeDTO> ongoing = allEvents.stream()
+                .filter(e -> e.getTblShowingTimes() != null && !e.getTblShowingTimes().isEmpty())
+                .filter(e -> e.getTblShowingTimes().stream().anyMatch(st ->
+                        st.getSaleOpenTime() != null && st.getSaleCloseTime() != null &&
+                                !now.isBefore(st.getSaleOpenTime()) && !now.isAfter(st.getSaleCloseTime())
+                ))
+                .map(event -> {
+                    double minPrice = event.getTblShowingTimes().stream()
+                            .flatMap(st -> st.getSeats().stream())
+                            .mapToDouble(seat -> seat.getPrice().doubleValue())
+                            .min()
+                            .orElse(0.0);
+                    return new EventHomeDTO(event, minPrice);
+                })
+                .collect(Collectors.toList());
+
+        // Lọc upcoming
+        List<EventHomeDTO> upcoming = allEvents.stream()
+                .filter(e -> e.getTblShowingTimes() != null && !e.getTblShowingTimes().isEmpty())
+                .filter(e -> e.getTblShowingTimes().stream().allMatch(st ->
+                        st.getSaleOpenTime() != null && now.isBefore(st.getSaleOpenTime())
+                ))
+                .map(event -> {
+                    double minPrice = event.getTblShowingTimes().stream()
+                            .flatMap(st -> st.getSeats().stream())
+                            .mapToDouble(seat -> seat.getPrice().doubleValue())
+                            .min()
+                            .orElse(0.0);
+                    return new EventHomeDTO(event, minPrice);
+                })
+                .collect(Collectors.toList());
+
+        return new FeaturedEventResponse(ongoing, upcoming);
+    }
+
 }

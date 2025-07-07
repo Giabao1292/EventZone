@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import useAuth from "../hooks/useAuth";
 import avatarDefault from "../assets/images/profile/avtDefault.jpg";
 import { FaBars, FaTimes } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const Header = () => {
   const { isAuthenticated, user, logout } = useAuth();
@@ -13,7 +14,12 @@ const Header = () => {
   const mobileMenuRef = useRef(null);
   const timeoutRef = useRef(null);
   const location = useLocation();
+  const navigate = useNavigate();
 
+  const handleGoToHistory = () => {
+    navigate("/booking-history", { replace: false });
+  };
+  
   const handleMouseEnter = () => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -110,7 +116,7 @@ const Header = () => {
             Liên hệ
           </Link>
           <Link
-            to="/home"
+            to="/booking-history"
             className="flex items-center text-gray-300 hover:text-white text-sm font-semibold transition-colors"
           >
             <svg
