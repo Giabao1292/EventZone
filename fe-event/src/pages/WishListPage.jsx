@@ -15,7 +15,6 @@ export default function WishlistPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // ✅ Fetch danh sách wishlist từ backend
   const fetchWishlist = async () => {
     try {
       const data = await wishlistService.getWishlist();
@@ -24,6 +23,7 @@ export default function WishlistPage() {
         eventTitle: ev.title,
         posterImage: ev.imageUrl,
         startTime: ev.date,
+        isFavorite: true, // All events in wishlist are favorites
       }));
       setWishlist(formatted);
     } catch (err) {
@@ -38,18 +38,17 @@ export default function WishlistPage() {
     fetchWishlist();
   }, []);
 
-  // ✅ Toggle xoá khỏi wishlist và gọi lại dữ liệu từ backend
-  const toggleFavorite = async (eventId) => {
+  const handleToggleWishlist = async (eventId) => {
     try {
       await wishlistService.removeFromWishlist(eventId);
-      setWishlist((prev) => prev.filter((ev) => ev.id !== eventId)); // 👈 lỗi có thể nằm đây
+      setWishlist((prev) => prev.filter((ev) => ev.id !== eventId));
+      toast.success("Đã xóa khỏi danh sách yêu thích!");
     } catch (err) {
       console.error("❌ Xoá khỏi wishlist thất bại:", err.message);
+      toast.error("Lỗi khi xóa khỏi danh sách yêu thích!");
     }
   };
 
-
-  // ✅ Lọc và sắp xếp danh sách
   const filteredWishlist = wishlist.filter((event) =>
     event.eventTitle.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -85,7 +84,7 @@ export default function WishlistPage() {
             Danh sách sự kiện bạn đã thêm vào yêu thích để dễ dàng theo dõi và đặt vé sau này.
           </p>
           <p className="text-orange-300 text-sm font-medium mb-6 drop-shadow-md">
-            Bạn có thể xoá sự kiện khỏi danh sách bất cứ lúc nào hoặc nhấn vào sự kiện để xem chi tiết.
+            Bạn có thể xóa sự kiện khỏi danh sách bất cứ lúc nào hoặc nhấn vào sự kiện để xem chi tiết.
           </p>
 
           {/* Tìm kiếm */}
@@ -114,7 +113,7 @@ export default function WishlistPage() {
               </p>
               <p className="text-gray-300 mb-6 drop-shadow-md">
                 {searchQuery
-                  ? "Hãy thử lại với từ khoá khác."
+                  ? "Hãy thử lại với từ khóa khác."
                   : "Hãy bắt đầu bằng cách thêm sự kiện bạn quan tâm vào danh sách yêu thích!"}
               </p>
               {searchQuery && (
@@ -123,7 +122,7 @@ export default function WishlistPage() {
                   variant="outline"
                   className="border-gray-500 text-gray-300 hover:bg-gray-800 bg-transparent backdrop-blur-sm"
                 >
-                  Xoá tìm kiếm
+                  Xóa tìm kiếm
                 </Button>
               )}
             </div>
@@ -134,8 +133,8 @@ export default function WishlistPage() {
               <EventCard
                 key={event.id}
                 event={event}
-                isFavorite={true}
-                onToggleFavorite={toggleFavorite}
+                isFavorite={event.isFavorite}
+                onToggleFavorite={handleToggleWishlist}
               />
             ))}
           </div>

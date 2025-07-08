@@ -17,6 +17,9 @@ import java.util.List;
 
 public interface BookingRepository extends JpaRepository<Booking, Integer> {
     @EntityGraph(attributePaths = {
+            "tblBookingSeats",
+            "tblBookingSeats.seat",          // ⚠️ PHẢI CÓ DÒNG NÀY
+            "tblBookingSeats.zone",          // nếu có zone
             "showingTime",
             "showingTime.event",
             "showingTime.address"
@@ -57,6 +60,15 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
     @EntityGraph(attributePaths = {"tblBookingSeats"})
     List<Booking> findByShowingTimeStartTimeAndShowingTimeEventId(LocalDateTime startTime, int eventId);
 
-    List<Booking> findByUserEmailAndPaymentStatus(String email, PaymentStatus paymentStatus);
+    List<Booking> findByUserEmailAndPaymentStatus(String email, String paymentStatus);
+
+    boolean existsByShowingTime_IdAndUser_Id(Integer showingTimeId, Integer userId);
+
+    List<Booking> findByUserIdAndPaymentStatus(Integer userId, String paymentStatus);
+
+
+    @Query("SELECT b.showingTime.id FROM Booking b WHERE b.user.id = :userId AND b.paymentStatus = 'CONFIRMED'")
+    List<Integer> findConfirmedShowingTimeIdsByUserId(@Param("userId") Integer userId);
+
 
 }

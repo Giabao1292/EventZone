@@ -8,7 +8,7 @@ import CategoryNav from "../ui/CategoryNav"
 import { wishlistService } from "../services/wishlistServices"
 import { getCategories, getEventsByCategory } from "../services/categoryService"
 import { getActiveAdsToday } from "../services/adsService"
-import { getHomeEvents } from "../services/eventService"
+import { getHomeEvents, getTrackedEvents } from "../services/eventService"
 import AdEventCard from "../ui/AdEventCard"
 import BackgroundEffect from "../ui/BackGround"
 import SearchBar from "../components/home/SearchBar"
@@ -36,6 +36,7 @@ export default function Home() {
     upcoming: [],
   })
   const [wishlistEventIds, setWishlistEventIds] = useState(new Set())
+  const [trackedEventIds, setTrackedEventIds] = useState(new Set())
 
   useEffect(() => {
     const verifyStatus = getQueryParam("verifyStatus", location.search)
@@ -82,7 +83,7 @@ export default function Home() {
           cats.map(async (cat) => {
             const events = await getEventsByCategory(cat.categoryId)
             eventsMap[cat.categoryId] = events
-          }),
+          })
         )
         setEventsByCategory(eventsMap)
       } catch (error) {
@@ -90,21 +91,30 @@ export default function Home() {
       }
     }
 
-    fetchHomeData()
-    fetchCategories()
-  }, [])
-
-  useEffect(() => {
     const fetchWishlist = async () => {
       try {
         const wishlist = await wishlistService.getWishlist()
         const ids = new Set(wishlist.map((event) => event.id))
         setWishlistEventIds(ids)
-      } catch (err) {
-        console.error("Error loading wishlist:", err.message)
+      } catch (error) {
+        console.error("Lỗi tải danh sách yêu thích:", error.message)
       }
     }
+
+    const fetchTrackedEvents = async () => {
+      try {
+        const trackedEvents = await getTrackedEvents()
+        const ids = new Set(trackedEvents.map((event) => event.id))
+        setTrackedEventIds(ids)
+      } catch (error) {
+        console.error("Lỗi tải danh sách sự kiện đã theo dõi:", error.message)
+      }
+    }
+
+    fetchHomeData()
+    fetchCategories()
     fetchWishlist()
+    fetchTrackedEvents()
   }, [])
 
   const toggleFavorite = async (eventId) => {
@@ -124,6 +134,16 @@ export default function Home() {
       console.error("Failed to update wishlist:", error.message)
       toast.error("Lỗi khi cập nhật yêu thích")
     }
+  }
+
+  const toggleTrack = async (eventId, isTracking) => {
+    const updatedSet = new Set(trackedEventIds)
+    if (isTracking) {
+      updatedSet.add(eventId)
+    } else {
+      updatedSet.delete(eventId)
+    }
+    setTrackedEventIds(updatedSet)
   }
 
   const handleSearch = (query) => {
@@ -199,7 +219,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Categories Navigation - Moved to top */}
+      {/* Categories Navigation */}
       <div className="relative z-10 border-b border-gray-700/50 bg-gray-800/30 backdrop-blur-sm">
         <CategoryNav
           selectedCategoryId={selectedCategoryId}
@@ -208,7 +228,7 @@ export default function Home() {
         />
       </div>
 
-      {/* Events by Category - Show when category is selected */}
+      {/* Events by Category */}
       {selectedCategoryId && (
         <section className="relative z-10 py-16">
           <div className="max-w-7xl mx-auto px-6">
@@ -229,7 +249,9 @@ export default function Home() {
                   key={event.id}
                   event={event}
                   isFavorite={wishlistEventIds.has(event.id)}
+                  isUpcoming={false}
                   onToggleFavorite={toggleFavorite}
+                  onToggleTrack={togglescholarship toggleTrack}
                 />
               ))}
             </div>
@@ -292,7 +314,9 @@ export default function Home() {
                   key={ev.id}
                   event={ev}
                   isFavorite={wishlistEventIds.has(ev.id)}
+                  isUpcoming={false}
                   onToggleFavorite={toggleFavorite}
+                  onToggleTrack={toggleTrack}
                 />
               ))}
             </div>
@@ -319,7 +343,9 @@ export default function Home() {
                   key={ev.id}
                   event={ev}
                   isFavorite={wishlistEventIds.has(ev.id)}
+                  isUpcoming={true}
                   onToggleFavorite={toggleFavorite}
+                  onToggleTrack={toggleTrack}
                 />
               ))}
             </div>

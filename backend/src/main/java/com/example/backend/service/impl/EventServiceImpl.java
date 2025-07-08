@@ -364,6 +364,12 @@ public class EventServiceImpl implements EventService {
         }
         eventRepository.save(event);
     }
+    @Override
+    public Event findById(Integer id) {
+        return eventRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found with id = " + id));
+    }
+
     public List<EventHomeDTO> userSearchEvent(String[] search) {
 
         List<Event> events = search != null &&  search.length != 0 ? searchCriteriaRepository.userSearchEvent(search) : eventRepository.findAll();

@@ -31,6 +31,8 @@ public interface EventService {
 
     void updateStatus(UpdateStatusEvent status, int eventId);
 
+
+    Event findById(Integer id);
     List<EventHomeDTO> userSearchEvent(String[] search);
 
     FeaturedEventResponse getFeaturedEventsForHome();

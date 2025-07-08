@@ -12,6 +12,7 @@ import org.hibernate.annotations.ColumnDefault;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -97,8 +98,8 @@ public class Event {
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "event")
     private Set<EventVoucher> tblEventVouchers = new LinkedHashSet<>();
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "event")
-    private Set<Review> tblReviews = new LinkedHashSet<>();
+//    @OneToMany(cascade = CascadeType.ALL, mappedBy = "event")
+//    private Set<Review> tblReviews = new LinkedHashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL,mappedBy = "event")
     @JsonManagedReference
@@ -112,4 +113,8 @@ public class Event {
     @JoinColumn(name = "status_id", nullable = false)
     @JsonBackReference
     private EventStatus status;
+
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<TrackingEventUpcoming> trackingUsers = new LinkedHashSet<>();
+
 }

@@ -34,7 +34,7 @@ public class AppConfig implements WebMvcConfigurer , WebSecurityCustomizer {
     private String[] WHITE_LIST = {"/api/image","/api/auth/**", "/api/users/**",
             "/api/categories","/api/categories/**",
             "/api/showing-times/*/layout", "/api/events/showing-times/*/layout", "/api/events/detail/**",
-            "/api/event-ads/active-today","/api/events/detail/{eventId}","/api/events/home", "/api/events/public"};
+            "/api/event-ads/active-today","/api/events/detail/{eventId}","/api/events/home", "/api/events/public","/api/reviews/**"};
     private String[] ORGANIZER_LIST = {"/api/organizer/**","/api/event-ads/*"};
 
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
@@ -60,7 +60,7 @@ public class AppConfig implements WebMvcConfigurer , WebSecurityCustomizer {
         return httpSecurity.cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint(jwtAuthenticationEntryPoint) // Đăng ký AuthenticationEntryPoint
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint)
                 )
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
                         .requestMatchers(WHITE_LIST).permitAll()

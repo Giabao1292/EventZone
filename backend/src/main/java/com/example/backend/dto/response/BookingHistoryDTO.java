@@ -5,6 +5,8 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Data
 @NoArgsConstructor
@@ -21,9 +23,24 @@ public class BookingHistoryDTO {
     private String paymentStatus;
     private String checkinStatus;
     private String imageUrl; // ✅ ảnh sự kiện
+    private List<String> seatNumbers;
 
     public BookingHistoryDTO(Booking booking) {
         this.bookingId = booking.getId();
+
+        this.seatNumbers = booking.getTblBookingSeats()
+                .stream()
+                .map(bs -> {
+                    if (bs.getSeat() != null && bs.getSeat().getSeatLabel() != null) {
+                        return bs.getSeat().getSeatLabel();
+                    } else if (bs.getZone() != null) {
+                        return bs.getZone().getZoneName() + " x" + bs.getQuantity();
+                    } else {
+                        return "Unknown";
+                    }
+                })
+                .collect(Collectors.toList());
+
 
         // Lấy tiêu đề sự kiện
         this.eventTitle = booking.getShowingTime() != null && booking.getShowingTime().getEvent() != null

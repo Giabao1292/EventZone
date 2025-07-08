@@ -140,4 +140,11 @@ public class User implements UserDetails, Serializable {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Wishlist> wishlist = new LinkedHashSet<>();
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<TrackingEventUpcoming> trackingEvents = new LinkedHashSet<>();
+
+    public User(Integer id) {
+        this.id = id;
+    }
+
 }

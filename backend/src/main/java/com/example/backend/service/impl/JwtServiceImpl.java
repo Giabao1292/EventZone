@@ -3,6 +3,7 @@ package com.example.backend.service.impl;
 import com.example.backend.service.JwtService;
 import com.example.backend.util.TokenType;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
@@ -56,7 +57,7 @@ public class JwtServiceImpl implements JwtService {
                 .setClaims(claims)
                 .claim("roles", userDetails.getAuthorities())
                 .setSubject(userDetails.getUsername())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000L * 60 * limitTime))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000L * 60 * 60 * limitTime))
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .signWith(getKey(type), SignatureAlgorithm.HS512)
                 .compact();
@@ -73,12 +74,16 @@ public class JwtServiceImpl implements JwtService {
     }
 
     private Claims getClaimsFromToken(String token, TokenType type) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getKey(type))
-                .build()
-                .parseClaimsJws(token) // sẽ tự ném ExpiredJwtException nếu token hết hạn
-                .getBody();
 
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(getKey(type))
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (JwtException e) {
+            return null;
+        }
     }
 
     private <T> T extractClaimsFromToken(String token, Function<Claims, T> claimsResolver, TokenType type) {

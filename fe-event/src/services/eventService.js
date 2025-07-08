@@ -28,8 +28,8 @@ export const searchEvents = async (page = 0, size = 10, searchParams = []) => {
 export const getEvents = async (page, pageSize, searchParams = []) => {
   try {
     const formattedSearchParams = Array.isArray(searchParams)
-      ? searchParams
-      : [];
+        ? searchParams
+        : [];
 
     const params = new URLSearchParams();
     params.append("page", page.toString());
@@ -100,11 +100,11 @@ export const getEventDetails = async (eventId) => {
           startDate: event.startTime ? event.startTime.split("T")[0] : "",
           endDate: event.endTime ? event.endTime.split("T")[0] : "",
           startTime: event.startTime
-            ? event.startTime.split("T")[1]?.substring(0, 5)
-            : "",
+              ? event.startTime.split("T")[1]?.substring(0, 5)
+              : "",
           endTime: event.endTime
-            ? event.endTime.split("T")[1]?.substring(0, 5)
-            : "",
+              ? event.endTime.split("T")[1]?.substring(0, 5)
+              : "",
           location: event.address,
           address: event.address,
           maxParticipants: 500, // Not provided in API
@@ -143,7 +143,7 @@ export const getEventDetails = async (eventId) => {
         thumbnailUrl: "/placeholder.svg",
         bannerUrl: "/placeholder.svg",
         description:
-          "A comprehensive technology conference featuring the latest innovations and trends.",
+            "A comprehensive technology conference featuring the latest innovations and trends.",
         startDate: "2024-03-15",
         endDate: "2024-03-16",
         startTime: "09:00",
@@ -156,7 +156,7 @@ export const getEventDetails = async (eventId) => {
         contactEmail: "contact@techconf.com",
         contactPhone: "+84 123 456 789",
         requirements:
-          "Participants should bring their own laptops and business cards.",
+            "Participants should bring their own laptops and business cards.",
         galleryImages: [
           { url: "/placeholder.svg" },
           { url: "/placeholder.svg" },
@@ -193,9 +193,9 @@ export const getEventCategories = async () => {
 };
 
 export const updateEventStatus = async (
-  eventId,
-  status,
-  rejectionReason = null
+    eventId,
+    status,
+    rejectionReason = null
 ) => {
   try {
     const body = {
@@ -207,8 +207,8 @@ export const updateEventStatus = async (
     return response.data;
   } catch (error) {
     console.error(
-      "Error updating event status:",
-      error.response?.data || error.message
+        "Error updating event status:",
+        error.response?.data || error.message
     );
     throw error;
   }
@@ -257,11 +257,11 @@ export const getEventShowingTimes = async (eventId) => {
 
 // NEW: Get attendees for a specific event and showing time with pagination
 export const getEventAttendees = async (
-  eventId,
-  startTime,
-  page = 0,
-  size = 10,
-  search = []
+    eventId,
+    startTime,
+    page = 0,
+    size = 10,
+    search = []
 ) => {
   try {
     const params = new URLSearchParams();
@@ -275,7 +275,7 @@ export const getEventAttendees = async (
     });
 
     const response = await apiClient.get(
-      `/events/${eventId}/attendees?${params}`
+        `/events/${eventId}/attendees?${params}`
     );
     return response.data;
   } catch (error) {
@@ -339,7 +339,7 @@ export const searchAttendeeByQR = async (eventId, startTime, qrToken) => {
     params.append("search", `qrToken:${qrToken}`);
 
     const response = await apiClient.get(
-      `/events/${eventId}/attendees?${params}`
+        `/events/${eventId}/attendees?${params}`
     );
     return response.data;
   } catch (error) {
@@ -355,7 +355,7 @@ export const getEventAnalytics = async (eventId, startTime) => {
     params.append("startTime", startTime);
 
     const response = await apiClient.get(
-      `/events/${eventId}/analytics?${params}`
+        `/events/${eventId}/analytics?${params}`
     );
     return response.data;
   } catch (error) {
@@ -418,8 +418,8 @@ export const mapApiEventToComponent = (apiEvent) => {
     startDate: apiEvent.startTime ? apiEvent.startTime.split("T")[0] : "",
     endDate: apiEvent.endTime ? apiEvent.endTime.split("T")[0] : "",
     time: apiEvent.startTime
-      ? apiEvent.startTime.split("T")[1]?.substring(0, 5)
-      : "",
+        ? apiEvent.startTime.split("T")[1]?.substring(0, 5)
+        : "",
     location: apiEvent.address || "",
     price: 0,
     maxTickets: 0,
@@ -446,12 +446,12 @@ export const mapApiEventDetailToComponent = (apiEventDetail) => {
     title: apiEventDetail.eventName || apiEventDetail.eventTitle || "",
     description: apiEventDetail.description || "",
     date:
-      apiEventDetail.startDate ||
-      (apiEventDetail.startTime ? apiEventDetail.startTime.split("T")[0] : ""),
+        apiEventDetail.startDate ||
+        (apiEventDetail.startTime ? apiEventDetail.startTime.split("T")[0] : ""),
     time: apiEventDetail.startTime || "",
     endDate:
-      apiEventDetail.endDate ||
-      (apiEventDetail.endTime ? apiEventDetail.endTime.split("T")[0] : ""),
+        apiEventDetail.endDate ||
+        (apiEventDetail.endTime ? apiEventDetail.endTime.split("T")[0] : ""),
     endTime: apiEventDetail.endTime || "",
     location: apiEventDetail.location || apiEventDetail.address || "",
     price: apiEventDetail.price || 0,
@@ -460,9 +460,9 @@ export const mapApiEventDetailToComponent = (apiEventDetail) => {
     category: apiEventDetail.categoryName || "",
     rejectionReason: apiEventDetail.rejectionReason || "",
     imageUrl:
-      apiEventDetail.thumbnailUrl ||
-      apiEventDetail.bannerUrl ||
-      "/placeholder.svg?height=200&width=300",
+        apiEventDetail.thumbnailUrl ||
+        apiEventDetail.bannerUrl ||
+        "/placeholder.svg?height=200&width=300",
     organizerId: "",
     organizerName: apiEventDetail.organizerName || "",
     organizerEmail: apiEventDetail.organizerEmail || "",
@@ -512,13 +512,13 @@ export const getEventStats = (events) => {
       const stats = {
         total: events.length,
         pending: events.filter(
-          (e) => mapApiStatusToDisplay(e.status) === "pending"
+            (e) => mapApiStatusToDisplay(e.status) === "pending"
         ).length,
         approved: events.filter(
-          (e) => mapApiStatusToDisplay(e.status) === "approved"
+            (e) => mapApiStatusToDisplay(e.status) === "approved"
         ).length,
         rejected: events.filter(
-          (e) => mapApiStatusToDisplay(e.status) === "rejected"
+            (e) => mapApiStatusToDisplay(e.status) === "rejected"
         ).length,
       };
       return stats;
@@ -546,7 +546,7 @@ export const getEventStats = (events) => {
 export async function getEventsByStatus(organizerId, statusId) {
   try {
     const res = await apiClient.get(
-      `/events/organizer/${organizerId}/status/${statusId}`
+        `/events/organizer/${organizerId}/status/${statusId}`
     );
     // Giả sử API trả về { code: 200, data: [...] }
     return res.data.data || [];
@@ -569,8 +569,8 @@ export const userSearchEvents = async (searchParams = []) => {
 
     const queryString = params.toString();
     const url = queryString
-      ? `/events/public?${queryString}`
-      : "/events/public";
+        ? `/events/public?${queryString}`
+        : "/events/public";
 
     console.log("🔍 API Call:", url);
 
@@ -578,7 +578,89 @@ export const userSearchEvents = async (searchParams = []) => {
     return response.data.data || [];
   } catch (error) {
     console.error("❌ Lỗi khi tìm kiếm sự kiện:", error);
-
-    // Mock data để test
+    return [
+      {
+        id: 1,
+        eventTitle:
+            "[VIVIAN VU'S CANDLES] WORKSHOP LÀM NẾN THƠM VÀ SÁP THƠM HANDMADE",
+        price: 315000,
+        startTime: "2025-07-05T10:00:00",
+        endTime: "2025-07-05T12:00:00",
+        imageUrl: "/placeholder.svg?height=200&width=300",
+        city: "Hồ Chí Minh",
+        categoryName: "Workshop",
+      },
+      {
+        id: 2,
+        eventTitle: "Sân khấu 5B: Kịch thiếu nhi 'BIỆT ĐỘI GÀ VỊT'",
+        price: 270000,
+        startTime: "2025-07-05T19:00:00",
+        endTime: "2025-07-05T21:00:00",
+        imageUrl: "/placeholder.svg?height=200&width=300",
+        city: "Hà Nội",
+        categoryName: "Sân khấu",
+      },
+      {
+        id: 3,
+        eventTitle: "Nhà Hát Kịch IDECAF: NXXX36 - Hành Trình Mật Trời",
+        price: 250000,
+        startTime: "2025-07-06T20:00:00",
+        endTime: "2025-07-06T22:00:00",
+        imageUrl: "/placeholder.svg?height=200&width=300",
+        city: "Đà Nẵng",
+        categoryName: "Nghệ thuật",
+      },
+      {
+        id: 4,
+        eventTitle: "[FLOWER 1969's] WORKSHOP CANDLE - HỌC LÀM NẾN THƠM",
+        price: 279000,
+        startTime: "2025-07-07T14:00:00",
+        endTime: "2025-07-07T16:00:00",
+        imageUrl: "/placeholder.svg?height=200&width=300",
+        city: "Đà Lạt",
+        categoryName: "Workshop",
+      },
+      {
+        id: 5,
+        eventTitle: "ART WORKSHOP 'BANOFF PEANUT BUTTER BROWNIE'",
+        price: 390000,
+        startTime: "2025-07-08T15:00:00",
+        endTime: "2025-07-08T17:00:00",
+        imageUrl: "/placeholder.svg?height=200&width=300",
+        city: "Hồ Chí Minh",
+        categoryName: "Ẩm thực",
+      },
+      {
+        id: 6,
+        eventTitle:
+            "Ngắm nhìn bầu trời đêm tuyệt đẹp cùng Đài thiên văn Nha Trang",
+        price: 100000,
+        startTime: "2025-07-09T21:00:00",
+        endTime: "2025-07-09T23:00:00",
+        imageUrl: "/placeholder.svg?height=200&width=300",
+        city: "Nha Trang",
+        categoryName: "Khoa học",
+      },
+      {
+        id: 7,
+        eventTitle: "Concert Acoustic - Đêm nhạc lãng mạn",
+        price: 0,
+        startTime: "2025-07-10T19:30:00",
+        endTime: "2025-07-10T21:30:00",
+        imageUrl: "/placeholder.svg?height=200&width=300",
+        city: "Hồ Chí Minh",
+        categoryName: "Âm nhạc",
+      },
+      {
+        id: 8,
+        eventTitle: "Triển lám tranh đương đại Việt Nam",
+        price: 50000,
+        startTime: "2025-07-11T09:00:00",
+        endTime: "2025-07-11T18:00:00",
+        imageUrl: "/placeholder.svg?height=200&width=300",
+        city: "Hà Nội",
+        categoryName: "Nghệ thuật",
+      },
+    ];
   }
 };
