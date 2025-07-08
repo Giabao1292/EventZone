@@ -20,5 +20,8 @@ public interface ReviewService {
     List<ReviewResponse> getReviewsByShowingTimeForAdmin(Integer showingTimeId, int page, int size, String status);
 
     List<Integer> getShowingTimeIdsByUserId(Integer userId);
+
+    boolean hasUserReviewed(Integer showingTimeId, Integer currentUserId);
+
 }
 

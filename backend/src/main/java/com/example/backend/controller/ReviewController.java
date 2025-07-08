@@ -88,5 +88,14 @@ public class ReviewController {
 
 
 
+    @GetMapping("/has-reviewed")
+    public ResponseEntity<ResponseData<Boolean>> hasUserReviewed(
+            @RequestParam("showingTimeId") Integer showingTimeId,
+            @RequestParam("currentUserId") Integer currentUserId
+    ) {
+        boolean hasReviewed = reviewService.hasUserReviewed(showingTimeId, currentUserId);
+        return ResponseEntity.ok(new ResponseData<>(200, "Kiểm tra thành công", hasReviewed));
+    }
+
 
 }

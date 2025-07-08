@@ -155,4 +155,13 @@ public class ReviewServiceImpl implements ReviewService {
         dto.setUpdatedAt(r.getUpdatedAt());
         return dto;
     }
+
+    @Override
+    public boolean hasUserReviewed(Integer showingTimeId, Integer userId) {
+        return reviewRepository.existsByShowingTime_IdAndUser_IdAndStatus(
+                showingTimeId, userId, ReviewStatus.active
+        );
+    }
+
+
 }
