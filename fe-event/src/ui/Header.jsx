@@ -272,7 +272,7 @@ const Header = () => {
                 Liên hệ
               </Link>
               <Link
-                to="/bookinf-history"
+                to="/booking-history"
                 className="flex items-center text-gray-300 hover:text-orange-400 text-sm font-semibold transition cursor-pointer no-underline"
                 onClick={() => setMobileMenuOpen(false)}
               >
