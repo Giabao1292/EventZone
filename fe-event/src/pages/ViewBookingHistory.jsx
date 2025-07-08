@@ -461,7 +461,7 @@ export default function ViewBookingHistory() {
             </div>
         )}
 
-        <style jsx>{`
+        <style >{`
         html,
         body {
           overflow: visible !important;
