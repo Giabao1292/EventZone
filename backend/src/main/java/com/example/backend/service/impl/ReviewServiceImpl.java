@@ -7,52 +7,50 @@ import com.example.backend.repository.BookingRepository;
 import com.example.backend.repository.ShowingTimeRepository;
 import com.example.backend.repository.ReviewRepository;
 import com.example.backend.service.ReviewService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-
+import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+
 @Service
+@RequiredArgsConstructor
 public class ReviewServiceImpl implements ReviewService {
 
-    @Autowired
-    private ReviewRepository reviewRepository;
-    @Autowired
-    private ShowingTimeRepository showingTimeRepository; // Thay cho EventRepository
-    @Autowired
-    private BookingRepository bookingRepository;
+
+    private final ReviewRepository reviewRepository;
+
+    private final ShowingTimeRepository showingTimeRepository;
+
+    private final BookingRepository bookingRepository;
 
     @Override
     public ReviewResponse createReview(ReviewRequest dto, Integer currentUserId) {
-        // 1. Kiểm tra showingTime tồn tại
         ShowingTime showingTime = showingTimeRepository.findById(dto.getShowingTimeId())
                 .orElseThrow(() -> new RuntimeException("Suất chiếu không tồn tại"));
 
-        // 2. Kiểm tra suất chiếu đã kết thúc chưa
         if (showingTime.getEndTime().isAfter(LocalDateTime.now())) {
             throw new RuntimeException("Chỉ được đánh giá sau khi suất chiếu kết thúc");
         }
 
-        // 3. Kiểm tra user đã mua vé suất chiếu này chưa
         boolean hasBooking = bookingRepository.existsByShowingTime_IdAndUser_Id(dto.getShowingTimeId(), currentUserId);
         if (!hasBooking) {
             throw new RuntimeException("Bạn chưa tham gia suất chiếu này!");
         }
 
-        // 4. Kiểm tra đã review chưa (chỉ 1 review/user/showingTime)
         boolean exists = reviewRepository.existsByShowingTime_IdAndUser_IdAndStatus(dto.getShowingTimeId(), currentUserId, ReviewStatus.active);
         if (exists) {
             throw new RuntimeException("Bạn đã đánh giá suất chiếu này rồi!");
         }
 
-        // 5. Tạo review mới
         Review review = new Review();
         review.setShowingTime(showingTime);
         review.setUser(new User(currentUserId));
@@ -115,9 +113,26 @@ public class ReviewServiceImpl implements ReviewService {
                 .toList();
     }
 
+    // Method mới: admin lấy review theo trạng thái (status)
+    @Override
+    public List<ReviewResponse> getReviewsByShowingTimeForAdmin(Integer showingTimeId, int page, int size, String status) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        ReviewStatus reviewStatus;
+        try {
+            reviewStatus = ReviewStatus.valueOf(status);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Trạng thái review không hợp lệ: " + status);
+        }
+
+        Page<Review> reviewPage = reviewRepository.findByShowingTimeIdAndStatus(showingTimeId, reviewStatus, pageable);
+        return reviewPage.getContent()
+                .stream()
+                .map(this::toResponseDto)
+                .collect(Collectors.toList());
+    }
+
     @Override
     public List<Integer> getShowingTimeIdsByUserId(Integer userId) {
-        // Chỉ lấy booking đã xác nhận thành công, tránh lấy cả booking đã hủy
         List<Booking> bookings = bookingRepository.findByUserIdAndPaymentStatus(userId, "CONFIRMED");
         return bookings.stream()
                 .map(b -> b.getShowingTime().getId())
@@ -125,13 +140,10 @@ public class ReviewServiceImpl implements ReviewService {
                 .collect(Collectors.toList());
     }
 
-
-    // Mapping entity -> response DTO
     private ReviewResponse toResponseDto(Review r) {
         ReviewResponse dto = new ReviewResponse();
         dto.setReviewId(r.getId());
         dto.setShowingTimeId(r.getShowingTime().getId());
-        // dto.setEventId(r.getShowingTime().getEvent().getId()); // Nếu muốn trả luôn eventId
         dto.setUserId(r.getUser().getId());
         dto.setRating(r.getRating());
         dto.setComment(r.getComment());

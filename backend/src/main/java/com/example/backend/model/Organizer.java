@@ -99,4 +99,8 @@ public class Organizer {
     private OrgType orgType;
 
 
+    @Size(max = 100)
+    @Column(name = "email", unique = true, nullable = false)
+    private String email;
+
 }

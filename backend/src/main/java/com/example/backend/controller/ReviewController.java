@@ -5,7 +5,9 @@ import com.example.backend.dto.response.ResponseData;
 import com.example.backend.dto.response.ReviewResponse;
 import com.example.backend.service.ReviewService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,6 +19,7 @@ public class ReviewController {
     @Autowired
     private ReviewService reviewService;
 
+    @PreAuthorize("hasRole('USER')")
     @PostMapping
     public ResponseEntity<ResponseData<ReviewResponse>> createReview(
             @RequestBody ReviewRequest dto,
@@ -26,6 +29,7 @@ public class ReviewController {
         return ResponseEntity.ok(new ResponseData<>(200, "Tạo review thành công", review));
     }
 
+    @PreAuthorize("hasRole('USER')")
     @PutMapping("/{reviewId}")
     public ResponseEntity<ResponseData<ReviewResponse>> updateReview(
             @PathVariable Integer reviewId,
@@ -36,6 +40,7 @@ public class ReviewController {
         return ResponseEntity.ok(new ResponseData<>(200, "Cập nhật review thành công", review));
     }
 
+    @PreAuthorize("hasRole('USER')")
     @DeleteMapping("/{reviewId}")
     public ResponseEntity<ResponseData<Void>> deleteReview(
             @PathVariable Integer reviewId,
@@ -69,6 +74,19 @@ public class ReviewController {
     }
 
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin/showing-time/{showingTimeId}")
+    public ResponseEntity<ResponseData<List<ReviewResponse>>> getReviewsByShowingTimeForAdmin(
+            @PathVariable Integer showingTimeId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "active") String status
+    ) {
+        List<ReviewResponse> reviews = reviewService.getReviewsByShowingTimeForAdmin(showingTimeId, page, size, status);
+        return ResponseEntity.ok(new ResponseData<>(200, "Lấy danh sách review cho admin thành công", reviews));
+    }
+
+
+
 
 }
-

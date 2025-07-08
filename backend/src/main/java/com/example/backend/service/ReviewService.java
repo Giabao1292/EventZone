@@ -17,6 +17,8 @@ public interface ReviewService {
 
     List<ReviewResponse> getReviewsByShowingTime(Integer showingTimeId, int page, int size);
 
+    List<ReviewResponse> getReviewsByShowingTimeForAdmin(Integer showingTimeId, int page, int size, String status);
+
     List<Integer> getShowingTimeIdsByUserId(Integer userId);
 }
 
