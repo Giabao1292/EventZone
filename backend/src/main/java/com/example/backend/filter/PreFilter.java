@@ -1,8 +1,6 @@
 package com.example.backend.filter;
 
-import com.example.backend.model.User;
 import com.example.backend.service.JwtService;
-import com.example.backend.service.UserService;
 import com.example.backend.service.impl.UserDetailService;
 import com.example.backend.util.TokenType;
 import io.micrometer.common.util.StringUtils;
@@ -21,12 +19,14 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+
 @Component
 @Slf4j
 @RequiredArgsConstructor
 public class PreFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserDetailService userDetailService;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         log.info("-----------PreFilter-------------");
@@ -50,5 +50,6 @@ public class PreFilter extends OncePerRequestFilter {
             }
         }
         filterChain.doFilter(request, response);
+
     }
 }

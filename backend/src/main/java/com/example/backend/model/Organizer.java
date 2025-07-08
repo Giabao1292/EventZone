@@ -94,7 +94,7 @@ public class Organizer {
     @JsonManagedReference
     private Set<Event> tblEvents = new LinkedHashSet<>();
 
-    @ManyToOne()
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "org_type_id")
     private OrgType orgType;
 

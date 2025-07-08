@@ -9,6 +9,7 @@ import com.example.backend.model.Event;
 import com.example.backend.model.Organizer;
 import com.example.backend.model.Seat;
 import com.example.backend.model.ShowingTime;
+import com.example.backend.repository.EventRepository;
 import com.example.backend.service.EventService;
 import com.example.backend.service.OrganizerService;
 import com.example.backend.service.VNPayService;
@@ -35,6 +36,7 @@ import java.util.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 
 @RestController
@@ -47,6 +49,7 @@ public class EventController {
     private final OrganizerService organizerService;
     private final BookingService bookingService;
     private final ShowingTimeService showingTimeService;
+    private final EventRepository eventRepository;
 
     @GetMapping("/home")
     public ResponseEntity<ResponseData<Map<String, List<EventHomeDTO>>>> getHomeEvents() {
@@ -278,16 +281,24 @@ public class EventController {
         PageResponse<AttendeeResponse> response = bookingService.searchAttendees(pageable, eventId, startTime, search);
         return new ResponseData<>(HttpStatus.OK.value(), "Get list attendees successful", response);
     }
+
     @PreAuthorize("hasAnyRole({'ORGANIZER', 'ADMIN'})")
     @GetMapping("/{eventId}/analytics")
     public ResponseData<AnalyticAttendeesResponse> getAnalytics(@PathVariable("eventId") int eventId, @RequestParam("startTime") LocalDateTime startTime) {
         AnalyticAttendeesResponse response = bookingService.getAnalytics(eventId, startTime);
         return new ResponseData<>(HttpStatus.OK.value(), "Get list attendees successful", response);
     }
+
     @PreAuthorize("hasAnyRole({'ORGANIZER', 'ADMIN'})")
     @GetMapping("/{eventId}/showing-times")
     public ResponseData<List<ShowingTimeAdmin>> getShowingTime(@PathVariable int eventId){
         List<ShowingTimeAdmin> showingTimeAdminList = showingTimeService.getListShowingTime(eventId);
         return new ResponseData<>(HttpStatus.OK.value(), "Get list showing time successful", showingTimeAdminList);
     }
+    @GetMapping("/public")
+    public ResponseData<List<EventHomeDTO>> userSearchEvents(@RequestParam(name = "search", required = false) String... search) {
+        List<EventHomeDTO> listEvents = eventService.userSearchEvent(search);
+        return new ResponseData<>(HttpStatus.OK.value(), "Get list of events", listEvents);
+    }
+
 }

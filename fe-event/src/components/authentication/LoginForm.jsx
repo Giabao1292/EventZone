@@ -21,10 +21,6 @@ const LoginForm = () => {
   const onSubmit = async (data) => {
     try {
       const result = await login(data);
-
-      //lưu token
-      localStorage.setItem("accessToken", result.accessToken);
-
       updateAuth(result);
       const roles = result?.roles || [];
       console.log("roles result:", roles.includes("ORGANIZER"));
@@ -44,10 +40,6 @@ const LoginForm = () => {
     try {
       const idToken = credentialResponse.credential;
       const result = await loginWithGoogle({ idToken });
-
-      //lưu token
-      localStorage.setItem("accessToken", result.accessToken);
-
       updateAuth(result);
 
       // Lấy danh sách roles từ API response

@@ -54,9 +54,10 @@ public class GoogleAuthService {
         });
 
         String token = jwtService.generateToken(user);
+        String refreshToken = jwtService.generateRefreshToken(user);
         return TokenResponse.builder()
                 .accessToken(token)
-                .refreshToken("refresh_token")
+                .refreshToken(refreshToken)
                 .roles(user.getTblUserRoles().stream().map(role -> role.getRole().getRoleName()).toList())
                 .build();
     }

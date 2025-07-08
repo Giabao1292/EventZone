@@ -27,7 +27,7 @@ public class TrackingEventUpcomingServiceImpl implements TrackingEventUpcomingSe
                     TrackingEventUpcoming tracking = new TrackingEventUpcoming();
                     tracking.setUser(user);
                     tracking.setEvent(event);
-                    tracking.setTrackingTime(Instant.now());
+                    tracking.setTrackingTime(LocalDateTime.now());
                     return trackingRepository.save(tracking);
                 });
     }
