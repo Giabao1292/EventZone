@@ -58,13 +58,6 @@ public class ShowingTime {
     @Column(name = "layout_mode", nullable = false)
     private String layoutMode;
 
-    @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "organizer_id", nullable = false)
-    @JsonBackReference
-    private Organizer organizer;
-
-
     @OneToMany(mappedBy = "showingTime", cascade = CascadeType.ALL)
     @JsonManagedReference
     private Set<Seat> seats = new HashSet<>();
