@@ -67,4 +67,11 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
     WHERE e.event_id IN (:eventIds)
     """, nativeQuery = true)
     List<EventMinPriceProjection> findMinPriceByEventIds(List<Long> eventIds);
+
+    @Query("SELECT DISTINCT e FROM Event e " +
+            "LEFT JOIN FETCH e.tblShowingTimes st " +
+            "LEFT JOIN FETCH st.seats s " +
+            "WHERE e.status.statusName = 'APPROVED'")
+    List<Event> findApprovedEventsWithShowingsAndSeats();
+
 }
