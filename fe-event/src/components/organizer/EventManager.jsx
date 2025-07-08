@@ -151,9 +151,9 @@ export default function EventManager() {
                   {/* Status badge */}
                   <span
                     className={`
-                    absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold shadow
-                    ${STATUS_BADGES[event.status] || "bg-gray-500"}
-                  `}
+          absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold shadow
+          ${STATUS_BADGES[event.status] || "bg-gray-500"}
+        `}
                   >
                     {event.status === "DRAFT" && "Nháp"}
                     {event.status === "PENDING" && "Chờ duyệt"}
@@ -178,19 +178,41 @@ export default function EventManager() {
                   <div className="text-sm text-gray-300 mt-1 line-clamp-2">
                     {event.description}
                   </div>
-                  {/* Nếu bị từ chối thì show lý do nếu có */}
+
+                  {/* REJECTED: Lý do từ chối */}
                   {event.status === "REJECTED" && event.rejectionReason && (
                     <div className="flex items-center gap-1 mt-2 text-xs text-red-300 bg-red-900/40 px-3 py-2 rounded">
                       <HiOutlineInformationCircle /> Lý do từ chối:{" "}
                       {event.rejectionReason}
                     </div>
                   )}
-                  <Link
-                    to={`/organizer/edit/${event.id}`}
-                    className="mt-4 flex items-center justify-center gap-1 text-sm font-semibold bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-4 py-2 rounded-xl shadow hover:shadow-lg transition"
-                  >
-                    <HiOutlineEye /> Chỉnh sửa
-                  </Link>
+
+                  {/* DRAFT: nút Chỉnh sửa */}
+                  {event.status === "DRAFT" && (
+                    <Link
+                      to={`/organizer/edit/${event.id}`}
+                      className="mt-4 flex items-center justify-center gap-1 text-sm font-semibold bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-4 py-2 rounded-xl shadow hover:shadow-lg transition"
+                    >
+                      <HiOutlineEye /> Chỉnh sửa
+                    </Link>
+                  )}
+
+                  {/* APPROVED: nút Quảng cáo */}
+                  {event.status === "APPROVED" && (
+                    <Link
+                      to={`/organizer/ads/create/${event.id}`}
+                      className="mt-4 flex items-center justify-center gap-1 text-sm font-semibold bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-xl shadow hover:shadow-lg transition"
+                    >
+                      📢 Quảng cáo
+                    </Link>
+                  )}
+
+                  {/* PENDING: hiển thị thông báo */}
+                  {event.status === "PENDING" && (
+                    <p className="mt-4 text-sm italic text-yellow-300 text-center">
+                      ⏳ Sự kiện đang chờ duyệt
+                    </p>
+                  )}
                 </div>
               </div>
             ))}
