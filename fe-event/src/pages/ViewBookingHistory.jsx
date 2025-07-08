@@ -146,10 +146,11 @@ export default function ViewBookingHistory() {
               </button>
               <div className="absolute bottom-4 left-4">
                 <span
-                  className={`px-3 py-1 rounded-full text-sm font-medium ${selectedBooking.checkinStatus === "Đã check-in"
-                    ? "bg-green-500 text-white"
-                    : "bg-yellow-500 text-white"
-                    }`}
+                  className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    selectedBooking.checkinStatus === "Đã check-in"
+                      ? "bg-green-500 text-white"
+                      : "bg-yellow-500 text-white"
+                  }`}
                 >
                   {selectedBooking.checkinStatus || "Chưa check-in"}
                 </span>
@@ -229,10 +230,11 @@ export default function ViewBookingHistory() {
                       <p className="font-medium text-gray-900">
                         {selectedBooking.paymentMethod}
                         <span
-                          className={`ml-2 px-2 py-1 rounded-full text-xs ${selectedBooking.paymentStatus === "Đã thanh toán"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-yellow-100 text-yellow-800"
-                            }`}
+                          className={`ml-2 px-2 py-1 rounded-full text-xs ${
+                            selectedBooking.paymentStatus === "Đã thanh toán"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-yellow-100 text-yellow-800"
+                          }`}
                         >
                           {selectedBooking.paymentStatus || "Chưa rõ"}
                         </span>
@@ -270,6 +272,7 @@ export default function ViewBookingHistory() {
           </div>
         </div>
       )}
+
       <style jsx>{`
         html, body {
           overflow: visible !important;
@@ -284,8 +287,6 @@ export default function ViewBookingHistory() {
             transform: translateY(0);
           }
         }
-        
-        /* Ensure modal is always on top */
         .modal-overlay {
           position: fixed !important;
           top: 0 !important;
@@ -301,7 +302,7 @@ export default function ViewBookingHistory() {
 
 // Booking Card Component
 const BookingCard = ({ booking, onViewDetails, index }) => {
-  const { eventTitle, imageUrl, venue, showTime, finalPrice, checkinStatus, paymentStatus } = booking
+  const { eventTitle, imageUrl, venue, showTime, finalPrice, checkinStatus } = booking
 
   const formatDateTime = (dateStr) => {
     if (!dateStr) return "Chưa có thông tin"
@@ -335,10 +336,11 @@ const BookingCard = ({ booking, onViewDetails, index }) => {
         />
         <div className="absolute top-3 right-3">
           <span
-            className={`px-2 py-1 rounded-full text-xs font-medium ${checkinStatus === "Đã check-in"
-              ? "bg-green-500/20 text-green-400 border border-green-500/30"
-              : "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
-              }`}
+            className={`px-2 py-1 rounded-full text-xs font-medium ${
+              checkinStatus === "Đã check-in"
+                ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                : "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+            }`}
           >
             {checkinStatus || "Chưa check-in"}
           </span>
@@ -366,7 +368,6 @@ const BookingCard = ({ booking, onViewDetails, index }) => {
               {booking.seatNumbers.join(", ")}
             </p>
           )}
-
         </div>
 
         <button

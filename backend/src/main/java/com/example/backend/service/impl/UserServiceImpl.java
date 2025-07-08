@@ -126,28 +126,35 @@ public class UserServiceImpl implements UserService {
         wishlistRepository.save(wishlistItem);
     }
 
-
+    @Transactional
     @Override
     public void removeFromWishlist(String username, Integer eventId) {
-        User user = userRepository.findByEmail(username).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        Event event = eventRepository.findById(eventId).orElseThrow(() -> new ResourceNotFoundException("Event not found"));
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
 
-        if (user.getWishlist().remove(event)) {
-            userRepository.save(user);
-        }
+        Wishlist wishlist = wishlistRepository.findByUserAndEvent(user, event)
+                .orElseThrow(() -> new ResourceNotFoundException("Wishlist item not found"));
+
+        wishlistRepository.delete(wishlist);  // <-- Xoá trực tiếp từ repository
     }
+
 
     @Override
     public Set<EventSummaryDTO> getWishlist(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        return user.getWishlist().stream()
-                .map(Wishlist::getEvent)                  // Lấy Event từ Wishlist
-                .map(EventSummaryDTO::new)                // Tạo DTO từ Event
-                .collect(Collectors.toCollection(LinkedHashSet::new)); // Trả về Set
+        List<Wishlist> wishlistItems = wishlistRepository.findAllByUser(user);
+
+        return wishlistItems.stream()
+                .map(Wishlist::getEvent)
+                .map(EventSummaryDTO::new)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
+
     private Page<User> findAllUser(Pageable pageable) {
         Page<Long> listUserIds = userRepository.findAllUserIds(pageable);
         return new PageImpl<User>(userRepository.findUsersToSearch(listUserIds.getContent()), pageable, listUserIds.getTotalElements());
