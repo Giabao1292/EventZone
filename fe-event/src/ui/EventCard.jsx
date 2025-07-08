@@ -4,7 +4,11 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Heart, Share2, Calendar, MapPin, Bell, BellOff } from "lucide-react";
 import { toast } from "react-toastify";
-import { trackEvent, untrackEvent, isEventTracked } from "../services/trackingService";
+import {
+  trackEvent,
+  untrackEvent,
+  isEventTracked,
+} from "../services/trackingService";
 import { wishlistService } from "../services/wishlistServices";
 
 const formatDate = (isoDate) => {
@@ -192,7 +196,11 @@ const EventCard = ({
             }`}
             title={tracking ? "Bỏ thông báo" : "Nhận thông báo khi mở bán"}
           >
-            {tracking ? <BellOff className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
+            {tracking ? (
+              <BellOff className="w-4 h-4" />
+            ) : (
+              <Bell className="w-4 h-4" />
+            )}
           </button>
         )}
         <button
@@ -209,7 +217,11 @@ const EventCard = ({
         >
           <Heart
             size={16}
-            className={isFavorite ? "fill-red-500 text-red-500" : "text-gray-300 hover:text-orange-400"}
+            className={
+              isFavorite
+                ? "fill-red-500 text-red-500"
+                : "text-gray-300 hover:text-orange-400"
+            }
           />
         </button>
       </div>

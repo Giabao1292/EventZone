@@ -24,8 +24,10 @@ import VoucherManagementPage from "./pages/admin/VoucherManagementPage";
 import AdsManagement from "./pages/admin/AdsManagement";
 import RegisterOrganizerForm from "./components/organizer/OrganizerRegistration";
 import PaymentAdsResultPage from "./components/organizer/PaymentAdsResult";
+
 import StatisticsSeatsPage from "./pages/StatisticsSeatsPage";
 import PaymentCancel from "./components/booking/Payment-cancel";
+import PaymentResult from "./components/booking/Payment-result";
 import DepositResult from "./components/organizer/DepositResult";
 import SearchPage from "./pages/SearchPage";
 import VerifyEmail from "./pages/VerifyEmail";
@@ -33,7 +35,7 @@ import PageLoader from "./ui/PageLoader";
 import PrivateRoute from "./ui/PrivateRoute";
 import OrganizerLayout from "./ui/organizer/OrganizerLayout";
 import ReviewPage from "./components/review/ReviewPage";
-import ViewBookingHistory from "./pages/ViewBookingHistory"; 
+import ViewBookingHistory from "./pages/ViewBookingHistory";
 
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() => import("./components/authentication/LoginPage"));
@@ -131,7 +133,10 @@ function App() {
 
               <Route path="create-event" element={<EventCreationForm />} />
               <Route path="edit/:id" element={<EditEventForm />} />
-              <Route path="statistics-seats" element={<StatisticsSeatsPage />} />
+              <Route
+                path="statistics-seats"
+                element={<StatisticsSeatsPage />}
+              />
             </Route>
           </Route>
 
@@ -154,9 +159,6 @@ function App() {
             <Route path="/admin/profile" element={<ProfilePage />} />
           </Route>
           <Route path="/book/:showingId/*" element={<BookingPage />} />
-
-
-
         </Routes>
       </Suspense>
     </BrowserRouter>
