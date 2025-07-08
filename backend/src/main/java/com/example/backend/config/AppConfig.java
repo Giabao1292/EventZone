@@ -63,6 +63,7 @@ public class AppConfig implements WebMvcConfigurer , WebSecurityCustomizer {
                         .authenticationEntryPoint(jwtAuthenticationEntryPoint)
                 )
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
+                        .requestMatchers("/ws/**").permitAll()
                         .requestMatchers(WHITE_LIST).permitAll()
                         .requestMatchers(ORGANIZER_LIST).hasAnyRole("ORGANIZER")
                         .requestMatchers("/api/bookings/history").hasAnyRole("USER", "ADMIN", "ORGANIZER")

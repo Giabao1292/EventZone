@@ -5,6 +5,7 @@ import com.example.backend.dto.request.EventRequest;
 import com.example.backend.dto.request.UpdateStatusEvent;
 import com.example.backend.dto.response.*;
 import com.example.backend.model.Event;
+import com.example.backend.util.StatusOrganizer;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
@@ -32,4 +33,5 @@ public interface EventService {
 
     Event findById(Integer id);
     List<EventHomeDTO> userSearchEvent(String[] search);
+
 }

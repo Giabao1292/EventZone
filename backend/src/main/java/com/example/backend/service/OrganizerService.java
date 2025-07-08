@@ -3,6 +3,7 @@ package com.example.backend.service;
 import com.example.backend.dto.request.OrganizerRequest;
 import com.example.backend.dto.response.*;
 import com.example.backend.model.Organizer;
+import com.example.backend.util.StatusOrganizer;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,4 +26,5 @@ public interface OrganizerService {
 
     Organizer getOrganizerByEmail(String email);
 
+    StatusOrganizer getOrganizerStatus();
 }

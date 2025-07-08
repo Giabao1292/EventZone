@@ -4,6 +4,7 @@ import com.example.backend.dto.request.OrganizerRequest;
 import com.example.backend.dto.response.*;
 import com.example.backend.model.Organizer;
 import com.example.backend.service.OrganizerService;
+import com.example.backend.util.StatusOrganizer;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,4 +52,9 @@ public class OrganizerController {
         return new ResponseData<>(HttpStatus.OK.value(), "Search organizer successfully", organizerService.findAllOrgType());
     }
 
+    @GetMapping("/organizers/status")
+    public ResponseData<?> getOrgStatus(){
+        StatusOrganizer status = organizerService.getOrganizerStatus();
+        return new ResponseData<>(HttpStatus.OK.value(), "Search organizer successfully", status);
+    }
 }

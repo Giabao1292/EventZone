@@ -32,6 +32,7 @@ import VerifyEmail from "./pages/VerifyEmail";
 import PageLoader from "./ui/PageLoader";
 import PrivateRoute from "./ui/PrivateRoute";
 import OrganizerLayout from "./ui/organizer/OrganizerLayout";
+import NotificationSocket from "./pages/NotificationSocket";
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() => import("./components/authentication/LoginPage"));
 const RegisterPage = lazy(() =>
@@ -76,6 +77,7 @@ function App() {
             <Route path="/home" element={<Home />} />
             <Route path="/events/:eventId" element={<EventDetail />} />
             <Route path="/search" element={<SearchPage />} />
+            <Route path="/test" element={<NotificationSocket />} />
           </Route>
 
           {/* Protected Routes for Authenticated Users */}
