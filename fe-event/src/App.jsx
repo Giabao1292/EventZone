@@ -37,7 +37,7 @@ import OrganizerLayout from "./ui/organizer/OrganizerLayout";
 import ReviewPage from "./components/review/ReviewPage";
 import ViewBookingHistory from "./pages/ViewBookingHistory";
 import ReviewManagementPage from "./pages/ReviewManagementPage";
-
+import NotificationSocket from "./pages/NotificationSocket";
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() => import("./components/authentication/LoginPage"));
 const RegisterPage = lazy(() =>
@@ -83,6 +83,7 @@ function App() {
             <Route path="/events/:eventId" element={<EventDetail />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/reviews/:showingTimeId" element={<ReviewPage />} />
+            <Route path="/test" element={<NotificationSocket />} />
           </Route>
 
           {/* Protected Routes for Authenticated Users */}

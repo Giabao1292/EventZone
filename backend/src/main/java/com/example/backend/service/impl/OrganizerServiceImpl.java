@@ -10,8 +10,8 @@ import com.example.backend.model.Organizer;
 import com.example.backend.model.User;
 import com.example.backend.model.UserRole;
 import com.example.backend.repository.*;
+import com.example.backend.service.NotificationService;
 import com.example.backend.service.OrganizerService;
-import com.example.backend.service.UserService;
 import com.example.backend.util.StatusOrganizer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -38,6 +38,7 @@ public class OrganizerServiceImpl implements OrganizerService {
     private final SearchCriteriaRepository searchCriteriaRepository;
     private final OrgTypeRepository orgTypeRepository;
     private final RoleRepository roleRepository;
+    private final NotificationService notificationService;
 
     @Override
     public String uploadPics(MultipartFile file) {
@@ -87,6 +88,7 @@ public class OrganizerServiceImpl implements OrganizerService {
                 .orgLogoUrl(logoUrl)
                 .businessLicenseUrl(businessUrl)
                 .build();
+        notificationService.notifyOrganizerRegistration(user);
         organizerRepository.save(organizer);
     }
 
@@ -184,7 +186,11 @@ public class OrganizerServiceImpl implements OrganizerService {
             userRole.setUser(organizer.getUser());
             userRole.setRole(roleRepository.findByRoleName("ORGANIZER").orElseThrow(() -> new ResourceNotFoundException("Role not found")));
             organizer.getUser().getTblUserRoles().add(userRole);
+            notificationService.notifyRoleApproved(organizer.getUser());
             userRepository.save(organizer.getUser());
+        }
+        else{
+            notificationService.notifyRoleRejected(organizer.getUser());
         }
         organizer.setStatus(StatusOrganizer.valueOf(status));
         organizerRepository.save(organizer);
@@ -196,4 +202,10 @@ public class OrganizerServiceImpl implements OrganizerService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy organizer cho username: " + email));
     }
 
+    @Override
+    public StatusOrganizer getOrganizerStatus(){
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(username).get();
+        return user.getOrganizer().getStatus();
+    }
 }

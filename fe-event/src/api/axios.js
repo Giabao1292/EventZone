@@ -44,7 +44,7 @@ apiClient.interceptors.response.use(
     }
 
     // 2. Chỉ xử lý lỗi 401 VÀ khi có refreshToken
-    if (status === 401 && refreshToken) {
+    if ((status === 401 || status === 403) && refreshToken) {
       originalRequest._retry = true; // Đánh dấu là đã thử lại
 
       try {

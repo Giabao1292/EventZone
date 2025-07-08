@@ -16,4 +16,6 @@ public interface AuthService {
     void handleForgotPassword(String email);
 
     void resetPassword(String token, String newPassword);
+
+    String getUsername();
 }
