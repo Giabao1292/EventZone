@@ -49,6 +49,18 @@ const OrganizerSidebar = () => {
               </span>
             </span>
           </Link>
+
+          <Link
+                  to="/organizer/statistics-seats"
+                  className="group block py-3 px-4 rounded-lg transition-all duration-300 hover:bg-gradient-to-r hover:from-green-600/20 hover:to-blue-600/20 hover:shadow-lg hover:shadow-green-500/25 hover:translate-x-2 border border-transparent hover:border-green-500/30 backdrop-blur-sm"
+                >
+                  <span className="flex items-center space-x-2">
+                    <span className="w-2 h-2 bg-green-400 rounded-full group-hover:animate-pulse"></span>
+                    <span className="group-hover:text-green-300 transition-colors duration-300">
+                      Thống Kê Doanh Thu
+                    </span>
+                  </span>
+          </Link>
         </nav>
       </div>
 

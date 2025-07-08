@@ -24,7 +24,7 @@ import VoucherManagementPage from "./pages/admin/VoucherManagementPage";
 import AdsManagement from "./pages/admin/AdsManagement";
 import RegisterOrganizerForm from "./components/organizer/OrganizerRegistration";
 import PaymentAdsResultPage from "./components/organizer/PaymentAdsResult";
-import PaymentResult from "./components/booking/Payment-result";
+import StatisticsSeatsPage from "./pages/StatisticsSeatsPage";
 import PaymentCancel from "./components/booking/Payment-cancel";
 import DepositResult from "./components/organizer/DepositResult";
 import SearchPage from "./pages/SearchPage";
@@ -131,6 +131,7 @@ function App() {
 
               <Route path="create-event" element={<EventCreationForm />} />
               <Route path="edit/:id" element={<EditEventForm />} />
+              <Route path="statistics-seats" element={<StatisticsSeatsPage />} />
             </Route>
           </Route>
 
