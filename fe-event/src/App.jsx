@@ -25,6 +25,7 @@ import OrganizerEventList from "./components/organizer/OrganizerEventList";
 import EditEventForm from "./components/organizer/EditEventForm";
 import VoucherManagementPage from "./pages/admin/VoucherManagementPage";
 import OrganizerProfile from "./components/organizer/OrganizerProfile";
+import CategoryManagementPage from "./pages/admin/CategoryManagementPage";
 
 import AdsManagement from "./pages/admin/AdsManagement";
 import AdsCreatePage from "./components/organizer/AdsCreatePage";
@@ -132,6 +133,7 @@ function App() {
             <Route path="/admin/dashboard" element={<DashboardPage />} />
             <Route path="/admin/users" element={<UserManagementPage />} />
             <Route path="/admin/vouchers" element={<VoucherManagementPage />} />
+            <Route path="/admin/category-management" element={<CategoryManagementPage />} />
             <Route path="/admin/ads" element={<AdsManagement />} />
             <Route
               path="/admin/organizers"
