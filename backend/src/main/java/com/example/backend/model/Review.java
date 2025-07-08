@@ -5,9 +5,14 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
+import java.util.List;
+import java.util.ArrayList;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+
+
 
 @Getter
 @Setter
@@ -49,5 +54,21 @@ public class Review {
     @ManyToOne
     @JoinColumn(name = "showing_time_id", nullable = false)
     private ShowingTime showingTime;
+
+    @PrePersist
+    public void prePersist() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ReviewReply> replies = new ArrayList<>();
+
 
 }

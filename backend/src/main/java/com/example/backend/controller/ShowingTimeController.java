@@ -53,4 +53,14 @@ public class ShowingTimeController {
         return new ResponseData<>(HttpStatus.CREATED.value(), "Tạo suất chiếu thành công", created);
     }
 
+    @PreAuthorize("hasRole('ORGANIZER')")
+    @GetMapping("/{id}")
+    public ResponseData<ShowingTimeAdmin> getShowingTime(@PathVariable int id) {
+        ShowingTimeAdmin resp = showingTimeService.getShowingTimeById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Suất chiếu không tồn tại"));
+        return new ResponseData<>(200, "OK", resp);
+    }
+
+
+
 }
