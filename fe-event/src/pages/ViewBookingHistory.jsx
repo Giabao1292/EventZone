@@ -1,50 +1,194 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import ViewBookingHistoryService from "../services/ViewBookingHistoryServices"
-import BackgroundEffect from "../ui/BackGround"
-import backgroundImage from "../assets/images/background/background.png"
-import { Input } from "../components/ui/input"
-import { Search, Calendar, Ticket, Clock, User, X, MapPin, CreditCard } from "lucide-react"
+import { useEffect, useState } from "react";
+import ViewBookingHistoryService from "../services/ViewBookingHistoryServices";
+import BackgroundEffect from "../ui/BackGround";
+import backgroundImage from "../assets/images/background/background.png";
+import { Input } from "../components/ui/input";
+import {
+  Search,
+  Calendar,
+  Ticket,
+  Clock,
+  User,
+  X,
+  MapPin,
+  CreditCard,
+} from "lucide-react";
+import QrCodeService from "../services/qrCodeService";
+import jsPDF from "jspdf"; // Import jsPDF
 
 export default function ViewBookingHistory() {
-  const [bookings, setBookings] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [selectedBooking, setSelectedBooking] = useState(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [qrImage, setQrImage] = useState(null);
 
   useEffect(() => {
     const fetchBookings = async () => {
       try {
-        const data = await ViewBookingHistoryService.getBookings()
-        setBookings(data)
+        const data = await ViewBookingHistoryService.getBookings();
+        setBookings(data);
       } catch (err) {
-        console.error("Lỗi khi tải lịch sử đặt vé:", err.message)
+        console.error("Lỗi khi tải lịch sử đặt vé:", err.message);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    fetchBookings()
-  }, [])
+    };
+    fetchBookings();
+  }, []);
 
-  const filteredBookings = bookings.filter((b) => b.eventTitle?.toLowerCase().includes(searchQuery.toLowerCase()))
+  useEffect(() => {
+    const fetchQr = async () => {
+      if (!selectedBooking) return;
+      try {
+        const qrData = await QrCodeService.getQrCodeBase64(
+          selectedBooking.bookingId
+        );
+        setQrImage(qrData);
+      } catch (err) {
+        console.error("Lỗi khi tải QR:", err);
+        setQrImage(null);
+      }
+    };
+
+    fetchQr();
+  }, [selectedBooking]);
+
+  const filteredBookings = bookings.filter((b) =>
+    b.eventTitle?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleViewDetails = (booking) => {
-    setSelectedBooking(booking)
-    setIsModalOpen(true)
-  }
+    setSelectedBooking(booking);
+    setIsModalOpen(true);
+  };
+
+  // Function to generate and download PDF ticket
+  const downloadTicketPDF = () => {
+    if (!selectedBooking || !qrImage) {
+      console.error("No ticket information or QR code available to download.");
+      return;
+    }
+
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
+    });
+
+    // Add fonts (optional: you can add custom fonts for specific characters)
+    // For simplicity, we'll use default fonts.
+
+    // Header
+    doc.setFontSize(20);
+    doc.setTextColor(255, 102, 0); // Orange color
+    doc.text("Event Ticket", 105, 20, { align: "center" });
+    doc.setFontSize(16);
+    doc.setTextColor(0, 0, 0); // Black color
+    doc.text(selectedBooking.eventTitle, 105, 30, { align: "center" });
+
+    // Divider
+    doc.setLineWidth(0.5);
+    doc.setDrawColor(200, 200, 200);
+    doc.line(20, 35, 190, 35);
+
+    // Event Details
+    doc.setFontSize(12);
+    doc.setTextColor(100, 100, 100);
+    doc.text("Event Information", 20, 45);
+
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
+    doc.text(
+      `Venue: ${selectedBooking.venue || "No information available"}`,
+      20,
+      55
+    );
+    doc.text(
+      `Time: ${
+        selectedBooking.showTime
+          ? new Date(selectedBooking.showTime).toLocaleString("en-US")
+          : "No information available"
+      }`,
+      20,
+      65
+    );
+    doc.text(
+      `Booking Date: ${
+        selectedBooking.bookedAt
+          ? new Date(selectedBooking.bookedAt).toLocaleString("en-US")
+          : "No information available"
+      }`,
+      20,
+      75
+    );
+
+    // Booking Details
+    doc.setFontSize(12);
+    doc.setTextColor(100, 100, 100);
+    doc.text("Booking Details", 20, 90);
+
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
+    doc.text(`Quantity: ${selectedBooking.quantity || 1} ticket(s)`, 20, 100);
+    doc.text(
+      `Seat Numbers: ${
+        selectedBooking.seatNumbers?.join(", ") || "No seat information"
+      }`,
+      20,
+      110
+    );
+    doc.text(
+      `Payment: ${selectedBooking.paymentMethod || "Unknown"} (${
+        selectedBooking.paymentStatus || "Unknown"
+      })`,
+      20,
+      120
+    );
+    doc.text(
+      `Total Amount: ${
+        selectedBooking.finalPrice?.toLocaleString() || "0"
+      } VND`,
+      20,
+      130
+    );
+
+    // QR Code
+    if (qrImage) {
+      doc.addImage(qrImage, "PNG", 130, 45, 50, 50); // Position QR code
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      doc.text("Scan QR code to check-in", 130, 100, { align: "center" });
+    }
+
+    // Footer
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text("Thank you for using our service!", 105, 280, {
+      align: "center",
+    });
+
+    // Save the PDF
+    doc.save(
+      `Ticket_${selectedBooking.eventTitle}_${selectedBooking.bookingId}.pdf`
+    );
+  };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900 flex justify-center items-center">
         <div className="text-center bg-gray-800/80 backdrop-blur-sm p-12 rounded-2xl border border-gray-700">
           <div className="animate-spin rounded-full h-16 w-16 border-4 border-orange-500/20 border-t-orange-500 mx-auto mb-6"></div>
-          <h3 className="text-xl font-semibold text-white mb-2">Đang tải dữ liệu</h3>
+          <h3 className="text-xl font-semibold text-white mb-2">
+            Đang tải dữ liệu
+          </h3>
           <p className="text-gray-300">Vui lòng chờ trong giây lát...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -64,7 +208,8 @@ export default function ViewBookingHistory() {
             Danh sách các sự kiện bạn đã đặt vé để dễ dàng theo dõi và quản lý.
           </p>
           <p className="text-orange-400 text-sm">
-            Bạn có thể xóa sự kiện khỏi danh sách bất cứ lúc nào hoặc nhấn vào sự kiện để xem chi tiết.
+            Bạn có thể xóa sự kiện khỏi danh sách bất cứ lúc nào hoặc nhấn vào
+            sự kiện để xem chi tiết.
           </p>
 
           {/* Search Bar */}
@@ -96,7 +241,9 @@ export default function ViewBookingHistory() {
                 )}
               </div>
               <h3 className="text-2xl font-bold text-white mb-4">
-                {searchQuery ? "🔍 Không tìm thấy vé phù hợp" : "🙁 Bạn chưa có vé nào được đặt"}
+                {searchQuery
+                  ? "🔍 Không tìm thấy vé phù hợp"
+                  : "🙁 Bạn chưa có vé nào được đặt"}
               </h3>
               <p className="text-gray-300 text-lg mb-8">
                 {searchQuery
@@ -134,7 +281,7 @@ export default function ViewBookingHistory() {
             {/* Modal Header */}
             <div className="relative">
               <img
-                src={selectedBooking.imageUrl || "/placeholder.svg?height=200&width=600"}
+                src={selectedBooking.imageUrl}
                 alt={selectedBooking.eventTitle}
                 className="w-full h-48 object-cover rounded-t-2xl"
               />
@@ -159,7 +306,9 @@ export default function ViewBookingHistory() {
 
             {/* Modal Content */}
             <div className="p-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">{selectedBooking.eventTitle}</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                {selectedBooking.eventTitle}
+              </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Event Details */}
@@ -172,7 +321,9 @@ export default function ViewBookingHistory() {
                     <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
                     <div>
                       <p className="text-sm text-gray-500">Địa điểm</p>
-                      <p className="font-medium text-gray-900">{selectedBooking.venue || "Chưa có thông tin"}</p>
+                      <p className="font-medium text-gray-900">
+                        {selectedBooking.venue || "Chưa có thông tin"}
+                      </p>
                     </div>
                   </div>
 
@@ -182,7 +333,9 @@ export default function ViewBookingHistory() {
                       <p className="text-sm text-gray-500">Thời gian diễn ra</p>
                       <p className="font-medium text-gray-900">
                         {selectedBooking.showTime
-                          ? new Date(selectedBooking.showTime).toLocaleString("vi-VN")
+                          ? new Date(selectedBooking.showTime).toLocaleString(
+                              "vi-VN"
+                            )
                           : "Chưa có thông tin"}
                       </p>
                     </div>
@@ -194,7 +347,9 @@ export default function ViewBookingHistory() {
                       <p className="text-sm text-gray-500">Ngày đặt vé</p>
                       <p className="font-medium text-gray-900">
                         {selectedBooking.bookedAt
-                          ? new Date(selectedBooking.bookedAt).toLocaleString("vi-VN")
+                          ? new Date(selectedBooking.bookedAt).toLocaleString(
+                              "vi-VN"
+                            )
                           : "Chưa có thông tin"}
                       </p>
                     </div>
@@ -203,13 +358,17 @@ export default function ViewBookingHistory() {
 
                 {/* Booking Details */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2">Chi tiết đặt vé</h3>
+                  <h3 className="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2">
+                    Chi tiết đặt vé
+                  </h3>
 
                   <div className="flex items-start space-x-3">
                     <Ticket className="w-5 h-5 text-gray-400 mt-0.5" />
                     <div>
                       <p className="text-sm text-gray-500">Số lượng vé</p>
-                      <p className="font-medium text-gray-900">{selectedBooking.quantity || 1} vé</p>
+                      <p className="font-medium text-gray-900">
+                        {selectedBooking.quantity || 1} vé
+                      </p>
                     </div>
                   </div>
 
@@ -218,7 +377,8 @@ export default function ViewBookingHistory() {
                     <div>
                       <p className="text-sm text-gray-500">Số ghế</p>
                       <p className="font-medium text-gray-900">
-                        {selectedBooking.seatNumbers?.join(", ") || "Không có thông tin ghế"}
+                        {selectedBooking.seatNumbers?.join(", ") ||
+                          "Không có thông tin ghế"}
                       </p>
                     </div>
                   </div>
@@ -244,7 +404,9 @@ export default function ViewBookingHistory() {
 
                   <div className="bg-gray-50 rounded-lg p-4 mt-4">
                     <div className="flex justify-between items-center">
-                      <span className="text-lg font-semibold text-gray-700">Tổng tiền:</span>
+                      <span className="text-lg font-semibold text-gray-700">
+                        Tổng tiền:
+                      </span>
                       <span className="text-2xl font-bold text-orange-600">
                         {selectedBooking.finalPrice?.toLocaleString() || "0"} đ
                       </span>
@@ -253,9 +415,29 @@ export default function ViewBookingHistory() {
                 </div>
               </div>
 
+              {/* QR Code Section */}
+              <div className="mt-8 border-t border-gray-200 pt-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                  Mã QR Check-in
+                </h3>
+                <div className="flex justify-center">
+                  <img
+                    src={qrImage}
+                    alt="QR Code"
+                    className="w-48 h-48 object-contain border border-gray-300 rounded-lg"
+                  />
+                </div>
+                <p className="text-sm text-gray-500 text-center mt-2">
+                  Quét mã này tại sự kiện để check-in nhanh chóng.
+                </p>
+              </div>
+
               {/* Action Buttons */}
               <div className="flex gap-3 mt-8 pt-6 border-t border-gray-200">
-                <button className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                <button
+                  onClick={downloadTicketPDF} // Call the download function
+                  className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                >
                   Tải vé PDF
                 </button>
                 <button className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 px-6 rounded-lg transition-colors">
@@ -274,7 +456,8 @@ export default function ViewBookingHistory() {
       )}
 
       <style jsx>{`
-        html, body {
+        html,
+        body {
           overflow: visible !important;
         }
         @keyframes fadeInUp {
@@ -297,21 +480,28 @@ export default function ViewBookingHistory() {
         }
       `}</style>
     </div>
-  )
+  );
 }
 
 // Booking Card Component
 const BookingCard = ({ booking, onViewDetails, index }) => {
-  const { eventTitle, imageUrl, venue, showTime, finalPrice, checkinStatus } = booking
+  const {
+    eventTitle,
+    imageUrl,
+    showTime,
+    finalPrice,
+    checkinStatus,
+    seatNumbers,
+  } = booking;
 
   const formatDateTime = (dateStr) => {
-    if (!dateStr) return "Chưa có thông tin"
+    if (!dateStr) return "Chưa có thông tin";
     return new Date(dateStr).toLocaleDateString("vi-VN", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
-    })
-  }
+    });
+  };
 
   return (
     <div
@@ -327,12 +517,9 @@ const BookingCard = ({ booking, onViewDetails, index }) => {
       {/* Image */}
       <div className="relative">
         <img
-          src={imageUrl || "/placeholder.svg?height=200&width=300"}
+          src={imageUrl}
           alt={eventTitle}
           className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-          onError={(e) => {
-            e.target.src = "/placeholder.svg?height=200&width=300"
-          }}
         />
         <div className="absolute top-3 right-3">
           <span
@@ -353,7 +540,7 @@ const BookingCard = ({ booking, onViewDetails, index }) => {
           {eventTitle}
         </h3>
 
-        <div className="space-y-2 text-sm text-gray-300 mb-4">
+        <div className="space-y-2 text-sm text-gray-300">
           <p className="flex items-center">
             <span className="text-green-400 mr-2">💰</span>
             {finalPrice ? `${finalPrice.toLocaleString()} đ` : "Miễn phí"}
@@ -362,10 +549,10 @@ const BookingCard = ({ booking, onViewDetails, index }) => {
             <span className="mr-2">📅</span>
             {formatDateTime(showTime)}
           </p>
-          {booking.seatNumbers && booking.seatNumbers.length > 0 && (
+          {seatNumbers && seatNumbers.length > 0 && (
             <p className="flex items-center">
               <span className="mr-2">🪑</span>
-              {booking.seatNumbers.join(", ")}
+              {seatNumbers.join(", ")}
             </p>
           )}
         </div>
@@ -378,5 +565,5 @@ const BookingCard = ({ booking, onViewDetails, index }) => {
         </button>
       </div>
     </div>
-  )
-}
+  );
+};
