@@ -12,9 +12,6 @@ public class ReviewReplyRequest {
     private Integer reviewId;
 
     @NotNull
-    private Integer organizerId;
-
-    @NotNull
     @Size(min = 1, max = 1000)
     private String content;
 

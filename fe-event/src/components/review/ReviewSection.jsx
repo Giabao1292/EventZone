@@ -197,7 +197,6 @@ const ReviewSection = ({ showingTimeId, canReview }) => {
             }
             const req = {
                 reviewId,
-                organizerId: user.organizer?.id ?? user.organizerId,
                 content: replyContent[reviewId]
             };
             await reviewReplyService.createReply(req);
@@ -223,7 +222,8 @@ const ReviewSection = ({ showingTimeId, canReview }) => {
         try {
             await reviewReplyService.updateReply(
                 reply.id,
-                { reviewId, organizerId: user.organizer?.id ?? user.organizerId, content: editReplyContent }
+                { reviewId,
+                    content: editReplyContent }
             );
             setEditReplyId(null);
             setEditReplyContent("");

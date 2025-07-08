@@ -36,6 +36,7 @@ import PrivateRoute from "./ui/PrivateRoute";
 import OrganizerLayout from "./ui/organizer/OrganizerLayout";
 import ReviewPage from "./components/review/ReviewPage";
 import ViewBookingHistory from "./pages/ViewBookingHistory";
+import ReviewManagementPage from "./pages/ReviewManagementPage";
 
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() => import("./components/authentication/LoginPage"));

@@ -24,12 +24,11 @@ public class ReviewReplyServiceImpl implements ReviewReplyService {
     private final ReviewReplyRepository reviewReplyRepository;
     private final ReviewRepository reviewRepository;
     private final ShowingTimeRepository showingTimeRepository;
-    private final OrganizerRepository organizerRepository; // <- Thêm dòng này
+    private final OrganizerRepository organizerRepository;
 
-    // Lấy Organizer theo email, ném lỗi nếu không tồn tại
-    private Organizer getOrganizerByEmail(String email) {
-        return organizerRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("Organizer không tồn tại"));
+    private Organizer getOrganizerByUserEmail(String email) {
+        return organizerRepository.findByUser_Email(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Organizer không tồn tại cho email: " + email));
     }
 
     @Override
@@ -37,11 +36,11 @@ public class ReviewReplyServiceImpl implements ReviewReplyService {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ResourceNotFoundException("Review không tồn tại"));
 
-        Organizer organizer = getOrganizerByEmail(organizerEmail);
+        Organizer organizer = getOrganizerByUserEmail(organizerEmail);
         ShowingTime showingTime = showingTimeRepository.findById(review.getShowingTime().getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Suất chiếu không tồn tại"));
 
-        if (!showingTime.getOrganizer().getId().equals(organizer.getId())) {
+        if (!showingTime.getEvent().getOrganizer().getId().equals(organizer.getId())) {
             throw new RuntimeException("Bạn không có quyền trả lời review này!");
         }
     }
@@ -55,10 +54,11 @@ public class ReviewReplyServiceImpl implements ReviewReplyService {
             throw new ResourceNotFoundException("Review không tồn tại");
         }
 
-        Organizer organizer = getOrganizerByEmail(organizerEmail);
+        Organizer organizer = getOrganizerByUserEmail(organizerEmail);
         ShowingTime showingTime = showingTimeRepository.findById(review.getShowingTime().getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Suất chiếu không tồn tại"));
-        if (!showingTime.getOrganizer().getId().equals(organizer.getId())) {
+        if (!showingTime.getEvent().getOrganizer().getId().equals(organizer.getId())) {
+
             throw new RuntimeException("Bạn không có quyền thao tác với reply này!");
         }
     }
@@ -67,16 +67,18 @@ public class ReviewReplyServiceImpl implements ReviewReplyService {
     public ReviewReplyResponse createReply(ReviewReplyRequest request, String organizerEmail) {
         Review review = reviewRepository.findById(request.getReviewId())
                 .orElseThrow(() -> new ResourceNotFoundException("Review không tồn tại"));
-        Organizer organizer = getOrganizerByEmail(organizerEmail);
+
+        Organizer organizer = getOrganizerByUserEmail(organizerEmail);
 
         ReviewReply reply = new ReviewReply();
         reply.setReview(review);
         reply.setContent(request.getContent());
-        reply.setOrganizerId(organizer.getId()); // Lưu organizerId thực tế
+        reply.setOrganizer(organizer); // ✅ truyền đối tượng Organizer
 
         ReviewReply saved = reviewReplyRepository.save(reply);
         return mapToResponse(saved);
     }
+
 
     @Override
     public ReviewReplyResponse updateReply(Integer id, ReviewReplyRequest request, String organizerEmail) {
@@ -105,11 +107,11 @@ public class ReviewReplyServiceImpl implements ReviewReplyService {
         ReviewReplyResponse resp = new ReviewReplyResponse();
         resp.setId(reply.getId());
         resp.setReviewId(reply.getReview() != null ? reply.getReview().getId() : null);
-        resp.setOrganizerId(reply.getOrganizerId());
+        resp.setOrganizerId(reply.getOrganizer() != null ? reply.getOrganizer().getId() : null);
         resp.setContent(reply.getContent());
         resp.setCreatedAt(reply.getCreatedAt());
         resp.setUpdatedAt(reply.getUpdatedAt());
         return resp;
     }
-}
 
+}

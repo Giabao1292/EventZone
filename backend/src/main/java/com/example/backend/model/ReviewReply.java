@@ -21,8 +21,10 @@ public class ReviewReply {
     @JoinColumn(name = "review_id", nullable = false)
     private Review review;
 
-    @Column(name = "organizer_id", nullable = false)
-    private Integer organizerId; // Đổi từ Integer sang Long
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "organizer_id")
+    private Organizer organizer;
+
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;

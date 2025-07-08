@@ -145,6 +145,9 @@ public class ReviewServiceImpl implements ReviewService {
         dto.setReviewId(r.getId());
         dto.setShowingTimeId(r.getShowingTime().getId());
         dto.setUserId(r.getUser().getId());
+        if (r.getUser() != null) {
+            dto.setUserEmail(r.getUser().getEmail());
+        }
         dto.setRating(r.getRating());
         dto.setComment(r.getComment());
         dto.setStatus(r.getStatus().name());
