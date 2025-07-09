@@ -26,6 +26,8 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
 
     List<Booking> findByUserIdAndStatus(Integer userId, String status);
 
+    Page<Review> findByShowingTimeId(Integer showingTimeId, Pageable pageable);
+
 
 }
 

@@ -138,6 +138,9 @@ function App() {
                 path="statistics-seats"
                 element={<StatisticsSeatsPage />}
               />
+
+              <Route path="reviews" element={<ReviewManagementPage />} />
+
             </Route>
           </Route>
 

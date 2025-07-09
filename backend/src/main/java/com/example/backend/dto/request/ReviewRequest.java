@@ -13,4 +13,5 @@ public class ReviewRequest {
     private Integer showingTimeId;
     private Integer rating;
     private String comment;
+    private String status;
 }

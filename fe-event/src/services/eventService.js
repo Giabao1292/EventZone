@@ -580,3 +580,17 @@ export const userSearchEvents = async (searchParams = []) => {
     console.error("❌ Lỗi khi tìm kiếm sự kiện:", error);
   }
 };
+
+export const getMyEvents = async (token) => {
+  try {
+    const response = await apiClient.get("/events/myevents", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching my events:", error);
+    return [];
+  }
+};
