@@ -37,6 +37,8 @@ import OrganizerLayout from "./ui/organizer/OrganizerLayout";
 import ReviewPage from "./components/review/ReviewPage";
 import ViewBookingHistory from "./pages/ViewBookingHistory";
 import ReviewManagementPage from "./pages/ReviewManagementPage";
+import AdminReviewManagementPage from "./pages/admin/AdminReviewManagementPage";
+
 
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() => import("./components/authentication/LoginPage"));
@@ -161,6 +163,7 @@ function App() {
             />
             <Route path="/admin/events" element={<EventManagementPage />} />
             <Route path="/admin/profile" element={<ProfilePage />} />
+            <Route path="/admin/reviews" element={<AdminReviewManagementPage />} />
           </Route>
           <Route path="/book/:showingId/*" element={<BookingPage />} />
         </Routes>

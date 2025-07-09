@@ -594,3 +594,20 @@ export const getMyEvents = async (token) => {
     return [];
   }
 };
+
+// Chuẩn hóa gọi tất cả sự kiện cho admin (không phân trang hoặc phân trang lớn)
+export const getAllEvents = async () => {
+  try {
+    const response = await apiClient.get("/events", {
+      params: { page: 0, size: 1000 }
+    });
+    // Trả về mảng cho FE dùng dropdown select
+    return response.data.data?.content || [];
+  } catch (error) {
+    console.error("Error fetching all events:", error);
+    return [];
+  }
+};
+
+
+

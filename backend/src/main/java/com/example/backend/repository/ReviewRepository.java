@@ -28,6 +28,9 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
 
     Page<Review> findByShowingTimeId(Integer showingTimeId, Pageable pageable);
 
+    Page<Review> findByShowingTimeIdAndStatusIn(Integer showingTimeId, List<ReviewStatus> statusList, Pageable pageable);
+
+
 
 }
 

@@ -138,19 +138,29 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     public List<ReviewResponse> getReviewsByShowingTimeForAdmin(Integer showingTimeId, int page, int size, String status) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        ReviewStatus reviewStatus;
-        try {
-            reviewStatus = ReviewStatus.valueOf(status);
-        } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Trạng thái review không hợp lệ: " + status);
+
+        Page<Review> reviewPage;
+
+        if ("all".equalsIgnoreCase(status)) {
+            // Lấy cả active và deleted
+            reviewPage = reviewRepository.findByShowingTimeIdAndStatusIn(showingTimeId,
+                    List.of(ReviewStatus.active, ReviewStatus.deleted), pageable);
+        } else {
+            ReviewStatus reviewStatus;
+            try {
+                reviewStatus = ReviewStatus.valueOf(status);
+            } catch (IllegalArgumentException e) {
+                throw new RuntimeException("Trạng thái review không hợp lệ: " + status);
+            }
+            reviewPage = reviewRepository.findByShowingTimeIdAndStatus(showingTimeId, reviewStatus, pageable);
         }
 
-        Page<Review> reviewPage = reviewRepository.findByShowingTimeIdAndStatus(showingTimeId, reviewStatus, pageable);
         return reviewPage.getContent()
                 .stream()
                 .map(this::toResponseDto)
                 .collect(Collectors.toList());
     }
+
 
     @Override
     public List<Integer> getShowingTimeIdsByUserId(Integer userId) {

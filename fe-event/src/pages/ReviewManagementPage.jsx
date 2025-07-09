@@ -87,8 +87,7 @@ const ReviewManagementPage = () => {
         const fetchReviews = async () => {
             setLoading(true);
             try {
-                // LẤY TẤT CẢ REVIEW (active + deleted) cho organizer!
-                // Nếu cần phân biệt quyền thì chỉnh thêm ở đây.
+                // Lấy tất cả review (active + deleted) cho organizer
                 const reviewList = await reviewService.getReviews(selectedShowingTime, "all");
                 setReviews(reviewList || []);
                 let replyMap = {};
@@ -113,7 +112,7 @@ const ReviewManagementPage = () => {
         fetchReviews();
     }, [selectedShowingTime]);
 
-    // Lọc reviews theo search/star, KHÔNG ẩn review nào khỏi bảng cho organizer
+    // Lọc reviews theo search/star, không ẩn review nào khỏi bảng cho organizer
     const filteredReviews = reviews.filter((r) => {
         const starMatch = filterStar === 0 || r.rating === filterStar;
         const keyword = search.trim().toLowerCase();
@@ -195,6 +194,7 @@ const ReviewManagementPage = () => {
                     <MessageSquareText className="w-10 h-10 text-emerald-500" />
                     Quản lý đánh giá sự kiện
                 </h1>
+
                 {/* Thống kê + biểu đồ */}
                 <div className="grid md:grid-cols-2 gap-8 mb-10">
                     {/* Tổng số review + tỉ lệ */}
@@ -245,6 +245,7 @@ const ReviewManagementPage = () => {
                             ))}
                         </div>
                     </div>
+
                     {/* Biểu đồ cột */}
                     <div className="bg-white rounded-2xl shadow p-7 flex flex-col justify-center">
                         <div className="font-bold text-lg text-emerald-600 mb-2">Biểu đồ số lượng đánh giá theo sao</div>
@@ -259,6 +260,7 @@ const ReviewManagementPage = () => {
                         </ResponsiveContainer>
                     </div>
                 </div>
+
                 {/* Bộ lọc */}
                 <div className="flex flex-wrap gap-8 items-center mb-10 bg-white shadow p-6 rounded-2xl border border-emerald-200">
                     <div className="flex flex-col min-w-[260px]">
@@ -329,6 +331,7 @@ const ReviewManagementPage = () => {
                         />
                     </div>
                 </div>
+
                 {/* Bảng review */}
                 <div className="overflow-x-auto bg-white rounded-2xl shadow-lg border border-emerald-200">
                     <table className="w-full table-fixed text-base text-gray-800">
@@ -382,7 +385,6 @@ const ReviewManagementPage = () => {
                                             ))}
                                         </span>
                                     </td>
-                                    {/* Bình luận + nút ẩn/hiện sát phải */}
                                     <td className="px-4 py-5 whitespace-pre-line">
                                         <div className="flex justify-between items-start gap-2">
                                             <span className="flex-1 break-words">{r.comment}</span>

@@ -20,7 +20,9 @@ import java.util.function.Function;
 
 import static com.example.backend.util.TokenType.ACCESS_TOKEN;
 import static com.example.backend.util.TokenType.REFRESH_TOKEN;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 public class JwtServiceImpl implements JwtService {
 
