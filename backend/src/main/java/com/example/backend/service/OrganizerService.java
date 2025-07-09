@@ -27,4 +27,7 @@ public interface OrganizerService {
     Organizer getOrganizerByEmail(String email);
 
     StatusOrganizer getOrganizerStatus();
+
+    List<BuyerSummaryDTO> getBuyersForCurrentOrganizer();
+
 }

@@ -14,6 +14,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @RestController
 @Slf4j
 @RequestMapping("/api")
@@ -57,4 +59,12 @@ public class OrganizerController {
         StatusOrganizer status = organizerService.getOrganizerStatus();
         return new ResponseData<>(HttpStatus.OK.value(), "Search organizer successfully", status);
     }
+
+    @PreAuthorize("hasRole('ORGANIZER')")
+    @GetMapping("/organizer/view-buyers")
+    public ResponseData<List<BuyerSummaryDTO>> getBuyersForOrganizer() {
+        List<BuyerSummaryDTO> buyers = organizerService.getBuyersForCurrentOrganizer();
+        return new ResponseData<>(HttpStatus.OK.value(), "Danh sách người mua", buyers);
+    }
+
 }

@@ -12,6 +12,7 @@ import com.example.backend.model.UserRole;
 import com.example.backend.repository.*;
 import com.example.backend.service.NotificationService;
 import com.example.backend.service.OrganizerService;
+import com.example.backend.service.UserService;
 import com.example.backend.util.StatusOrganizer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -39,6 +40,7 @@ public class OrganizerServiceImpl implements OrganizerService {
     private final OrgTypeRepository orgTypeRepository;
     private final RoleRepository roleRepository;
     private final NotificationService notificationService;
+    private final BookingRepository bookingRepository;
 
     @Override
     public String uploadPics(MultipartFile file) {
@@ -208,4 +210,15 @@ public class OrganizerServiceImpl implements OrganizerService {
         User user = userRepository.findByEmail(username).get();
         return user.getOrganizer().getStatus();
     }
+
+    @Override
+    public List<BuyerSummaryDTO> getBuyersForCurrentOrganizer() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        Organizer organizer = user.getOrganizer();
+        return bookingRepository.findBuyersByOrganizerId(organizer.getId());
+    }
+
 }
