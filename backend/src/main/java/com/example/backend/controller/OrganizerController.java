@@ -61,6 +61,13 @@ public class OrganizerController {
     }
 
     @PreAuthorize("hasRole('ORGANIZER')")
+    @GetMapping("/organizer/events")
+    public ResponseData<List<EventSummaryDTO>> getEventsByOrganizer() {
+        List<EventSummaryDTO> events = organizerService.getEventsByCurrentOrganizer();
+        return new ResponseData<>(HttpStatus.OK.value(), "Lấy danh sách sự kiện thành công", events);
+    }
+
+    @PreAuthorize("hasRole('ORGANIZER')")
     @GetMapping("/organizer/view-buyers")
     public ResponseData<List<BuyerSummaryDTO>> getBuyersForOrganizer() {
         List<BuyerSummaryDTO> buyers = organizerService.getBuyersForCurrentOrganizer();

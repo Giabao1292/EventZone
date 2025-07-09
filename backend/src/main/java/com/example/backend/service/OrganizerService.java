@@ -30,4 +30,6 @@ public interface OrganizerService {
 
     List<BuyerSummaryDTO> getBuyersForCurrentOrganizer();
 
+    List<EventSummaryDTO> getEventsByCurrentOrganizer();
+
 }

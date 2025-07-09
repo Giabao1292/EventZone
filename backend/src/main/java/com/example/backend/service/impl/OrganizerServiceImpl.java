@@ -5,10 +5,7 @@ import com.cloudinary.utils.ObjectUtils;
 import com.example.backend.dto.request.OrganizerRequest;
 import com.example.backend.dto.response.*;
 import com.example.backend.exception.ResourceNotFoundException;
-import com.example.backend.model.OrgType;
-import com.example.backend.model.Organizer;
-import com.example.backend.model.User;
-import com.example.backend.model.UserRole;
+import com.example.backend.model.*;
 import com.example.backend.repository.*;
 import com.example.backend.service.NotificationService;
 import com.example.backend.service.OrganizerService;
@@ -41,6 +38,8 @@ public class OrganizerServiceImpl implements OrganizerService {
     private final RoleRepository roleRepository;
     private final NotificationService notificationService;
     private final BookingRepository bookingRepository;
+    private final EventRepository eventRepository;
+
 
     @Override
     public String uploadPics(MultipartFile file) {
@@ -219,6 +218,22 @@ public class OrganizerServiceImpl implements OrganizerService {
 
         Organizer organizer = user.getOrganizer();
         return bookingRepository.findBuyersByOrganizerId(organizer.getId());
+    }
+
+    @Override
+    public List<EventSummaryDTO> getEventsByCurrentOrganizer() {
+        Organizer organizer = getCurrentOrganizer(); // dùng helper
+        List<Event> events = eventRepository.findByOrganizer_Id(organizer.getId());
+        return events.stream()
+                .map(EventSummaryDTO::new)
+                .toList();
+    }
+
+    private Organizer getCurrentOrganizer() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        return user.getOrganizer();
     }
 
 }

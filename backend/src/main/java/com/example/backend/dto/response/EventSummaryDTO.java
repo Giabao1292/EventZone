@@ -18,6 +18,7 @@ public class EventSummaryDTO {
     private String description;
     private String location;
     private String date;
+    private LocalDateTime startTime;
     private String imageUrl;
     private String status;
     private String category;
@@ -38,7 +39,7 @@ public class EventSummaryDTO {
         }
         this.location = locationStr;
 
-        this.date = formatDate(event.getStartTime());
+        this.startTime = event.getStartTime();
         this.imageUrl = event.getPosterImage();
         this.status = event.getStatus() != null ? event.getStatus().getStatusName() : null;
         this.category = event.getCategory() != null ? event.getCategory().getCategoryName() : null;
