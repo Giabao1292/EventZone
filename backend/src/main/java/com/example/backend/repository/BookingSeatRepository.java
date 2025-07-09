@@ -28,25 +28,28 @@ public interface BookingSeatRepository extends JpaRepository<BookingSeat, Intege
             @Param("now") LocalDateTime now
     );
     @Query("""
-        SELECT new com.example.backend.dto.response.TicketSalesDTO(
-            e.id,
-            e.eventTitle,
-            COUNT(bs.id),
-            SUM(bs.price * bs.quantity)
-        )
-        FROM BookingSeat bs
-        JOIN bs.seat s
-        JOIN s.showingTime st
-        JOIN st.event e
-        WHERE bs.status = 'HOLD'
-          AND (:eventId IS NULL OR e.id = :eventId)
-          AND (:fromDate IS NULL OR st.startTime >= :fromDate)
-          AND (:toDate IS NULL OR st.startTime <= :toDate)
-        GROUP BY e.id, e.eventTitle
-    """)
+    SELECT new com.example.backend.dto.response.TicketSalesDTO(
+        e.id,
+        e.eventTitle,
+        COUNT(bs.id),
+        SUM(bs.price * bs.quantity)
+    )
+    FROM BookingSeat bs
+    JOIN bs.booking b
+    JOIN b.showingTime st
+    JOIN st.event e
+    WHERE bs.status = 'HOLD'
+      AND e.organizer.id = :organizerId
+      AND (:eventId IS NULL OR e.id = :eventId)
+      AND (:fromDate IS NULL OR st.startTime >= :fromDate)
+      AND (:toDate IS NULL OR st.startTime <= :toDate)
+    GROUP BY e.id, e.eventTitle
+""")
     List<TicketSalesDTO> getTicketSalesSummary(
             @Param("eventId") Integer eventId,
             @Param("fromDate") LocalDateTime fromDate,
-            @Param("toDate") LocalDateTime toDate
+            @Param("toDate") LocalDateTime toDate,
+            @Param("organizerId") Integer organizerId
     );
+
 }
