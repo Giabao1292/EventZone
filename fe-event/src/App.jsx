@@ -28,7 +28,6 @@ import CategoryManagementPage from "./pages/admin/CategoryManagementPage";
 import AdsManagement from "./pages/admin/AdsManagement";
 import RegisterOrganizerForm from "./components/organizer/OrganizerRegistration";
 import PaymentAdsResultPage from "./components/organizer/PaymentAdsResult";
-
 import StatisticsSeatsPage from "./pages/StatisticsSeatsPage";
 import PaymentCancel from "./components/booking/Payment-cancel";
 import PaymentResult from "./components/booking/Payment-result";
@@ -139,6 +138,7 @@ function App() {
 
               <Route path="create-event" element={<EventCreationForm />} />
               <Route path="edit/:id" element={<EditEventForm />} />
+              <Route path="statistics-seats" element={<StatisticsSeatsPage />} />
               <Route
                 path="statistics-seats"
                 element={<StatisticsSeatsPage />}
