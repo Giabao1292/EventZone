@@ -21,9 +21,7 @@ import EventManagementPage from "./pages/admin/EventManagementPage";
 import OrganizerManagementPage from "./pages/admin/OrganizerManagementPage";
 import UserManagementPage from "./pages/admin/UserManagementPage";
 import VoucherManagementPage from "./pages/admin/VoucherManagementPage";
-import OrganizerProfile from "./components/organizer/OrganizerProfile";
 import CategoryManagementPage from "./pages/admin/CategoryManagementPage";
-
 
 import AdsManagement from "./pages/admin/AdsManagement";
 import RegisterOrganizerForm from "./components/organizer/OrganizerRegistration";
@@ -41,6 +39,8 @@ import ReviewPage from "./components/review/ReviewPage";
 import ViewBookingHistory from "./pages/ViewBookingHistory";
 import ReviewManagementPage from "./pages/ReviewManagementPage";
 import AdminWithdrawRequests from "./pages/admin/AdminWithdrawRequests";
+import WithdrawRequestPage from "./components/organizer/WithdrawRequestPage";
+import NotificationSocket from "./ui/NotificationSocket";
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() => import("./components/authentication/LoginPage"));
 const RegisterPage = lazy(() =>
@@ -138,7 +138,10 @@ function App() {
 
               <Route path="create-event" element={<EventCreationForm />} />
               <Route path="edit/:id" element={<EditEventForm />} />
-              <Route path="statistics-seats" element={<StatisticsSeatsPage />} />
+              <Route
+                path="statistics-seats"
+                element={<StatisticsSeatsPage />}
+              />
               <Route
                 path="statistics-seats"
                 element={<StatisticsSeatsPage />}
@@ -157,7 +160,10 @@ function App() {
             <Route path="/admin/dashboard" element={<DashboardPage />} />
             <Route path="/admin/users" element={<UserManagementPage />} />
             <Route path="/admin/vouchers" element={<VoucherManagementPage />} />
-            <Route path="/admin/category-management" element={<CategoryManagementPage />} />
+            <Route
+              path="/admin/category-management"
+              element={<CategoryManagementPage />}
+            />
             <Route path="/admin/ads" element={<AdsManagement />} />
             <Route path="/admin/withdraw" element={<AdminWithdrawRequests />} />
             <Route
