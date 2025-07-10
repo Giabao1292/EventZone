@@ -1,7 +1,9 @@
 package com.example.backend.repository;
 
 
+import com.example.backend.dto.response.BuyerSummaryDTO;
 import com.example.backend.model.Booking;
+import com.example.backend.model.PaymentStatus;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,7 +17,22 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface BookingRepository extends JpaRepository<Booking, Integer> {
+    @EntityGraph(attributePaths = {
+            "tblBookingSeats",
+            "tblBookingSeats.seat",          // ⚠️ PHẢI CÓ DÒNG NÀY
+            "tblBookingSeats.zone",          // nếu có zone
+            "showingTime",
+            "showingTime.event",
+            "showingTime.address"
+    })
     List<Booking> findByUserId(Integer userId);
+
+    @EntityGraph(attributePaths = {
+            "showingTime",
+            "showingTime.event",
+            "showingTime.address"
+    })
+    List<Booking> findByUserEmail(String email);
 
     default void deleteExpiredHolds(LocalDateTime expirationTime) {
         List<Booking> expiredBookings = findAllByPaymentStatusAndCreatedDatetimeBefore("HOLD", expirationTime);
@@ -43,4 +60,37 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
 
     @EntityGraph(attributePaths = {"tblBookingSeats"})
     List<Booking> findByShowingTimeStartTimeAndShowingTimeEventId(LocalDateTime startTime, int eventId);
+
+    List<Booking> findByUserEmailAndPaymentStatus(String email, String paymentStatus);
+
+    boolean existsByShowingTime_IdAndUser_Id(Integer showingTimeId, Integer userId);
+
+    List<Booking> findByUserIdAndPaymentStatus(Integer userId, String paymentStatus);
+
+
+    @Query("SELECT b.showingTime.id FROM Booking b WHERE b.user.id = :userId AND b.paymentStatus = 'CONFIRMED'")
+    List<Integer> findConfirmedShowingTimeIdsByUserId(@Param("userId") Integer userId);
+
+    @Query("""
+    SELECT new com.example.backend.dto.response.BuyerSummaryDTO(
+        u.fullName,
+        u.email,
+        u.phone,
+        e.eventTitle,
+        b.createdDatetime,
+        SUM(bs.quantity),
+        b.finalPrice
+    )
+    FROM Booking b
+    JOIN b.user u
+    JOIN b.tblBookingSeats bs
+    JOIN b.showingTime st
+    JOIN st.event e
+    WHERE e.organizer.id = :organizerId
+      AND b.paymentStatus = 'CONFIRMED'
+    GROUP BY u.fullName, u.email, u.phone, e.eventTitle, b.createdDatetime, b.finalPrice
+""")
+    List<BuyerSummaryDTO> findBuyersByOrganizerId(@Param("organizerId") Integer organizerId);
+
+    List<Booking> findByShowingTimeIdAndPaymentStatus(Integer showingTimeId, String paymentStatus);
 }

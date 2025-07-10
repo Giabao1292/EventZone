@@ -69,4 +69,8 @@ public class ShowingTime {
     @OneToMany(mappedBy = "showingTime", cascade = CascadeType.ALL)
     @JsonManagedReference
     private Set<Booking> bookings = new HashSet<>();
+
+    @OneToMany(mappedBy = "showingTime", cascade = CascadeType.ALL)
+    private Set<Review> reviews = new HashSet<>();
+
 }

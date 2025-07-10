@@ -105,6 +105,15 @@ public class User implements UserDetails, Serializable {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private Set<UserVoucher> tblUserVouchers = new LinkedHashSet<>();
 
+    @OneToMany(mappedBy = "user")
+    private Set<Notification> tblNotifications = new LinkedHashSet<>();
+
+    @ManyToMany
+    @JoinTable(name = "tbl_user_wishlist",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "event_id"))
+    private Set<Event> tblEvents = new LinkedHashSet<>();
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return tblUserRoles.stream()
@@ -142,5 +151,9 @@ public class User implements UserDetails, Serializable {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<TrackingEventUpcoming> trackingEvents = new LinkedHashSet<>();
+
+    public User(Integer id) {
+        this.id = id;
+    }
 
 }

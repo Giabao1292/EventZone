@@ -243,4 +243,21 @@ public  class ShowingTimeServiceImpl implements ShowingTimeService {
         return showingTimeRepository.save(st);
     }
 
+    @Override
+    public Optional<ShowingTimeAdmin> getShowingTimeById(int id) {
+        return showingTimeRepository.findById(id).map(st -> {
+            ShowingTimeAdmin dto = new ShowingTimeAdmin();
+            dto.setId(st.getId());
+            dto.setEvent_id(st.getEvent().getId());
+            // Nếu có organizer trong event, set vào
+            dto.setOrganizerId(st.getEvent().getOrganizer() != null ? st.getEvent().getOrganizer().getId() : null);
+            dto.setStartTime(st.getStartTime());
+            dto.setEndTime(st.getEndTime());
+            dto.setSaleOpenTime(st.getSaleOpenTime());
+            dto.setSaleCloseTime(st.getSaleCloseTime());
+            return dto;
+        });
+    }
+
+
 }

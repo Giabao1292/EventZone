@@ -3,6 +3,7 @@ package com.example.backend.service.impl;
 import com.example.backend.dto.request.BookingRequest;
 import com.example.backend.dto.response.AnalyticAttendeesResponse;
 import com.example.backend.dto.response.AttendeeResponse;
+import com.example.backend.dto.response.BookingHistoryDTO;
 import com.example.backend.dto.response.PageResponse;
 import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.model.*;
@@ -17,11 +18,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import vn.payos.PayOS;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -39,6 +40,7 @@ import static com.example.backend.util.CheckIn.CHECKED_IN;
 public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
+    private final UserRepository userRepository;
     private final ShowingTimeRepository showingTimeRepository;
     private final SeatRepository seatRepository;
     private final ZoneRepository zoneRepository;
@@ -87,7 +89,7 @@ public class BookingServiceImpl implements BookingService {
                     throw new RuntimeException("Not enough tickets in zone: " + zone.getZoneName());
                 }
 
-                // ✅ Trừ luôn số lượng vé zone
+                // Trừ luôn số lượng vé zone
                 zone.setCapacity(zone.getCapacity() - dto.getQuantity());
                 zoneRepository.save(zone);
 
@@ -201,5 +203,32 @@ public class BookingServiceImpl implements BookingService {
                 .averageAttendees(averageAttendees)
                 .numberOfAttendees(bookings.size())
                 .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<BookingHistoryDTO> getBookingHistory(String username) {
+        List<Booking> bookings = bookingRepository.findByUserEmail(username);
+
+        return bookings.stream()
+                .map(BookingHistoryDTO::new)
+                .toList();
+    }
+
+
+    @Override
+    public List<Integer> getShowingTimeIdsByUserId(Integer userId) {
+        return bookingRepository.findConfirmedShowingTimeIdsByUserId(userId);
+    }
+
+    @Override
+    public List<Booking> findByUserIdAndPaymentStatus(Integer userId, String paymentStatus) {
+        return bookingRepository.findByUserIdAndPaymentStatus(userId, paymentStatus);
+    }
+
+
+    @Override
+    public List<Integer> getConfirmedShowingTimeIdsByUserId(Integer userId) {
+        return bookingRepository.findConfirmedShowingTimeIdsByUserId(userId);
     }
 }

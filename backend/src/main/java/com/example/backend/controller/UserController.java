@@ -6,9 +6,7 @@ import com.example.backend.dto.request.OnCreate;
 import com.example.backend.dto.request.UserRequestDTO;
 import com.example.backend.dto.request.UserUpdateRequest;
 import com.example.backend.dto.response.*;
-import com.example.backend.model.Event;
 import com.example.backend.model.User;
-import com.example.backend.model.Wishlist;
 import com.example.backend.repository.RoleRepository;
 import com.example.backend.repository.UserRoleRepository;
 import com.example.backend.service.JwtService;
@@ -26,11 +24,9 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
+import java.io.IOException;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
@@ -61,26 +57,18 @@ public class UserController {
 
     @GetMapping("/profile")
     public ResponseData<UserDetailResponse> getProfile(HttpServletRequest request) {
-        try {
-            String username = extractToken(request);
-            User user = userService.findByUsername(username);
-            // Chuyển entity sang DTO
-            UserDetailResponse dto = new UserDetailResponse();
-            dto.setFullname(user.getFullName());
-            dto.setEmail(user.getEmail());
-            dto.setUsername(user.getUsername());
-            dto.setPhone(user.getPhone());
-            dto.setProfileUrl(user.getProfileUrl());
-            dto.setDateOfBirth(user.getDateOfBirth());
-            dto.setId(user.getId());
-            return new ResponseData<>(HttpStatus.OK.value(), "Profile retrieved successfully", dto);
-        } catch (IllegalArgumentException e) {
-            return new ResponseData<>(HttpStatus.BAD_REQUEST.value(), e.getMessage());
-        } catch (RuntimeException e) {
-            return new ResponseData<>(HttpStatus.NOT_FOUND.value(), e.getMessage());
-        } catch (Exception e) {
-            return new ResponseData<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Failed to get profile: " + e.getMessage());
-        }
+        String username = extractToken(request);
+        User user = userService.findByUsername(username);
+        // Chuyển entity sang DTO
+        UserDetailResponse dto = new UserDetailResponse();
+        dto.setFullname(user.getFullName());
+        dto.setEmail(user.getEmail());
+        dto.setUsername(user.getUsername());
+        dto.setPhone(user.getPhone());
+        dto.setProfileUrl(user.getProfileUrl());
+        dto.setDateOfBirth(user.getDateOfBirth());
+        dto.setId(user.getId());
+        return new ResponseData<>(HttpStatus.OK.value(), "Profile retrieved successfully", dto);
     }
 
 
@@ -88,46 +76,29 @@ public class UserController {
     public ResponseData<UserDetailResponse> updateProfile(
             @RequestBody UserUpdateRequest updateRequest,
             HttpServletRequest request) {
-        try {
-            String username = extractToken(request);
-            userService.updateProfileByUsername(username, updateRequest);
-            User updatedUser = userService.findByUsername(username);
+        String username = extractToken(request);
+        userService.updateProfileByUsername(username, updateRequest);
+        User updatedUser = userService.findByUsername(username);
+        // Chuyển sang DTO
+        UserDetailResponse dto = new UserDetailResponse();
+        dto.setFullname(updatedUser.getFullName());
+        dto.setEmail(updatedUser.getEmail());
+        dto.setUsername(updatedUser.getUsername());
+        dto.setProfileUrl(updatedUser.getProfileUrl());
+        dto.setPhone(updatedUser.getPhone());
+        dto.setDateOfBirth(updatedUser.getDateOfBirth());
 
-            // Chuyển sang DTO
-            UserDetailResponse dto = new UserDetailResponse();
-            dto.setFullname(updatedUser.getFullName());
-            dto.setEmail(updatedUser.getEmail());
-            dto.setUsername(updatedUser.getUsername());
-            dto.setProfileUrl(updatedUser.getProfileUrl());
-            dto.setPhone(updatedUser.getPhone());
-            dto.setDateOfBirth(updatedUser.getDateOfBirth());
-
-            return new ResponseData<>(HttpStatus.OK.value(), "Profile updated successfully", dto);
-        } catch (IllegalArgumentException e) {
-            return new ResponseData<>(HttpStatus.BAD_REQUEST.value(), e.getMessage());
-        } catch (RuntimeException e) {
-            return new ResponseData<>(HttpStatus.NOT_FOUND.value(), e.getMessage());
-        } catch (Exception e) {
-            return new ResponseData<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error updating profile: " + e.getMessage());
-        }
+        return new ResponseData<>(HttpStatus.OK.value(), "Profile updated successfully", dto);
     }
 
     @PostMapping("/avatar")
     public ResponseData<String> updateAvatar(
             @RequestParam("file") MultipartFile file,
             HttpServletRequest request
-    ) {
-        try {
-            String username = extractToken(request);
-            String imageUrl = userService.updateAvatar(username, file, cloudinary);
-            return new ResponseData<>(HttpStatus.OK.value(), "Avatar updated successfully", imageUrl);
-        } catch (IllegalArgumentException e) {
-            return new ResponseData<>(HttpStatus.BAD_REQUEST.value(), e.getMessage());
-        } catch (RuntimeException e) {
-            return new ResponseData<>(HttpStatus.NOT_FOUND.value(), e.getMessage());
-        } catch (Exception e) {
-            return new ResponseData<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Failed to upload avatar: " + e.getMessage());
-        }
+    ) throws IOException {
+        String username = extractToken(request);
+        String imageUrl = userService.updateAvatar(username, file, cloudinary);
+        return new ResponseData<>(HttpStatus.OK.value(), "Avatar updated successfully", imageUrl);
     }
 
     @PutMapping("/change-password")
@@ -141,53 +112,33 @@ public class UserController {
     }
 
     @PostMapping("/wishlist/{eventId}")
-    public ResponseData<String> addToWishlist(@PathVariable Integer eventId) {
-        try {
-            String username = SecurityContextHolder.getContext().getAuthentication().getName();
-            String result = wishlistService.addToWishlist(username, eventId);
-            return new ResponseData<>(HttpStatus.OK.value(), result);
-        } catch (NoSuchElementException e) {
-            return new ResponseData<>(HttpStatus.NOT_FOUND.value(), e.getMessage());
-        } catch (Exception e) {
-            return new ResponseData<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    "Failed to add to wishlist: " + e.getMessage());
-        }
+    public ResponseData<String> addToWishlist(
+            @PathVariable Integer eventId) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        userService.addToWishlist(username, eventId);
+        return new ResponseData<>(HttpStatus.OK.value(), "Added to wishlist");
+
     }
 
     @DeleteMapping("/wishlist/{eventId}")
-    public ResponseData<String> removeFromWishlist(@PathVariable Integer eventId) {
-        try {
-            String username = SecurityContextHolder.getContext().getAuthentication().getName();
-            String result = wishlistService.removeFromWishlist(username, eventId);
-            return new ResponseData<>(HttpStatus.OK.value(), result);
-        } catch (NoSuchElementException e) {
-            return new ResponseData<>(HttpStatus.NOT_FOUND.value(), e.getMessage());
-        } catch (Exception e) {
-            return new ResponseData<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    "Failed to remove from wishlist: " + e.getMessage());
-        }
+    public ResponseData<String> removeFromWishlist(
+            @PathVariable Integer eventId, HttpServletRequest request) {
+        // giống add nhưng gọi removeToWishlist
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        userService.removeFromWishlist(username, eventId);
+        return new ResponseData<>(HttpStatus.OK.value(), "Removed from wishlist");
     }
 
     @GetMapping("/wishlist")
-    public ResponseData<List<EventSummaryDTO>> getWishlist() {
-        try {
-            String username = SecurityContextHolder.getContext().getAuthentication().getName();
+    public ResponseData<Set<EventSummaryDTO>> getWishlist() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();      // đã hard-code hoặc lấy từ JWT
+        Set<EventSummaryDTO> wishlist = userService.getWishlist(username);
 
-            List<Wishlist> wishlists = wishlistService.getWishlist(username); // ✅ đúng kiểu
-
-            List<EventSummaryDTO> dtos = wishlists.stream()
-                    .map(Wishlist::getEvent) // Lấy Event từ Wishlist
-                    .map(EventSummaryDTO::new) // Chuyển Event sang DTO
-                    .collect(Collectors.toList());
-
-            return new ResponseData<>(HttpStatus.OK.value(), "Wishlist fetched", dtos);
-        } catch (NoSuchElementException e) {
-            return new ResponseData<>(HttpStatus.NOT_FOUND.value(), e.getMessage());
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseData<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    "Failed to fetch wishlist: " + e.getMessage());
-        }
+        return new ResponseData<>(
+                HttpStatus.OK.value(),
+                "Wishlist fetched",
+                wishlist
+        );
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -196,32 +147,37 @@ public class UserController {
         PageResponse<UserResponseDTO> userList = userService.getListUser(pageable, search);
         return new ResponseData<>(HttpStatus.OK.value(), "Get list user succesfully!", userList);
     }
+
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseData<?> createUser(@Validated(OnCreate.class) @Valid @RequestBody UserRequestDTO userRequestDTO) {
         userService.createUser(userRequestDTO);
         return new ResponseData<>(HttpStatus.OK.value(), "User created successfully");
     }
+
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
-    public ResponseData<?> updateUser(@PathVariable Integer id, @Valid @RequestBody UserRequestDTO userRequestDTO){
+    public ResponseData<?> updateUser(@PathVariable Integer id, @Valid @RequestBody UserRequestDTO userRequestDTO) {
         userService.updateUser(id, userRequestDTO);
         return new ResponseData<>(HttpStatus.OK.value(), "User updated successfully");
     }
+
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
-    public ResponseData<?> deleteUser(@PathVariable Integer id){
+    public ResponseData<?> deleteUser(@PathVariable Integer id) {
         userService.deleteUser(id);
         return new ResponseData<>(HttpStatus.OK.value(), "Inactive user successfully");
     }
+
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/roles")
     public ResponseData<?> getRoleName() {
         return new ResponseData<>(HttpStatus.OK.value(), "Get list user succesfully!", userService.getListRole());
     }
+
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/roles")
-    public ResponseData<?> addRole(@RequestBody Map<String, Object> role){
+    public ResponseData<?> addRole(@RequestBody Map<String, Object> role) {
         userService.createRole(role.get("role").toString());
         return new ResponseData<>(HttpStatus.OK.value(), "Role created successfully");
     }

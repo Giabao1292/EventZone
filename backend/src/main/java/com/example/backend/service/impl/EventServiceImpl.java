@@ -1,5 +1,8 @@
+
 package com.example.backend.service.impl;
 
+import com.example.backend.dto.projection.EventMinPriceProjection;
+import com.example.backend.dto.request.EventHomeDTO;
 import com.example.backend.dto.request.EventRequest;
 import com.example.backend.dto.request.ShowingTimeRequest;
 import com.example.backend.dto.request.UpdateStatusEvent;
@@ -8,16 +11,20 @@ import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.model.*;
 import com.example.backend.repository.*;
 import com.example.backend.service.EventService;
+import com.example.backend.util.StatusOrganizer;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PutMapping;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,6 +40,7 @@ public class EventServiceImpl implements EventService {
     private final SearchCriteriaRepository searchCriteriaRepository;
 
     private final AddressRepository addressRepository;
+    private final UserRepository userRepository;
 
 
     @Override
@@ -348,9 +356,6 @@ public class EventServiceImpl implements EventService {
         return eventRepository.findByOrganizer_IdAndStatus_Id(organizerId, statusId);
     }
 
-
-
-
     @Override
     public void updateStatus(UpdateStatusEvent status, int eventId) {
         Event event = eventRepository.findById(eventId).orElseThrow(() -> new ResourceNotFoundException("Event not found"));
@@ -366,6 +371,63 @@ public class EventServiceImpl implements EventService {
     public Event findById(Integer id) {
         return eventRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found with id = " + id));
+    }
+
+    public List<EventHomeDTO> userSearchEvent(String[] search) {
+
+        List<Event> events = search != null &&  search.length != 0 ? searchCriteriaRepository.userSearchEvent(search) : eventRepository.findAll();
+
+        List<Event> filteredEvents = events.stream().filter(event ->
+        {
+            return event.getStatus().getStatusName().equals("APPROVED") && ((event.getEndTime() != null && !event.getEndTime().isBefore(LocalDateTime.now())) || (event.getStartTime() != null && !event.getStartTime().isBefore(LocalDateTime.now())));
+        }).toList();
+        List<EventMinPriceProjection> minPriceProjections = eventRepository.findMinPriceByEventIds(filteredEvents.stream().map(event -> event.getId().longValue()).toList());
+
+        //Map giúp tìm kiếm lowestPrice với O(1)
+        Map<Long, Double> priceMap = minPriceProjections.stream().collect(Collectors.toMap(EventMinPriceProjection::getEventId, EventMinPriceProjection::getMinPrice));
+        return filteredEvents.stream().map(event-> new EventHomeDTO(event, priceMap.get(event.getId().longValue()))).toList();
+    }
+
+
+    @Override
+    public FeaturedEventResponse getFeaturedEventsForHome() {
+        LocalDateTime now = LocalDateTime.now();
+        List<Event> allEvents = eventRepository.findApprovedEventsWithShowingsAndSeats();
+
+        // Lọc ongoing
+        List<EventHomeDTO> ongoing = allEvents.stream()
+                .filter(e -> e.getTblShowingTimes() != null && !e.getTblShowingTimes().isEmpty())
+                .filter(e -> e.getTblShowingTimes().stream().anyMatch(st ->
+                        st.getSaleOpenTime() != null && st.getSaleCloseTime() != null &&
+                                !now.isBefore(st.getSaleOpenTime()) && !now.isAfter(st.getSaleCloseTime())
+                ))
+                .map(event -> {
+                    double minPrice = event.getTblShowingTimes().stream()
+                            .flatMap(st -> st.getSeats().stream())
+                            .mapToDouble(seat -> seat.getPrice().doubleValue())
+                            .min()
+                            .orElse(0.0);
+                    return new EventHomeDTO(event, minPrice);
+                })
+                .collect(Collectors.toList());
+
+        // Lọc upcoming
+        List<EventHomeDTO> upcoming = allEvents.stream()
+                .filter(e -> e.getTblShowingTimes() != null && !e.getTblShowingTimes().isEmpty())
+                .filter(e -> e.getTblShowingTimes().stream().allMatch(st ->
+                        st.getSaleOpenTime() != null && now.isBefore(st.getSaleOpenTime())
+                ))
+                .map(event -> {
+                    double minPrice = event.getTblShowingTimes().stream()
+                            .flatMap(st -> st.getSeats().stream())
+                            .mapToDouble(seat -> seat.getPrice().doubleValue())
+                            .min()
+                            .orElse(0.0);
+                    return new EventHomeDTO(event, minPrice);
+                })
+                .collect(Collectors.toList());
+
+        return new FeaturedEventResponse(ongoing, upcoming);
     }
 
 }

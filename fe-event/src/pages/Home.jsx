@@ -252,8 +252,12 @@ export default function Home() {
               <EventCard
                 key={ev.id}
                 event={ev}
+                isUpcoming={true}
                 isFavorite={wishlistEventIds.has(ev.id)}
                 onToggleFavorite={toggleFavorite}
+                onToggleTrack={(eventId, isTracking) => {
+                  console.log(`Event ${eventId} tracking: ${isTracking}`);
+                }}
               />
             ))}
           </div>

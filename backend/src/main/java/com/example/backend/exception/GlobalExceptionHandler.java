@@ -1,5 +1,6 @@
 package com.example.backend.exception;
 
+import io.jsonwebtoken.JwtException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -65,6 +66,11 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleBadCredentials(Exception ex, WebRequest request) {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, "Bad Credentials", "Wrong username or password", request);
+    }
+    @ExceptionHandler(JwtException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ErrorResponse handleJwtException(JwtException ex, WebRequest request) {
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Access denied", ex.getMessage(), request);
     }
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)

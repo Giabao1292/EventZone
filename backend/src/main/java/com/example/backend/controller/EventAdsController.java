@@ -40,11 +40,8 @@ public class EventAdsController {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         try {
-            // 1. Tạo quảng cáo (tương tự logic trong holdAds)
-            EventAds saved = eventAdsService.holdAds(request, user); // Hoặc tạo hàm mới để lưu quảng cáo
+            EventAds saved = eventAdsService.holdAds(request, user);
             Integer adsId = saved.getId();
-
-            // 2. Tạo link thanh toán
             String checkoutUrl;
             String paymentMethod = request.getPaymentMethod();
              Integer amount = request.getTotalPrice().intValue();

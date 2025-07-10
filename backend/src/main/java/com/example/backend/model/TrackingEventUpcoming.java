@@ -3,6 +3,7 @@ package com.example.backend.model;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -27,5 +28,5 @@ public class TrackingEventUpcoming {
     private Event event;
 
     @Column(name = "tracking_time", nullable = false)
-    private Instant trackingTime;
+    private LocalDateTime trackingTime;
 }
