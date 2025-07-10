@@ -21,6 +21,10 @@ import EventManagementPage from "./pages/admin/EventManagementPage";
 import OrganizerManagementPage from "./pages/admin/OrganizerManagementPage";
 import UserManagementPage from "./pages/admin/UserManagementPage";
 import VoucherManagementPage from "./pages/admin/VoucherManagementPage";
+import OrganizerProfile from "./components/organizer/OrganizerProfile";
+import CategoryManagementPage from "./pages/admin/CategoryManagementPage";
+
+
 import AdsManagement from "./pages/admin/AdsManagement";
 import RegisterOrganizerForm from "./components/organizer/OrganizerRegistration";
 import PaymentAdsResultPage from "./components/organizer/PaymentAdsResult";
@@ -153,6 +157,7 @@ function App() {
             <Route path="/admin/dashboard" element={<DashboardPage />} />
             <Route path="/admin/users" element={<UserManagementPage />} />
             <Route path="/admin/vouchers" element={<VoucherManagementPage />} />
+            <Route path="/admin/category-management" element={<CategoryManagementPage />} />
             <Route path="/admin/ads" element={<AdsManagement />} />
             <Route path="/admin/withdraw" element={<AdminWithdrawRequests />} />
             <Route

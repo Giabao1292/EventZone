@@ -140,6 +140,22 @@ export default function SidebarNavigation() {
             <li className="sidebar-item">
               <a
                 className={`sidebar-link gap-3 py-2.5 my-1 text-base flex items-center relative rounded-md w-full ${
+                  pathname === "/admin/category-management"
+                    ? "text-blue-600 bg-blue-50"
+                    : "text-gray-500"
+                }`}
+                href="/admin/category-management"
+              >
+                <i className="ti ti-folder ps-2 text-2xl text-yellow-500"></i>
+                <span>Category Management</span>
+              </a>
+            </li>
+
+
+
+            <li className="sidebar-item">
+              <a
+                className={`sidebar-link gap-3 py-2.5 my-1 text-base flex items-center relative rounded-md w-full ${
                   pathname === "/components/forms"
                     ? "text-blue-600 bg-blue-50"
                     : "text-gray-500"
