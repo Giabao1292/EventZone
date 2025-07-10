@@ -38,6 +38,7 @@ import ReviewPage from "./components/review/ReviewPage";
 import ViewBookingHistory from "./pages/ViewBookingHistory";
 import ReviewManagementPage from "./pages/ReviewManagementPage";
 import AdminReviewManagementPage from "./pages/admin/AdminReviewManagementPage";
+import AttendeeManager from "./components/organizer/AttendeeManager";
 
 
 const Home = lazy(() => import("./pages/Home"));
@@ -142,6 +143,8 @@ function App() {
               />
 
               <Route path="reviews" element={<ReviewManagementPage />} />
+              <Route path="attendees/:eventId" element={<AttendeeManager />} />
+
 
             </Route>
           </Route>

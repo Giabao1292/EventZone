@@ -21,4 +21,7 @@ public class AttendeeResponse {
     private int numberOfSeats;
     private Instant checkInTime;
     private CheckIn checkInStatus;
+
+    private String seatLabels;
+    private String zoneNames;
 }

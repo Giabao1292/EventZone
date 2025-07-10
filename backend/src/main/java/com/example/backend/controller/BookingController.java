@@ -4,6 +4,7 @@
     import com.example.backend.dto.request.BookingRequest;
     import com.example.backend.dto.response.BookingHistoryDTO;
     import com.example.backend.dto.response.ResponseData;
+    import com.example.backend.exception.ResourceNotFoundException;
     import com.example.backend.model.Booking;
     import com.example.backend.model.User;
     import com.example.backend.repository.BookingRepository;
@@ -123,6 +124,8 @@
             bookingService.checkIn(bookingId);
             return new ResponseData<>(HttpStatus.OK.value(), "Check in successful");
         }
+
+
 
         @GetMapping("/history")
         public ResponseData<List<BookingHistoryDTO>> getBookingHistory(HttpServletRequest request) {

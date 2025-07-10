@@ -17,6 +17,7 @@ public class BookingHistoryDTO {
     private String eventTitle;
     private String venue;
     private LocalDateTime showTime;
+    private LocalDateTime endTime;
     private LocalDateTime bookedAt;
     private BigDecimal finalPrice;
     private String paymentMethod;
@@ -55,6 +56,10 @@ public class BookingHistoryDTO {
         // Lấy thời gian chiếu
         this.showTime = booking.getShowingTime() != null
                 ? booking.getShowingTime().getStartTime()
+                : null;
+
+        this.endTime = booking.getShowingTime() != null
+                ? booking.getShowingTime().getEndTime()
                 : null;
 
         this.bookedAt = booking.getCreatedDatetime();

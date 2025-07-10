@@ -15,6 +15,8 @@ import {
   MapPin,
   CreditCard,
 } from "lucide-react";
+
+import QrCodeService from "../services/qrCodeService";
 import jsPDF from "jspdf";
 
 import ReviewSection from "../components/review/ReviewSection";
@@ -54,15 +56,16 @@ export default function ViewBookingHistory() {
       } catch (err) {
         setQrImage(null);
         console.error("Lỗi khi tải QR:", err);
+        setQrImage(null);
       }
     };
     fetchQr();
   }, [selectedBooking]);
 
   // Hàm kiểm tra sự kiện đã kết thúc chưa
-  const isEventEnded = (showTime) => {
-    if (!showTime) return false;
-    return new Date(showTime) < new Date();
+  const isEventEnded = (endTime) => {
+    if (!endTime) return false;
+    return new Date(endTime) < new Date();
   };
 
   const filteredBookings = bookings.filter((b) =>
@@ -169,12 +172,15 @@ export default function ViewBookingHistory() {
       doc.text("Scan QR code to check-in", 130, 100, { align: "center" });
     }
 
+    //footer
     doc.setFontSize(8);
     doc.setTextColor(150, 150, 150);
     doc.text("Thank you for using our service!", 105, 280, {
       align: "center",
     });
 
+
+    //save the PDF
     doc.save(
         `Ticket_${selectedBooking.eventTitle}_${selectedBooking.bookingId}.pdf`
     );
@@ -330,6 +336,7 @@ export default function ViewBookingHistory() {
                 </span>
                   </div>
                 </div>
+
                 {/* Modal Content */}
                 <div className="p-6">
                   <h2 className="text-2xl font-bold text-gray-900 mb-6">
@@ -341,6 +348,7 @@ export default function ViewBookingHistory() {
                       <h3 className="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2">
                         Thông tin sự kiện
                       </h3>
+
                       <div className="flex items-start space-x-3">
                         <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
                         <div>
@@ -350,6 +358,7 @@ export default function ViewBookingHistory() {
                           </p>
                         </div>
                       </div>
+
                       <div className="flex items-start space-x-3">
                         <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
                         <div>
@@ -361,6 +370,7 @@ export default function ViewBookingHistory() {
                           </p>
                         </div>
                       </div>
+
                       <div className="flex items-start space-x-3">
                         <Clock className="w-5 h-5 text-gray-400 mt-0.5" />
                         <div>
@@ -373,6 +383,7 @@ export default function ViewBookingHistory() {
                         </div>
                       </div>
                     </div>
+
                     {/* Booking Details */}
                     <div className="space-y-4">
                       <h3 className="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2">
@@ -387,6 +398,7 @@ export default function ViewBookingHistory() {
                           </p>
                         </div>
                       </div>
+
                       <div className="flex items-start space-x-3">
                         <User className="w-5 h-5 text-gray-400 mt-0.5" />
                         <div>
@@ -396,6 +408,7 @@ export default function ViewBookingHistory() {
                           </p>
                         </div>
                       </div>
+
                       <div className="flex items-start space-x-3">
                         <CreditCard className="w-5 h-5 text-gray-400 mt-0.5" />
                         <div>
@@ -414,6 +427,7 @@ export default function ViewBookingHistory() {
                           </p>
                         </div>
                       </div>
+
                       <div className="bg-gray-50 rounded-lg p-4 mt-4">
                         <div className="flex justify-between items-center">
                           <span className="text-lg font-semibold text-gray-700">Tổng tiền:</span>
@@ -424,6 +438,7 @@ export default function ViewBookingHistory() {
                       </div>
                     </div>
                   </div>
+
                   {/* QR Code Section */}
                   <div className="mt-8 border-t border-gray-200 pt-6">
                     <h3 className="text-lg font-semibold text-gray-800 mb-4">Mã QR Check-in</h3>
@@ -438,6 +453,7 @@ export default function ViewBookingHistory() {
                       Quét mã này tại sự kiện để check-in nhanh chóng.
                     </p>
                   </div>
+
                   {/* Action Buttons */}
                   <div className="flex gap-3 mt-8 pt-6 border-t border-gray-200">
                     <button
@@ -495,6 +511,7 @@ const BookingCard = ({ booking, onViewDetails, onOpenReview, isEventEnded, index
     eventTitle,
     imageUrl,
     showTime,
+    endTime,
     finalPrice,
     checkinStatus,
     seatNumbers,
@@ -573,7 +590,7 @@ const BookingCard = ({ booking, onViewDetails, onOpenReview, isEventEnded, index
               Chi tiết
             </button>
 
-            {paymentStatus === "CONFIRMED" && isEventEnded(showTime) && (
+            {paymentStatus === "CONFIRMED" && isEventEnded(endTime) && (
                 <button
                     onClick={() => onOpenReview(booking)}
                     className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg border border-blue-500/70 transition-colors"

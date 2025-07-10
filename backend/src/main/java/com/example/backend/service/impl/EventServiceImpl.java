@@ -207,6 +207,7 @@ public class EventServiceImpl implements EventService {
         Page<Integer> eventIds = eventRepository.findAllEventIds(pageable);
         return new PageImpl<>(eventRepository.findAllEventByIds(eventIds.getContent()), pageable, eventIds.getTotalElements());
     }
+
     @Override
     public PageResponse<EventSummaryAdmin> searchEvent(Pageable pageable, String... search) {
 
