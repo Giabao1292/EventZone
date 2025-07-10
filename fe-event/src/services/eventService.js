@@ -532,7 +532,6 @@ export const getEventStats = (events) => {
       draft: 0,
     };
   } catch (error) {
-    console.error("Error calculating event stats:", error);
     return {
       total: 0,
       pending: 0,
@@ -571,12 +570,14 @@ export const userSearchEvents = async (searchParams = []) => {
     const url = queryString
       ? `/events/public?${queryString}`
       : "/events/public";
-
-    console.log("🔍 API Call:", url);
-
     const response = await apiClient.get(url);
     return response.data.data || [];
   } catch (error) {
     console.error("❌ Lỗi khi tìm kiếm sự kiện:", error);
+    return {
+      code: 500,
+      data: [],
+      message: "Lỗi khi tìm kiếm sự kiện",
+    };
   }
 };
