@@ -491,9 +491,13 @@ export const getMyEvents = async (token) => {
         Authorization: `Bearer ${token}`,
       },
     });
-    return response.data.data;
+    return response.data.data || [];
   } catch (error) {
-    console.error("Error fetching my events:", error);
-    return [];
+    console.error("❌ Lỗi khi lấy danh sách sự kiện của tôi:", error);
+    return {
+      code: error.response?.status || 500,
+      data: [],
+      message: "Lỗi khi lấy danh sách sự kiện của tôi",
+    };
   }
 };

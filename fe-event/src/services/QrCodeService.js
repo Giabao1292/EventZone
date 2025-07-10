@@ -13,3 +13,4 @@ const QrCodeService = {
 };
 
 export default QrCodeService;
+

@@ -224,9 +224,7 @@ const EventCreationForm = () => {
         setCurrentStep((prev) => prev + 1);
       }
     } catch (err) {
-      console.error("Lỗi:", err);
-      const message =
-        err?.message || "Lỗi khi lưu dữ liệu. Vui lòng kiểm tra lại.";
+      const message = "Lỗi khi lưu dữ liệu. Vui lòng kiểm tra lại.";
       toast.error(message);
     } finally {
       setLoading(false);
