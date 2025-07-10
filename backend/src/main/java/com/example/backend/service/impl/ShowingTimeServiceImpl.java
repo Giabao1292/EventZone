@@ -11,7 +11,6 @@ import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.model.*;
 import com.example.backend.repository.*;
 import com.example.backend.service.ShowingTimeService;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -34,6 +33,8 @@ public  class ShowingTimeServiceImpl implements ShowingTimeService {
     private final EventRepository eventRepo;
 
     private final AddressRepository addressRepo;
+
+    private final BookingRepository bookingRepo;
 
 
     @Override
@@ -207,18 +208,32 @@ public  class ShowingTimeServiceImpl implements ShowingTimeService {
         return showingTimeRepository.save(st);
     }
 
+
     @Override
     public List<ShowingTimeAdmin> getListShowingTime(int eventId) {
-        List<ShowingTime> showingTimes = eventRepo.findById(eventId).get().getTblShowingTimes().stream().toList();
+        // Lấy event từ repository
+        Event event = eventRepo.findById(eventId).orElse(null);
+        if (event == null) return List.of(); // Nếu không có event thì trả list rỗng
+
+        // Lấy organizerId từ event (chính là người tạo event này)
+        Integer organizerId = event.getOrganizer() != null ? event.getOrganizer().getId() : null;
+
+        // Lấy danh sách suất chiếu từ event
+        List<ShowingTime> showingTimes = event.getTblShowingTimes().stream().toList();
+
+        // Map sang DTO
         return showingTimes.stream().map(showingTime -> ShowingTimeAdmin.builder()
-                .id(showingTime.getId())
-                .event_id(eventId)
-                .startTime(showingTime.getStartTime())
-                .endTime(showingTime.getEndTime())
-                .saleCloseTime(showingTime.getStartTime())
-                .saleOpenTime(showingTime.getSaleOpenTime())
-                .build()).toList();
+                        .id(showingTime.getId())
+                        .event_id(eventId)
+                        .organizerId(organizerId) // <- Đúng chỗ này!
+                        .startTime(showingTime.getStartTime())
+                        .endTime(showingTime.getEndTime())
+                        .saleOpenTime(showingTime.getSaleOpenTime())
+                        .saleCloseTime(showingTime.getSaleCloseTime())
+                        .build())
+                .toList();
     }
+
 
     @Override
     public ShowingTime createShowingTime(UpdateShowingTimeRequest req) {
@@ -260,4 +275,11 @@ public  class ShowingTimeServiceImpl implements ShowingTimeService {
     }
 
 
+
+
+
 }
+
+
+
+

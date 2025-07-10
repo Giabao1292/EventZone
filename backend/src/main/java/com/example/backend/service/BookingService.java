@@ -34,4 +34,6 @@ public interface BookingService {
 
     List<Integer> getConfirmedShowingTimeIdsByUserId(Integer userId);
 
+
+
 }

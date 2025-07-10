@@ -197,7 +197,7 @@ public class EventController {
     }
 
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'ADMIN')")
     @GetMapping
     public ResponseData<PageResponse<EventSummaryAdmin>> searchEvent(Pageable pageable, @RequestParam(name = "search", required = false) String... search) {
         PageResponse<EventSummaryAdmin> listEvents = eventService.searchEvent(pageable, search);

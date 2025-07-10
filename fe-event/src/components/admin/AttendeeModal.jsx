@@ -20,12 +20,12 @@ import {
 import { Badge } from "../../components/ui/badge";
 
 const AttendeeModal = ({
-  isOpen,
-  onClose,
-  attendee,
-  onCheckIn,
-  isCheckingIn,
-}) => {
+                         isOpen,
+                         onClose,
+                         attendee,
+                         onCheckIn,
+                         isCheckingIn,
+                       }) => {
   if (!isOpen || !attendee) return null;
 
   const getCheckInStatusBadge = (status) => {
@@ -50,117 +50,135 @@ const AttendeeModal = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <Card className="w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <QrCode className="w-5 h-5" />
-            Thông tin người tham dự
-          </CardTitle>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            <X className="w-4 h-4" />
-          </Button>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Header với tên và trạng thái */}
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold">{attendee.fullName}</h2>
-            {getCheckInStatusBadge(attendee.checkInStatus)}
-          </div>
-
-          {/* Thông tin cơ bản */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <Mail className="w-5 h-5 text-blue-600" />
-                <div>
-                  <p className="text-sm text-gray-600">Email</p>
-                  <p className="font-medium">{attendee.email}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Phone className="w-5 h-5 text-green-600" />
-                <div>
-                  <p className="text-sm text-gray-600">Số điện thoại</p>
-                  <p className="font-medium">{attendee.phone}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <QrCode className="w-5 h-5 text-purple-600" />
-                <div>
-                  <p className="text-sm text-gray-600">Mã QR</p>
-                  <p className="font-medium font-mono">{attendee.qrToken}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Users className="w-5 h-5 text-orange-600" />
-                <div>
-                  <p className="text-sm text-gray-600">Số ghế</p>
-                  <p className="font-medium">{attendee.numberOfSeats} ghế</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Thông tin thời gian */}
-          <div className="border-t pt-4 space-y-3">
-            <h3 className="font-semibold text-lg">Thông tin thời gian</h3>
-
-            {attendee.paidAt && (
-              <div className="flex items-center gap-3">
-                <Calendar className="w-5 h-5 text-green-600" />
-                <div>
-                  <p className="text-sm text-gray-600">Thời gian thanh toán</p>
-                  <p className="font-medium">
-                    {formatDateTime(attendee.paidAt)}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {attendee.checkInTime && (
-              <div className="flex items-center gap-3">
-                <Clock className="w-5 h-5 text-blue-600" />
-                <div>
-                  <p className="text-sm text-gray-600">Thời gian check-in</p>
-                  <p className="font-medium">
-                    {formatDateTime(attendee.checkInTime)}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Actions */}
-          <div className="border-t pt-4 flex gap-3">
-            {attendee.checkInStatus === "NOT_CHECKED_IN" && (
-              <Button
-                onClick={() => onCheckIn(attendee.id)}
-                disabled={isCheckingIn}
-                className="flex-1"
-              >
-                <UserCheck className="w-4 h-4 mr-2" />
-                {isCheckingIn ? "Đang check-in..." : "Check-in"}
-              </Button>
-            )}
-
-            <Button
-              variant="outline"
-              onClick={() => alert(`Gửi email cho ${attendee.fullName}`)}
-              className="flex-1"
-            >
-              <Mail className="w-4 h-4 mr-2" />
-              Gửi email
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <Card className="w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <QrCode className="w-5 h-5" />
+              Thông tin người tham dự
+            </CardTitle>
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              <X className="w-4 h-4" />
             </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Header với tên và trạng thái */}
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">{attendee.fullName}</h2>
+              {getCheckInStatusBadge(attendee.checkInStatus)}
+            </div>
+
+            {/* Thông tin cơ bản */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <Mail className="w-5 h-5 text-blue-600" />
+                  <div>
+                    <p className="text-sm text-gray-600">Email</p>
+                    <p className="font-medium">{attendee.email}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <Phone className="w-5 h-5 text-green-600" />
+                  <div>
+                    <p className="text-sm text-gray-600">Số điện thoại</p>
+                    <p className="font-medium">{attendee.phone || "Chưa có"}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <QrCode className="w-5 h-5 text-purple-600" />
+                  <div>
+                    <p className="text-sm text-gray-600">Mã QR</p>
+                    <p className="font-medium font-mono">{attendee.qrToken}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <Users className="w-5 h-5 text-orange-600" />
+                  <div>
+                    <p className="text-sm text-gray-600">Số ghế</p>
+                    <p className="font-medium">{attendee.numberOfSeats} ghế</p>
+                  </div>
+                </div>
+
+                {/* Hiển thị Ghế cụ thể nếu có */}
+                {attendee.seatLabels && attendee.seatLabels.trim() !== "" && (
+                    <div className="flex items-center gap-3">
+                      <Users className="w-5 h-5 text-yellow-600" />
+                      <div>
+                        <p className="text-sm text-gray-600">Ghế cụ thể</p>
+                        <p className="font-medium">{attendee.seatLabels}</p>
+                      </div>
+                    </div>
+                )}
+
+                {/* Hiển thị Khu vực nếu có */}
+                {attendee.zoneNames && attendee.zoneNames.trim() !== "" && (
+                    <div className="flex items-center gap-3">
+                      <Users className="w-5 h-5 text-cyan-600" />
+                      <div>
+                        <p className="text-sm text-gray-600">Khu vực</p>
+                        <p className="font-medium">{attendee.zoneNames}</p>
+                      </div>
+                    </div>
+                )}
+              </div>
+            </div>
+
+            {/* Thông tin thời gian */}
+            <div className="border-t pt-4 space-y-3">
+              <h3 className="font-semibold text-lg">Thông tin thời gian</h3>
+
+              {attendee.paidAt && (
+                  <div className="flex items-center gap-3">
+                    <Calendar className="w-5 h-5 text-green-600" />
+                    <div>
+                      <p className="text-sm text-gray-600">Thời gian thanh toán</p>
+                      <p className="font-medium">{formatDateTime(attendee.paidAt)}</p>
+                    </div>
+                  </div>
+              )}
+
+              {attendee.checkInTime && (
+                  <div className="flex items-center gap-3">
+                    <Clock className="w-5 h-5 text-blue-600" />
+                    <div>
+                      <p className="text-sm text-gray-600">Thời gian check-in</p>
+                      <p className="font-medium">{formatDateTime(attendee.checkInTime)}</p>
+                    </div>
+                  </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="border-t pt-4 flex gap-3">
+              {attendee.checkInStatus === "NOT_CHECKED_IN" && (
+                  <Button
+                      onClick={() => onCheckIn(attendee.id)}
+                      disabled={isCheckingIn}
+                      className="flex-1"
+                  >
+                    <UserCheck className="w-4 h-4 mr-2" />
+                    {isCheckingIn ? "Đang check-in..." : "Check-in"}
+                  </Button>
+              )}
+
+              <Button
+                  variant="outline"
+                  onClick={() => alert(`Gửi email cho ${attendee.fullName}`)}
+                  className="flex-1"
+              >
+                <Mail className="w-4 h-4 mr-2" />
+                Gửi email
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
   );
 };
 

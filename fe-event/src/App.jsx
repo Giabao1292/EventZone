@@ -40,6 +40,10 @@ import OrganizerLayout from "./ui/organizer/OrganizerLayout";
 import ReviewPage from "./components/review/ReviewPage";
 import ViewBookingHistory from "./pages/ViewBookingHistory";
 import ReviewManagementPage from "./pages/ReviewManagementPage";
+import AdminReviewManagementPage from "./pages/admin/AdminReviewManagementPage";
+import AttendeeManager from "./components/organizer/AttendeeManager";
+
+
 import AdminWithdrawRequests from "./pages/admin/AdminWithdrawRequests";
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() => import("./components/authentication/LoginPage"));
@@ -143,6 +147,9 @@ function App() {
                 path="statistics-seats"
                 element={<StatisticsSeatsPage />}
               />
+
+              <Route path="reviews" element={<ReviewManagementPage />} />
+              <Route path="attendees/:eventId" element={<AttendeeManager />} />
               <Route path="withdraw" element={<WithdrawRequestPage />} />
             </Route>
           </Route>
@@ -166,6 +173,7 @@ function App() {
             />
             <Route path="/admin/events" element={<EventManagementPage />} />
             <Route path="/admin/profile" element={<ProfilePage />} />
+            <Route path="/admin/reviews" element={<AdminReviewManagementPage />} />
           </Route>
           <Route path="/book/:showingId/*" element={<BookingPage />} />
         </Routes>

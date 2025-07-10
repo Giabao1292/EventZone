@@ -1,6 +1,7 @@
 package com.example.backend.repository;
 
 import com.example.backend.dto.response.TicketSalesDTO;
+import com.example.backend.model.Booking;
 import com.example.backend.model.BookingSeat;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -73,4 +74,7 @@ public interface BookingSeatRepository extends JpaRepository<BookingSeat, Intege
             @Param("fromDate") LocalDateTime fromDate,
             @Param("toDate") LocalDateTime toDate
     );
+
+
+
 }

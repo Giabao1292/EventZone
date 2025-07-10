@@ -15,6 +15,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface BookingRepository extends JpaRepository<Booking, Integer> {
     @EntityGraph(attributePaths = {
@@ -70,6 +71,12 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
 
     @Query("SELECT b.showingTime.id FROM Booking b WHERE b.user.id = :userId AND b.paymentStatus = 'CONFIRMED'")
     List<Integer> findConfirmedShowingTimeIdsByUserId(@Param("userId") Integer userId);
+
+    @Query("SELECT b FROM Booking b WHERE b.showingTime.id = :showingTimeId AND b.paymentStatus = :status")
+    List<Booking> findByShowingTimeIdAndPaymentStatus(Integer showingTimeId, String status);
+
+    List<Booking> findByShowingTimeId(Integer showingTimeId);
+
 
     @Query("""
     SELECT new com.example.backend.dto.response.BuyerSummaryDTO(
