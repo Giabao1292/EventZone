@@ -5,13 +5,11 @@ import com.cloudinary.utils.ObjectUtils;
 import com.example.backend.dto.request.OrganizerRequest;
 import com.example.backend.dto.response.*;
 import com.example.backend.exception.ResourceNotFoundException;
-import com.example.backend.model.OrgType;
-import com.example.backend.model.Organizer;
-import com.example.backend.model.User;
-import com.example.backend.model.UserRole;
+import com.example.backend.model.*;
 import com.example.backend.repository.*;
 import com.example.backend.service.NotificationService;
 import com.example.backend.service.OrganizerService;
+import com.example.backend.service.UserService;
 import com.example.backend.util.StatusOrganizer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -39,6 +37,9 @@ public class OrganizerServiceImpl implements OrganizerService {
     private final OrgTypeRepository orgTypeRepository;
     private final RoleRepository roleRepository;
     private final NotificationService notificationService;
+    private final BookingRepository bookingRepository;
+    private final EventRepository eventRepository;
+
 
     @Override
     public String uploadPics(MultipartFile file) {
@@ -208,4 +209,31 @@ public class OrganizerServiceImpl implements OrganizerService {
         User user = userRepository.findByEmail(username).get();
         return user.getOrganizer().getStatus();
     }
+
+    @Override
+    public List<BuyerSummaryDTO> getBuyersForCurrentOrganizer() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        Organizer organizer = user.getOrganizer();
+        return bookingRepository.findBuyersByOrganizerId(organizer.getId());
+    }
+
+    @Override
+    public List<EventSummaryDTO> getEventsByCurrentOrganizer() {
+        Organizer organizer = getCurrentOrganizer(); // dùng helper
+        List<Event> events = eventRepository.findByOrganizer_Id(organizer.getId());
+        return events.stream()
+                .map(EventSummaryDTO::new)
+                .toList();
+    }
+
+    private Organizer getCurrentOrganizer() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        return user.getOrganizer();
+    }
+
 }
