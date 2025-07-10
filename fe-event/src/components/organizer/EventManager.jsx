@@ -199,19 +199,21 @@ export default function EventManager() {
 
                   {/* APPROVED: nút Quảng cáo */}
                   {event.status === "APPROVED" && (
-                    <Link
-                      to={`/organizer/ads/create/${event.id}`}
-                      className="mt-4 flex items-center justify-center gap-1 text-sm font-semibold bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-xl shadow hover:shadow-lg transition"
-                    >
-                      📢 Quảng cáo
-                    </Link>
-                  )}
-
-                  {/* PENDING: hiển thị thông báo */}
-                  {event.status === "PENDING" && (
-                    <p className="mt-4 text-sm italic text-yellow-300 text-center">
-                      ⏳ Sự kiện đang chờ duyệt
-                    </p>
+                      <div className="flex gap-2 mt-4">
+                        <Link
+                            to={`/organizer/ads/create/${event.id}`}
+                            className="flex-1 flex items-center justify-center gap-1 text-sm font-semibold bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-xl shadow hover:shadow-lg transition"
+                        >
+                          📢 Quảng cáo
+                        </Link>
+                        <Link
+                            to={`/organizer/attendees/${event.id}`}
+                            state={{ eventTitle: event.title }} // Nếu muốn truyền eventTitle
+                            className="flex-1 flex items-center justify-center gap-1 text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl shadow hover:shadow-lg transition"
+                        >
+                          👥 Người tham dự
+                        </Link>
+                      </div>
                   )}
                 </div>
               </div>

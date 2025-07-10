@@ -522,3 +522,4 @@ const EventApprovalModal = ({ event, isOpen, onClose, onSuccess }) => {
   );
 };
 export default EventApprovalModal;
+

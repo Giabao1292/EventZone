@@ -47,7 +47,7 @@ const ReviewPage = () => {
 
                 <ReviewSection
                     showingTimeId={showingTimeId}
-                    canReview={canReview}
+                    canReview={false}
                     user={user}
                 />
 

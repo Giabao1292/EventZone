@@ -1,6 +1,7 @@
 package com.example.backend.repository;
 
 import com.example.backend.dto.response.TicketSalesDTO;
+import com.example.backend.model.Booking;
 import com.example.backend.model.BookingSeat;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -52,5 +53,29 @@ public interface BookingSeatRepository extends JpaRepository<BookingSeat, Intege
             @Param("toDate") LocalDateTime toDate,
             @Param("organizerId") Integer organizerId
     );
+
+
+        SELECT new com.example.backend.dto.response.TicketSalesDTO(
+            e.id,
+            e.eventTitle,
+            COUNT(bs.id),
+            SUM(bs.price * bs.quantity)
+        )
+        FROM BookingSeat bs
+        JOIN bs.seat s
+        JOIN s.showingTime st
+        JOIN st.event e
+        WHERE bs.status = 'HOLD'
+          AND (:eventId IS NULL OR e.id = :eventId)
+          AND (:fromDate IS NULL OR st.startTime >= :fromDate)
+          AND (:toDate IS NULL OR st.startTime <= :toDate)
+        GROUP BY e.id, e.eventTitle
+    """)
+    List<TicketSalesDTO> getTicketSalesSummary(
+            @Param("eventId") Integer eventId,
+            @Param("fromDate") LocalDateTime fromDate,
+            @Param("toDate") LocalDateTime toDate
+    );
+
 
 }

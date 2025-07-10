@@ -207,8 +207,9 @@ const EventDetail = () => {
               const now = new Date();
               const saleOpen = new Date(st.saleOpenTime);
               const saleClose = new Date(st.saleCloseTime);
+              const endTime = new Date(st.endTime); // <--- Thêm dòng này
               const isBeforeSale = now < saleOpen;
-              const isAfterSale = now > saleClose;
+              const isAfterEnd = now > endTime;     // <--- Thay đổi logic
               const canReview = user && confirmedShowings.includes(st.id);
 
               return (
@@ -227,7 +228,7 @@ const EventDetail = () => {
                           Vé chưa mở bán. Vui lòng quay lại sau.
                         </p>
                     )}
-                    {isAfterSale ? (
+                    {isAfterEnd ? ( // <--- Chỉ khi kết thúc mới xem đánh giá
                         <>
                           <p className="text-red-600 font-semibold">
                             Sự kiện đã kết thúc. Không thể mua vé.

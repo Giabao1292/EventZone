@@ -32,6 +32,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static com.example.backend.util.CheckIn.CHECKED_IN;
 
@@ -40,7 +41,6 @@ import static com.example.backend.util.CheckIn.CHECKED_IN;
 public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
-    private final UserRepository userRepository;
     private final ShowingTimeRepository showingTimeRepository;
     private final SeatRepository seatRepository;
     private final ZoneRepository zoneRepository;
@@ -156,32 +156,51 @@ public class BookingServiceImpl implements BookingService {
         List<Booking> bookings = bookingRepository.findBookingById(ids.getContent());
         return new PageImpl<>(bookings, pageable, ids.getTotalElements());
     }
+
     @Override
     public PageResponse<AttendeeResponse> searchAttendees(Pageable pageable, int eventId, LocalDateTime startTime, String[] search) {
-        Page<Booking> bookingPage = search != null && search.length != 0 ?  searchCriteriaRepository.searchAttendees(pageable, eventId, startTime, search) : findAll(pageable, eventId, startTime);
-        List<AttendeeResponse> attendeeResponseList = bookingPage.getContent().stream().map(
-                booking -> {
-                    return AttendeeResponse.builder()
-                            .id(booking.getId().intValue())
-                            .phone(booking.getUser().getPhone())
-                            .email(booking.getUser().getEmail())
-                            .fullName(booking.getUser().getFullName())
-                            .checkInStatus(booking.getCheckinStatus())
-                            .checkInTime(booking.getCheckinTime())
-                            .numberOfSeats(booking.getTblBookingSeats().size())
-                            .paidAt(booking.getPaidAt())
-                            .qrToken(booking.getQrToken())
-                            .build();
-                }
-        ).toList();
+        Page<Booking> bookingPage = search != null && search.length != 0
+                ? searchCriteriaRepository.searchAttendees(pageable, eventId, startTime, search)
+                : findAll(pageable, eventId, startTime);
+
+        List<AttendeeResponse> attendeeResponseList = bookingPage.getContent().stream().map(booking -> {
+            String seatLabels = booking.getTblBookingSeats().stream()
+                    .filter(bs -> bs.getSeat() != null)
+                    .map(bs -> bs.getSeat().getSeatLabel())
+                    .distinct()
+                    .collect(Collectors.joining(", "));
+
+            String zoneNames = booking.getTblBookingSeats().stream()
+                    .filter(bs -> bs.getZone() != null)
+                    .map(bs -> bs.getZone().getZoneName())
+                    .distinct()
+                    .collect(Collectors.joining(", "));
+
+            return AttendeeResponse.builder()
+                    .id(booking.getId().intValue())
+                    .phone(booking.getUser().getPhone())
+                    .email(booking.getUser().getEmail())
+                    .fullName(booking.getUser().getFullName())
+                    .checkInStatus(booking.getCheckinStatus())
+                    .checkInTime(booking.getCheckinTime())
+                    .numberOfSeats(booking.getTblBookingSeats().size())
+                    .paidAt(booking.getPaidAt())
+                    .qrToken(booking.getQrToken())
+                    .seatLabels(seatLabels)
+                    .zoneNames(zoneNames)
+                    .build();
+        }).toList();
+
         return PageResponse.<AttendeeResponse>builder()
-                .totalElements((int)bookingPage.getTotalElements())
+                .totalElements((int) bookingPage.getTotalElements())
                 .number(bookingPage.getNumber())
                 .size(bookingPage.getSize())
                 .totalPages(bookingPage.getTotalPages())
                 .content(attendeeResponseList)
                 .build();
     }
+
+
 
     @Override
     public void checkIn(Integer id) {
@@ -231,4 +250,5 @@ public class BookingServiceImpl implements BookingService {
     public List<Integer> getConfirmedShowingTimeIdsByUserId(Integer userId) {
         return bookingRepository.findConfirmedShowingTimeIdsByUserId(userId);
     }
+
 }

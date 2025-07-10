@@ -53,7 +53,7 @@ export const AuthProvider = ({ children }) => {
   const login = (data) => {
     const { accessToken, ...userData } = data;
 
-    saveToken(accessToken);
+    // saveToken(accessToken);
     saveToken(accessToken);
 
     const roles = userData.roles || [];
@@ -92,9 +92,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={authValue}>
-      {loading ? <PageLoader /> : children}
-    </AuthContext.Provider>
+      <AuthContext.Provider value={authValue}>
+        {loading ? <PageLoader /> : children}
+      </AuthContext.Provider>
   );
 };
 
