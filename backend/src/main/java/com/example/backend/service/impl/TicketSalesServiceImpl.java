@@ -27,8 +27,6 @@ public class TicketSalesServiceImpl implements TicketSalesService {
         Integer organizerId = currentUser.getOrganizer().getId();
 
         return bookingSeatRepository.getTicketSalesSummary(eventId, fromDate, toDate, organizerId);
-    }
 
-        return bookingSeatRepository.getTicketSalesSummary(eventId, fromDate, toDate);
     }
 }

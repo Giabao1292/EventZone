@@ -28,6 +28,7 @@ public interface BookingSeatRepository extends JpaRepository<BookingSeat, Intege
             @Param("showingTimeId") Integer showingTimeId,
             @Param("now") LocalDateTime now
     );
+
     @Query("""
     SELECT new com.example.backend.dto.response.TicketSalesDTO(
         e.id,
@@ -53,6 +54,7 @@ public interface BookingSeatRepository extends JpaRepository<BookingSeat, Intege
             @Param("organizerId") Integer organizerId
     );
 
+
         SELECT new com.example.backend.dto.response.TicketSalesDTO(
             e.id,
             e.eventTitle,
@@ -74,7 +76,6 @@ public interface BookingSeatRepository extends JpaRepository<BookingSeat, Intege
             @Param("fromDate") LocalDateTime fromDate,
             @Param("toDate") LocalDateTime toDate
     );
-
 
 
 }
