@@ -117,4 +117,7 @@ public class Event {
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<TrackingEventUpcoming> trackingUsers = new LinkedHashSet<>();
 
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL)
+    @JsonManagedReference
+    private List<WithdrawRequest> withdrawRequests;
 }

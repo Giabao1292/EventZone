@@ -70,5 +70,5 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
     @Query("SELECT b.showingTime.id FROM Booking b WHERE b.user.id = :userId AND b.paymentStatus = 'CONFIRMED'")
     List<Integer> findConfirmedShowingTimeIdsByUserId(@Param("userId") Integer userId);
 
-
+    List<Booking> findByShowingTimeIdAndPaymentStatus(Integer showingTimeId, String paymentStatus);
 }
