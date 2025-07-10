@@ -37,7 +37,7 @@ import OrganizerLayout from "./ui/organizer/OrganizerLayout";
 import ReviewPage from "./components/review/ReviewPage";
 import ViewBookingHistory from "./pages/ViewBookingHistory";
 import ReviewManagementPage from "./pages/ReviewManagementPage";
-import NotificationSocket from "./pages/NotificationSocket";
+import AdminWithdrawRequests from "./pages/admin/AdminWithdrawRequests";
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() => import("./components/authentication/LoginPage"));
 const RegisterPage = lazy(() =>
@@ -139,6 +139,7 @@ function App() {
                 path="statistics-seats"
                 element={<StatisticsSeatsPage />}
               />
+              <Route path="withdraw" element={<WithdrawRequestPage />} />
             </Route>
           </Route>
 
@@ -153,6 +154,7 @@ function App() {
             <Route path="/admin/users" element={<UserManagementPage />} />
             <Route path="/admin/vouchers" element={<VoucherManagementPage />} />
             <Route path="/admin/ads" element={<AdsManagement />} />
+            <Route path="/admin/withdraw" element={<AdminWithdrawRequests />} />
             <Route
               path="/admin/organizers"
               element={<OrganizerManagementPage />}
