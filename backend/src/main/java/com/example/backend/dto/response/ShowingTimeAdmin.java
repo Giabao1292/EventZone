@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 public class ShowingTimeAdmin {
     private Integer id;
     private Integer event_id;
+    private Integer organizerId;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private LocalDateTime saleOpenTime;

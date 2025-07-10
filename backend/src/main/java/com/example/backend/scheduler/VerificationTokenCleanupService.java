@@ -1,4 +1,4 @@
-package com.example.backend.service;
+package com.example.backend.scheduler;
 
 import com.example.backend.repository.UserTempRepository;
 import com.example.backend.repository.VerificationRepository;

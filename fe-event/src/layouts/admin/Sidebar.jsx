@@ -56,7 +56,19 @@ export default function SidebarNavigation() {
                 MANAGEMENT
               </span>
             </li>
-
+            <li className="sidebar-item">
+              <a
+                className={`sidebar-link gap-3 py-2.5 my-1 text-base flex items-center relative rounded-md w-full ${
+                  pathname === "/components/buttons"
+                    ? "text-blue-600 bg-blue-50"
+                    : "text-gray-500"
+                }`}
+                href="/admin/withdraw"
+              >
+                <i className="ti ti-user-circle ps-2 text-yellow-500 text-2xl"></i>{" "}
+                <span>Withdraw Management</span>
+              </a>
+            </li>
             <li className="sidebar-item">
               <a
                 className={`sidebar-link gap-3 py-2.5 my-1 text-base flex items-center relative rounded-md w-full ${

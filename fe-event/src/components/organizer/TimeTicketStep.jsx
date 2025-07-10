@@ -3,14 +3,13 @@ import { Calendar, MapPin, Plus, Clock, Ticket, X, Check } from "lucide-react";
 import AddressPicker from "./AddressPicker";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { createShowingTime } from "../../services/showingTime"; // Import service gọi API tạo suất chiếu mới
 
 const TimeTicketStep = ({
-                          eventData = {},
-                          handleInputChange = () => {},
-                          loading = false,
-                          eventId,
-                        }) => {
+  eventData = {},
+  handleInputChange = () => {},
+  loading = false,
+  eventId,
+}) => {
   const [newShowing, setNewShowing] = useState({
     startTime: "",
     endTime: "",
@@ -19,21 +18,20 @@ const TimeTicketStep = ({
     layoutMode: "seat",
   });
   const [showAddForm, setShowAddForm] = useState(false);
-  const [adding, setAdding] = useState(false); // loading khi bấm thêm
 
   const handleInputTimeChange = (field, value) => {
     setNewShowing((prev) => ({ ...prev, [field]: value }));
   };
 
-  // CHỈ GỌI API tạo suất chiếu mới, chỉ thêm vào mảng khi đã có id từ BE trả về!
-  const handleAddShowingTime = async () => {
-    const { startTime, endTime, saleOpenTime, saleCloseTime, layoutMode } = newShowing;
+  const handleAddShowingTime = () => {
+    const { startTime, endTime, saleOpenTime, saleCloseTime, layoutMode } =
+      newShowing;
     if (
-        !startTime ||
-        !endTime ||
-        !saleOpenTime ||
-        !saleCloseTime ||
-        !layoutMode
+      !startTime ||
+      !endTime ||
+      !saleOpenTime ||
+      !saleCloseTime ||
+      !layoutMode
     ) {
       toast.error("Vui lòng điền đầy đủ thông tin xuất chiếu.");
       return;
@@ -61,9 +59,9 @@ const TimeTicketStep = ({
       const existingStart = new Date(showing.startTime);
       const existingEnd = new Date(showing.endTime);
       return (
-          (start >= existingStart && start < existingEnd) ||
-          (end > existingStart && end <= existingEnd) ||
-          (start <= existingStart && end >= existingEnd)
+        (start >= existingStart && start < existingEnd) ||
+        (end > existingStart && end <= existingEnd) ||
+        (start <= existingStart && end >= existingEnd)
       );
     });
 
@@ -72,59 +70,29 @@ const TimeTicketStep = ({
       return;
     }
 
-    // CALL API
-    setAdding(true);
-    try {
-      // Gửi lên BE format chuẩn
-      const res = await createShowingTime({
-        eventId: eventId || eventData.id,
-        venueName: eventData.venueName,
-        location: eventData.location,
-        city: eventData.city,
-        // address_id: eventData.address_id, // nếu cần
-        showingTimes: [
-          {
-            startTime,
-            endTime,
-            saleOpenTime,
-            saleCloseTime,
-            layoutMode,
-          }
-        ]
-      });
+    // Add new showing time locally with a temporary ID
+    const newShowingWithTempId = {
+      ...newShowing,
+    };
+    const updated = [...(eventData?.showingTimes || []), newShowingWithTempId];
+    handleInputChange("showingTimes", updated);
 
-      // Nếu BE trả về mảng suất chiếu, lấy suất vừa tạo (phần tử cuối)
-      let createdShowing = Array.isArray(res) ? res[res.length - 1] : res;
-      // Nếu BE trả object, có thể là res?.data?.data hoặc res?.data (cái này phụ thuộc service createShowingTime bạn đang dùng)
-      if (!createdShowing?.id && (res?.data?.data || res?.data)) {
-        createdShowing = res?.data?.data || res?.data;
-      }
-
-      if (!createdShowing?.id) throw new Error("Không nhận được ID suất chiếu!");
-
-      // Thêm suất chiếu mới có id thật vào list
-      const updated = [...(eventData?.showingTimes || []), createdShowing];
-      handleInputChange("showingTimes", updated);
-
-      setNewShowing({
-        startTime: "",
-        endTime: "",
-        saleOpenTime: "",
-        saleCloseTime: "",
-        layoutMode: "seat",
-      });
-      setShowAddForm(false);
-
-      toast.success("Thêm xuất chiếu thành công!");
-    } catch (err) {
-      toast.error(err?.response?.data?.message || err.message || "Không thể tạo suất chiếu mới!");
-    }
-    setAdding(false);
+    // Reset form and close
+    setNewShowing({
+      startTime: "",
+      endTime: "",
+      saleOpenTime: "",
+      saleCloseTime: "",
+      layoutMode: "seat",
+    });
+    setShowAddForm(false);
+    toast.success("Đã thêm xuất chiếu vào danh sách tạm thời!");
   };
 
-
   const removeShowing = (index) => {
-    const updated = (eventData?.showingTimes || []).filter((_, i) => i !== index);
+    const updated = (eventData?.showingTimes || []).filter(
+      (_, i) => i !== index
+    );
     handleInputChange("showingTimes", updated);
   };
 
@@ -140,239 +108,238 @@ const TimeTicketStep = ({
   };
 
   return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6">
-        <ToastContainer position="top-right" autoClose={3000} theme="dark" />
-        <div className="max-w-4xl mx-auto space-y-8">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="flex items-center justify-center space-x-3 mb-4">
-              <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full">
-                <Calendar className="text-white" size={24} />
-              </div>
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                Thời gian & Địa điểm
-              </h2>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6">
+      <ToastContainer position="top-right" autoClose={3000} theme="dark" />
+      <div className="max-w-4xl mx-auto space-y-8">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center space-x-3 mb-4">
+            <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full">
+              <Calendar className="text-white" size={24} />
             </div>
-            <p className="text-gray-400 text-lg">
-              Thiết lập lịch chiếu và địa điểm tổ chức sự kiện
-            </p>
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+              Thời gian & Địa điểm
+            </h2>
+          </div>
+          <p className="text-gray-400 text-lg">
+            Thiết lập lịch chiếu và địa điểm tổ chức sự kiện
+          </p>
+        </div>
+
+        {/* Showing Times Section */}
+        <div className="bg-gray-800/50 p-6 rounded-2xl border border-gray-700/50 shadow-2xl">
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex items-center space-x-3">
+              <Ticket className="text-purple-400" size={20} />
+              <h3 className="text-xl text-white font-semibold">Lịch chiếu</h3>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowAddForm(true)}
+              className="flex items-center px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:scale-105 transition-all duration-200"
+              disabled={loading}
+            >
+              <Plus size={16} />
+              <span>Thêm suất chiếu</span>
+            </button>
           </div>
 
-          {/* Showing Times Section */}
-          <div className="bg-gray-800/50 p-6 rounded-2xl border border-gray-700/50 shadow-2xl">
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center space-x-3">
-                <Ticket className="text-purple-400" size={20} />
-                <h3 className="text-xl text-white font-semibold">Lịch chiếu</h3>
+          {showAddForm && (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div className="bg-gray-800 rounded-2xl p-6 w-full max-w-2xl border border-gray-700 shadow-2xl">
+                <div className="flex justify-between items-center mb-6">
+                  <h4 className="text-xl text-white font-semibold flex items-center space-x-2">
+                    <Ticket className="text-purple-400" size={20} />
+                    <span>Thêm suất chiếu mới</span>
+                  </h4>
+                  <button
+                    onClick={() => setShowAddForm(false)}
+                    className="p-2 hover:bg-gray-700 rounded-full"
+                  >
+                    <X className="text-gray-400" size={20} />
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  {[
+                    {
+                      label: "Thời gian bắt đầu",
+                      field: "startTime",
+                      icon: Clock,
+                    },
+                    {
+                      label: "Thời gian kết thúc",
+                      field: "endTime",
+                      icon: Clock,
+                    },
+                    { label: "Mở bán vé", field: "saleOpenTime", icon: Ticket },
+                    {
+                      label: "Đóng bán vé",
+                      field: "saleCloseTime",
+                      icon: Ticket,
+                    },
+                  ].map(({ label, field, icon: Icon }) => (
+                    <div key={field} className="space-y-2">
+                      <label className="flex items-center text-sm text-gray-300 space-x-2">
+                        <Icon size={16} className="text-blue-400" />
+                        <span>{label} *</span>
+                      </label>
+                      <input
+                        type="datetime-local"
+                        value={newShowing[field]}
+                        onChange={(e) =>
+                          handleInputTimeChange(field, e.target.value)
+                        }
+                        className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white"
+                        disabled={loading}
+                      />
+                    </div>
+                  ))}
+                  <div className="space-y-2 col-span-1">
+                    <label className="flex items-center text-sm text-gray-300 space-x-2">
+                      <Ticket size={16} className="text-blue-400" />
+                      <span>Loại sơ đồ *</span>
+                    </label>
+                    <select
+                      value={newShowing.layoutMode}
+                      onChange={(e) =>
+                        handleInputTimeChange("layoutMode", e.target.value)
+                      }
+                      className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white"
+                      disabled={loading}
+                    >
+                      <option value="seat">Ghế</option>
+                      <option value="zone">Khu vực</option>
+                      <option value="both">Cả hai</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="flex justify-end space-x-3">
+                  <button
+                    onClick={() => setShowAddForm(false)}
+                    className="px-6 py-3 border border-gray-600 text-gray-300 rounded-xl hover:bg-gray-700"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    onClick={handleAddShowingTime}
+                    className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl"
+                    disabled={loading}
+                  >
+                    <Check size={16} />
+                    <span>Thêm</span>
+                  </button>
+                </div>
               </div>
-              <button
-                  type="button"
-                  onClick={() => setShowAddForm(true)}
-                  className="flex items-center px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:scale-105 transition-all duration-200"
-                  disabled={loading}
-              >
-                <Plus size={16} />
-                <span>Thêm suất chiếu</span>
-              </button>
             </div>
+          )}
 
-            {showAddForm && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                  <div className="bg-gray-800 rounded-2xl p-6 w-full max-w-2xl border border-gray-700 shadow-2xl">
-                    <div className="flex justify-between items-center mb-6">
-                      <h4 className="text-xl text-white font-semibold flex items-center space-x-2">
-                        <Ticket className="text-purple-400" size={20} />
-                        <span>Thêm suất chiếu mới</span>
-                      </h4>
-                      <button
-                          onClick={() => setShowAddForm(false)}
-                          className="p-2 hover:bg-gray-700 rounded-full"
-                      >
-                        <X className="text-gray-400" size={20} />
-                      </button>
+          {/* Danh sách lịch chiếu */}
+          {eventData?.showingTimes?.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {eventData.showingTimes.map((showing, index) => (
+                <div
+                  key={showing.id || index}
+                  className="relative bg-gray-800/80 p-6 rounded-xl border border-gray-600 shadow-md group"
+                >
+                  <button
+                    onClick={() => removeShowing(index)}
+                    className="absolute top-3 right-3 p-1 text-gray-400 hover:text-red-400 hover:bg-red-500/20 rounded-full opacity-0 group-hover:opacity-100"
+                  >
+                    <X size={16} />
+                  </button>
+                  <div className="text-center mb-3">
+                    <div className="flex justify-center items-center space-x-2 mb-2">
+                      <Ticket className="text-purple-400" size={18} />
+                      <span className="text-lg font-semibold text-white">
+                        Xuất {index + 1}
+                      </span>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                      {[
-                        {
-                          label: "Thời gian bắt đầu",
-                          field: "startTime",
-                          icon: Clock,
-                        },
-                        {
-                          label: "Thời gian kết thúc",
-                          field: "endTime",
-                          icon: Clock,
-                        },
-                        { label: "Mở bán vé", field: "saleOpenTime", icon: Ticket },
-                        {
-                          label: "Đóng bán vé",
-                          field: "saleCloseTime",
-                          icon: Ticket,
-                        },
-                      ].map(({ label, field, icon: Icon }) => (
-                          <div key={field} className="space-y-2">
-                            <label className="flex items-center text-sm text-gray-300 space-x-2">
-                              <Icon size={16} className="text-blue-400" />
-                              <span>{label} *</span>
-                            </label>
-                            <input
-                                type="datetime-local"
-                                value={newShowing[field]}
-                                onChange={(e) =>
-                                    handleInputTimeChange(field, e.target.value)
-                                }
-                                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white"
-                                disabled={loading || adding}
-                            />
-                          </div>
-                      ))}
-                      {/* Layout Mode */}
-                      <div className="space-y-2 col-span-1">
-                        <label className="flex items-center text-sm text-gray-300 space-x-2">
-                          <Ticket size={16} className="text-blue-400" />
-                          <span>Loại sơ đồ *</span>
-                        </label>
-                        <select
-                            value={newShowing.layoutMode}
-                            onChange={(e) =>
-                                handleInputTimeChange("layoutMode", e.target.value)
-                            }
-                            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white"
-                            disabled={loading || adding}
-                        >
-                          <option value="seat">Ghế</option>
-                          <option value="zone">Khu vực</option>
-                          <option value="both">Cả hai</option>
-                        </select>
-                      </div>
+                  </div>
+                  <div className="space-y-2 text-sm text-white">
+                    <div className="flex justify-between">
+                      <span>Chiếu:</span>
+                      <span>{formatDateTime(showing.startTime)}</span>
                     </div>
-                    <div className="flex justify-end space-x-3">
-                      <button
-                          onClick={() => setShowAddForm(false)}
-                          className="px-6 py-3 border border-gray-600 text-gray-300 rounded-xl hover:bg-gray-700"
-                      >
-                        Hủy
-                      </button>
-                      <button
-                          onClick={handleAddShowingTime}
-                          className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl"
-                          disabled={adding}
-                      >
-                        <Check size={16} />
-                        <span>{adding ? "Đang thêm..." : "Thêm"}</span>
-                      </button>
+                    <div className="flex justify-between">
+                      <span>Kết thúc:</span>
+                      <span>{formatDateTime(showing.endTime)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Bán vé:</span>
+                      <span>{formatDateTime(showing.saleOpenTime)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Đóng bán:</span>
+                      <span>{formatDateTime(showing.saleCloseTime)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Sơ đồ:</span>
+                      <span className="capitalize">
+                        {showing.layoutMode === "seat"
+                          ? "Ghế"
+                          : showing.layoutMode === "zone"
+                          ? "Khu vực"
+                          : "Cả hai"}
+                      </span>
                     </div>
                   </div>
                 </div>
-            )}
-
-            {/* Danh sách lịch chiếu */}
-            {eventData?.showingTimes?.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {eventData.showingTimes.map((showing, index) => (
-                      <div
-                          key={showing.id || index}
-                          className="relative bg-gray-800/80 p-6 rounded-xl border border-gray-600 shadow-md group"
-                      >
-                        <button
-                            onClick={() => removeShowing(index)}
-                            className="absolute top-3 right-3 p-1 text-gray-400 hover:text-red-400 hover:bg-red-500/20 rounded-full opacity-0 group-hover:opacity-100"
-                        >
-                          <X size={16} />
-                        </button>
-                        <div className="text-center mb-3">
-                          <div className="flex justify-center items-center space-x-2 mb-2">
-                            <Ticket className="text-purple-400" size={18} />
-                            <span className="text-lg font-semibold text-white">
-                        Xuất {index + 1}
-                      </span>
-                          </div>
-                        </div>
-                        <div className="space-y-2 text-sm text-white">
-                          <div className="flex justify-between">
-                            <span>Chiếu:</span>
-                            <span>{formatDateTime(showing.startTime)}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Kết thúc:</span>
-                            <span>{formatDateTime(showing.endTime)}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Bán vé:</span>
-                            <span>{formatDateTime(showing.saleOpenTime)}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Đóng bán:</span>
-                            <span>{formatDateTime(showing.saleCloseTime)}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Sơ đồ:</span>
-                            <span className="capitalize">
-                        {showing.layoutMode === "seat"
-                            ? "Ghế"
-                            : showing.layoutMode === "zone"
-                                ? "Khu vực"
-                                : "Cả hai"}
-                      </span>
-                          </div>
-                        </div>
-                      </div>
-                  ))}
-                </div>
-            ) : (
-                <div className="text-center py-12">
-                  <Ticket className="mx-auto text-gray-600 mb-4" size={48} />
-                  <p className="text-gray-400 text-lg">Chưa có xuất chiếu nào</p>
-                  <p className="text-gray-500 text-sm mt-2">
-                    Nhấn "Thêm xuất chiếu" để bắt đầu
-                  </p>
-                </div>
-            )}
-          </div>
-
-          {/* Location Section */}
-          <div className="bg-gray-800/50 p-6 rounded-2xl border border-gray-700/50 shadow-2xl">
-            <div className="flex items-center space-x-3 mb-6">
-              <MapPin className="text-red-400" size={20} />
-              <h3 className="text-xl text-white font-semibold">
-                Địa điểm tổ chức
-              </h3>
+              ))}
             </div>
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm text-gray-300 mb-3">
-                  Tên địa điểm *
-                </label>
-                <input
-                    type="text"
-                    value={eventData?.venueName || ""}
-                    onChange={(e) => handleInputChange("venueName", e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-800/80 border border-gray-600 rounded-xl text-white"
-                    placeholder="Ví dụ: Rạp CGV Gò Vấp..."
-                    disabled={loading}
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-300 mb-3">
-                  Địa chỉ *
-                </label>
-                <AddressPicker
-                    onSelect={({ location, city, address_id }) => {
-                      handleInputChange("location", location);
-                      handleInputChange("city", city);
-                      if (address_id) handleInputChange("address_id", address_id);
-                    }}
-                    initialValue={{
-                      city: eventData?.city,
-                      location: eventData?.location,
-                      address_id: eventData?.address_id,
-                    }}
-                />
-              </div>
+          ) : (
+            <div className="text-center py-12">
+              <Ticket className="mx-auto text-gray-600 mb-4" size={48} />
+              <p className="text-gray-400 text-lg">Chưa có xuất chiếu nào</p>
+              <p className="text-gray-500 text-sm mt-2">
+                Nhấn "Thêm xuất chiếu" để bắt đầu
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Location Section */}
+        <div className="bg-gray-800/50 p-6 rounded-2xl border border-gray-700/50 shadow-2xl">
+          <div className="flex items-center space-x-3 mb-6">
+            <MapPin className="text-red-400" size={20} />
+            <h3 className="text-xl text-white font-semibold">
+              Địa điểm tổ chức
+            </h3>
+          </div>
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm text-gray-300 mb-3">
+                Tên địa điểm *
+              </label>
+              <input
+                type="text"
+                value={eventData?.venueName || ""}
+                onChange={(e) => handleInputChange("venueName", e.target.value)}
+                className="w-full px-4 py-3 bg-gray-800/80 border border-gray-600 rounded-xl text-white"
+                placeholder="Ví dụ: Rạp CGV Gò Vấp..."
+                disabled={loading}
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-300 mb-3">
+                Địa chỉ *
+              </label>
+              <AddressPicker
+                onSelect={({ location, city, address_id }) => {
+                  handleInputChange("location", location);
+                  handleInputChange("city", city);
+                  if (address_id) handleInputChange("address_id", address_id);
+                }}
+                initialValue={{
+                  city: eventData?.city,
+                  location: eventData?.location,
+                  address_id: eventData?.address_id,
+                }}
+              />
             </div>
           </div>
         </div>
       </div>
+    </div>
   );
 };
 

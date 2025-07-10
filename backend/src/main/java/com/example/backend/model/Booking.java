@@ -58,7 +58,6 @@ public class Booking {
 
     @NotNull
     @ColumnDefault("'pending'")
-    @Lob
     @Column(name = "payment_status", nullable = false)
     private String paymentStatus;
 
@@ -97,4 +96,5 @@ public class Booking {
     @JoinColumn(name = "showing_time_id", nullable = false)
     @JsonBackReference
     private ShowingTime showingTime;
+
 }

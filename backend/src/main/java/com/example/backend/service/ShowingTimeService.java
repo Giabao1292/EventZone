@@ -17,4 +17,5 @@ public interface ShowingTimeService {
     ShowingTime updateShowingTime(int id, UpdateShowingTimeRequest req);
     ShowingTime createShowingTime(UpdateShowingTimeRequest req);
     List<ShowingTimeAdmin> getListShowingTime(int id);
+    Optional<ShowingTimeAdmin> getShowingTimeById(int id);
 }

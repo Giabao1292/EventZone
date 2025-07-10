@@ -1,8 +1,12 @@
-import { Link, useLocation } from "react-router-dom";
-import { useState, useRef, useEffect } from "react";
-import useAuth from "../hooks/useAuth";
-import avatarDefault from "../assets/images/profile/avtDefault.jpg";
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import { FaBars, FaTimes } from "react-icons/fa";
+import { Link, useLocation } from "react-router-dom";
+import avatarDefault from "../assets/images/profile/avtDefault.jpg";
+import useAuth from "../hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import NotificationDropdown from "../components/home/NotificationDropdown";
 
 const Header = () => {
   const { isAuthenticated, user, logout } = useAuth();
@@ -13,6 +17,11 @@ const Header = () => {
   const mobileMenuRef = useRef(null);
   const timeoutRef = useRef(null);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleGoToHistory = () => {
+    navigate("/booking-history", { replace: false });
+  };
 
   const handleMouseEnter = () => {
     if (timeoutRef.current) {
@@ -110,7 +119,7 @@ const Header = () => {
             Liên hệ
           </Link>
           <Link
-            to="/home"
+            to="/booking-history"
             className="flex items-center text-gray-300 hover:text-white text-sm font-semibold transition-colors"
           >
             <svg
@@ -142,6 +151,9 @@ const Header = () => {
             {isOrganizer ? "Nhà tổ chức" : "Trở thành nhà tổ chức"}
           </Link>
 
+          {/* Notification Bell - Only show when authenticated */}
+          {isAuthenticated && <NotificationDropdown />}
+
           {isAuthenticated ? (
             <div
               className="relative"
@@ -151,7 +163,7 @@ const Header = () => {
             >
               <div className="flex items-center space-x-3 cursor-pointer bg-gray-800/50 rounded-full px-3 py-1 hover:bg-gray-700/50 transition-all">
                 <img
-                  src={avatarUrl}
+                  src={avatarUrl || "/placeholder.svg"}
                   alt="Avatar"
                   className="w-8 h-8 rounded-full object-cover border-2 border-gray-600"
                 />
@@ -266,7 +278,7 @@ const Header = () => {
                 Liên hệ
               </Link>
               <Link
-                to="/home"
+                to="/booking-history"
                 className="flex items-center text-gray-300 hover:text-orange-400 text-sm font-semibold transition cursor-pointer no-underline"
                 onClick={() => setMobileMenuOpen(false)}
               >

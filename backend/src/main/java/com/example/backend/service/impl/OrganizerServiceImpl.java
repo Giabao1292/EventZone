@@ -5,11 +5,9 @@ import com.cloudinary.utils.ObjectUtils;
 import com.example.backend.dto.request.OrganizerRequest;
 import com.example.backend.dto.response.*;
 import com.example.backend.exception.ResourceNotFoundException;
-import com.example.backend.model.OrgType;
-import com.example.backend.model.Organizer;
-import com.example.backend.model.User;
-import com.example.backend.model.UserRole;
+import com.example.backend.model.*;
 import com.example.backend.repository.*;
+import com.example.backend.service.NotificationService;
 import com.example.backend.service.OrganizerService;
 import com.example.backend.service.UserService;
 import com.example.backend.util.StatusOrganizer;
@@ -38,6 +36,10 @@ public class OrganizerServiceImpl implements OrganizerService {
     private final SearchCriteriaRepository searchCriteriaRepository;
     private final OrgTypeRepository orgTypeRepository;
     private final RoleRepository roleRepository;
+    private final NotificationService notificationService;
+    private final BookingRepository bookingRepository;
+    private final EventRepository eventRepository;
+
 
     @Override
     public String uploadPics(MultipartFile file) {
@@ -87,6 +89,7 @@ public class OrganizerServiceImpl implements OrganizerService {
                 .orgLogoUrl(logoUrl)
                 .businessLicenseUrl(businessUrl)
                 .build();
+        notificationService.notifyOrganizerRegistration(user);
         organizerRepository.save(organizer);
     }
 
@@ -184,7 +187,11 @@ public class OrganizerServiceImpl implements OrganizerService {
             userRole.setUser(organizer.getUser());
             userRole.setRole(roleRepository.findByRoleName("ORGANIZER").orElseThrow(() -> new ResourceNotFoundException("Role not found")));
             organizer.getUser().getTblUserRoles().add(userRole);
+            notificationService.notifyRoleApproved(organizer.getUser());
             userRepository.save(organizer.getUser());
+        }
+        else{
+            notificationService.notifyRoleRejected(organizer.getUser());
         }
         organizer.setStatus(StatusOrganizer.valueOf(status));
         organizerRepository.save(organizer);
@@ -194,6 +201,39 @@ public class OrganizerServiceImpl implements OrganizerService {
     public Organizer getOrganizerByEmail(String email) {
         return organizerRepository.findByUser_Email(email)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy organizer cho username: " + email));
+    }
+
+    @Override
+    public StatusOrganizer getOrganizerStatus(){
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(username).get();
+        return user.getOrganizer().getStatus();
+    }
+
+    @Override
+    public List<BuyerSummaryDTO> getBuyersForCurrentOrganizer() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        Organizer organizer = user.getOrganizer();
+        return bookingRepository.findBuyersByOrganizerId(organizer.getId());
+    }
+
+    @Override
+    public List<EventSummaryDTO> getEventsByCurrentOrganizer() {
+        Organizer organizer = getCurrentOrganizer(); // dùng helper
+        List<Event> events = eventRepository.findByOrganizer_Id(organizer.getId());
+        return events.stream()
+                .map(EventSummaryDTO::new)
+                .toList();
+    }
+
+    private Organizer getCurrentOrganizer() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        return user.getOrganizer();
     }
 
 }

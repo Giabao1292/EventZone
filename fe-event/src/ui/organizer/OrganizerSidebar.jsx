@@ -51,15 +51,38 @@ const OrganizerSidebar = () => {
           </Link>
 
           <Link
-                  to="/organizer/statistics-seats"
-                  className="group block py-3 px-4 rounded-lg transition-all duration-300 hover:bg-gradient-to-r hover:from-green-600/20 hover:to-blue-600/20 hover:shadow-lg hover:shadow-green-500/25 hover:translate-x-2 border border-transparent hover:border-green-500/30 backdrop-blur-sm"
-                >
-                  <span className="flex items-center space-x-2">
-                    <span className="w-2 h-2 bg-green-400 rounded-full group-hover:animate-pulse"></span>
-                    <span className="group-hover:text-green-300 transition-colors duration-300">
-                      Thống Kê Doanh Thu
-                    </span>
-                  </span>
+            to="/organizer/reviews"
+            className="group block py-3 px-4 rounded-lg transition-all duration-300 hover:bg-gradient-to-r hover:from-yellow-500/20 hover:to-orange-500/20 hover:shadow-lg hover:shadow-yellow-400/20 hover:translate-x-2 border border-transparent hover:border-yellow-400/30 backdrop-blur-sm"
+          >
+            <span className="flex items-center space-x-2">
+              <span className="w-2 h-2 bg-yellow-400 rounded-full group-hover:animate-pulse"></span>
+              <span className="group-hover:text-yellow-300 transition-colors duration-300">
+                Quản lý đánh giá
+              </span>
+            </span>
+          </Link>
+
+          <Link
+            to="/organizer/statistics-seats"
+            className="group block py-3 px-4 rounded-lg transition-all duration-300 hover:bg-gradient-to-r hover:from-green-600/20 hover:to-blue-600/20 hover:shadow-lg hover:shadow-green-500/25 hover:translate-x-2 border border-transparent hover:border-green-500/30 backdrop-blur-sm"
+          >
+            <span className="flex items-center space-x-2">
+              <span className="w-2 h-2 bg-green-400 rounded-full group-hover:animate-pulse"></span>
+              <span className="group-hover:text-green-300 transition-colors duration-300">
+                Thống Kê Doanh Thu
+              </span>
+            </span>
+          </Link>
+          <Link
+            to="/organizer/withdraw"
+            className="group block py-3 px-4 rounded-lg transition-all duration-300 hover:bg-gradient-to-r hover:from-green-600/20 hover:to-blue-600/20 hover:shadow-lg hover:shadow-green-500/25 hover:translate-x-2 border border-transparent hover:border-green-500/30 backdrop-blur-sm"
+          >
+            <span className="flex items-center space-x-2">
+              <span className="w-2 h-2 bg-green-900 rounded-full group-hover:animate-pulse"></span>
+              <span className="group-hover:text-green-300 transition-colors duration-300">
+                Rút tiền
+              </span>
+            </span>
           </Link>
         </nav>
       </div>

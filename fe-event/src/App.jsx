@@ -1,36 +1,47 @@
 import { Suspense, lazy } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
-import PageLoader from "./ui/PageLoader";
-import VerifyEmail from "./pages/VerifyEmail";
-import PrivateRoute from "./ui/PrivateRoute";
-import RegisterOrganizerForm from "./components/organizer/OrganizerRegistration";
-import OrganizerLayout from "./ui/organizer/OrganizerLayout";
+import {
+  default as Payment,
+  default as PaymentPage,
+} from "./components/booking/Payment";
+import SelectSeats from "./components/booking/SelectSeats";
+import AdsCreatePage from "./components/organizer/AdsCreatePage";
+import EditEventForm from "./components/organizer/EditEventForm";
 import EventCreationForm from "./components/organizer/EventCreationForm";
 import LayoutDesigner from "./components/organizer/LayoutDesigner";
-import AdminLayout from "./layouts/admin/AdminLayout";
-import DashboardPage from "./pages/admin/DashboardPage";
-import UserManagementPage from "./pages/admin/UserManagementPage";
-import EventDetail from "./pages/EventDetail";
-import BookingPage from "./pages/BookingPage";
-import OrganizerManagementPage from "./pages/admin/OrganizerManagementPage";
-import PaymentPage from "./components/booking/Payment";
-import SelectSeats from "./components/booking/SelectSeats";
-import Payment from "./components/booking/Payment";
-import WishlistPage from "./pages/WishListPage";
 import EventManager from "./components/organizer/EventManager";
-import { useAuth } from "./context/AuthContext";
+import OrganizerProfile from "./components/organizer/OrganizerProfile";
+import AdminLayout from "./layouts/admin/AdminLayout";
+import BookingPage from "./pages/BookingPage";
+import EventDetail from "./pages/EventDetail";
+import WishlistPage from "./pages/WishListPage";
+import DashboardPage from "./pages/admin/DashboardPage";
 import EventManagementPage from "./pages/admin/EventManagementPage";
-import OrganizerEventList from "./components/organizer/OrganizerEventList";
-import EditEventForm from "./components/organizer/EditEventForm";
+import OrganizerManagementPage from "./pages/admin/OrganizerManagementPage";
+import UserManagementPage from "./pages/admin/UserManagementPage";
 import VoucherManagementPage from "./pages/admin/VoucherManagementPage";
 import OrganizerProfile from "./components/organizer/OrganizerProfile";
 import CategoryManagementPage from "./pages/admin/CategoryManagementPage";
 
+
 import AdsManagement from "./pages/admin/AdsManagement";
-import AdsCreatePage from "./components/organizer/AdsCreatePage";
+import RegisterOrganizerForm from "./components/organizer/OrganizerRegistration";
 import PaymentAdsResultPage from "./components/organizer/PaymentAdsResult";
+
 import StatisticsSeatsPage from "./pages/StatisticsSeatsPage";
+import PaymentCancel from "./components/booking/Payment-cancel";
+import PaymentResult from "./components/booking/Payment-result";
+import DepositResult from "./components/organizer/DepositResult";
+import SearchPage from "./pages/SearchPage";
+import VerifyEmail from "./pages/VerifyEmail";
+import PageLoader from "./ui/PageLoader";
+import PrivateRoute from "./ui/PrivateRoute";
+import OrganizerLayout from "./ui/organizer/OrganizerLayout";
+import ReviewPage from "./components/review/ReviewPage";
+import ViewBookingHistory from "./pages/ViewBookingHistory";
+import ReviewManagementPage from "./pages/ReviewManagementPage";
+import AdminWithdrawRequests from "./pages/admin/AdminWithdrawRequests";
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() => import("./components/authentication/LoginPage"));
 const RegisterPage = lazy(() =>
@@ -74,13 +85,22 @@ function App() {
             <Route path="/" element={<Navigate to="/home" replace />} />
             <Route path="/home" element={<Home />} />
             <Route path="/events/:eventId" element={<EventDetail />} />
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="/reviews/:showingTimeId" element={<ReviewPage />} />
+            <Route path="/test" element={<NotificationSocket />} />
           </Route>
 
           {/* Protected Routes for Authenticated Users */}
           <Route element={<PrivateRoute />}>
             <Route element={<AppLayout />}>
               <Route path="/wishlist" element={<WishlistPage />} />
+              <Route path="/booking-history" element={<ViewBookingHistory />} />
               <Route path="payment" element={<PaymentPage />} />
+
+              <Route path="/payment-result" element={<PaymentResult />} />
+              <Route path="/payment-cancel" element={<PaymentCancel />} />
+              <Route path="/deposit-result" element={<DepositResult />} />
+
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/change-password" element={<ChangePasswordForm />} />
               <Route
@@ -119,7 +139,11 @@ function App() {
 
               <Route path="create-event" element={<EventCreationForm />} />
               <Route path="edit/:id" element={<EditEventForm />} />
-              <Route path="statistics-seats" element={<StatisticsSeatsPage />} />
+              <Route
+                path="statistics-seats"
+                element={<StatisticsSeatsPage />}
+              />
+              <Route path="withdraw" element={<WithdrawRequestPage />} />
             </Route>
           </Route>
 
@@ -135,6 +159,7 @@ function App() {
             <Route path="/admin/vouchers" element={<VoucherManagementPage />} />
             <Route path="/admin/category-management" element={<CategoryManagementPage />} />
             <Route path="/admin/ads" element={<AdsManagement />} />
+            <Route path="/admin/withdraw" element={<AdminWithdrawRequests />} />
             <Route
               path="/admin/organizers"
               element={<OrganizerManagementPage />}
