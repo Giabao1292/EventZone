@@ -15,12 +15,12 @@ const reviewService = {
 
     // Tạo bình luận
     submitReview: (showingTimeId, payload, userId) =>
-        apiClient.post(`/reviews`, {
+        apiClient.post(`/reviews?currentUserId=${userId}`, {
             showingTimeId,
             rating: payload.rating,
-            comment: payload.comment,
-            currentUserId: userId
+            comment: payload.comment
         }).then(res => res.data.data),
+
 
     // Sửa review (update tất cả field trong payload: rating, comment, status...)
     updateReview: (reviewId, payload, userId) =>
