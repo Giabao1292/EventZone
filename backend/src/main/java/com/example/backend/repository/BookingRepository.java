@@ -77,7 +77,6 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
 
     List<Booking> findByShowingTimeId(Integer showingTimeId);
 
-
     @Query("""
     SELECT new com.example.backend.dto.response.BuyerSummaryDTO(
         u.fullName,
@@ -97,7 +96,7 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
       AND b.paymentStatus = 'CONFIRMED'
     GROUP BY u.fullName, u.email, u.phone, e.eventTitle, b.createdDatetime, b.finalPrice
 """)
+
     List<BuyerSummaryDTO> findBuyersByOrganizerId(@Param("organizerId") Integer organizerId);
 
-    List<Booking> findByShowingTimeIdAndPaymentStatus(Integer showingTimeId, String paymentStatus);
 }

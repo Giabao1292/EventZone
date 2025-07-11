@@ -21,7 +21,6 @@ import EventManagementPage from "./pages/admin/EventManagementPage";
 import OrganizerManagementPage from "./pages/admin/OrganizerManagementPage";
 import UserManagementPage from "./pages/admin/UserManagementPage";
 import VoucherManagementPage from "./pages/admin/VoucherManagementPage";
-import OrganizerProfile from "./components/organizer/OrganizerProfile";
 import CategoryManagementPage from "./pages/admin/CategoryManagementPage";
 
 
@@ -45,6 +44,8 @@ import AttendeeManager from "./components/organizer/AttendeeManager";
 
 
 import AdminWithdrawRequests from "./pages/admin/AdminWithdrawRequests";
+import WithdrawRequestPage from "./components/organizer/WithdrawRequestPage";
+import NotificationSocket from "./ui/NotificationSocket";
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() => import("./components/authentication/LoginPage"));
 const RegisterPage = lazy(() =>

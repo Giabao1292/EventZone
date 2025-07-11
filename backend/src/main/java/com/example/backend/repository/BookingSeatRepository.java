@@ -53,6 +53,7 @@ public interface BookingSeatRepository extends JpaRepository<BookingSeat, Intege
             @Param("organizerId") Integer organizerId
     );
 
+    @Query("""
         SELECT new com.example.backend.dto.response.TicketSalesDTO(
             e.id,
             e.eventTitle,
