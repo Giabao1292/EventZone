@@ -126,6 +126,7 @@ public class BookingServiceImpl implements BookingService {
         booking.setQrPublicId(publicId);
         booking.setPaymentMethod(paymentMethod);
         booking.setPaymentStatus("CONFIRMED");
+        booking.setCheckinStatus(CheckIn.NOT_CHECKED_IN);
         booking.setPaidAt(LocalDateTime.now());
         booking.getTblBookingSeats().forEach(bs -> bs.setStatus("BOOKED"));
         bookingSeatRepository.saveAll(booking.getTblBookingSeats());

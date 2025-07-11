@@ -23,7 +23,6 @@ import UserManagementPage from "./pages/admin/UserManagementPage";
 import VoucherManagementPage from "./pages/admin/VoucherManagementPage";
 import CategoryManagementPage from "./pages/admin/CategoryManagementPage";
 
-
 import AdsManagement from "./pages/admin/AdsManagement";
 import RegisterOrganizerForm from "./components/organizer/OrganizerRegistration";
 import PaymentAdsResultPage from "./components/organizer/PaymentAdsResult";
@@ -143,7 +142,10 @@ function App() {
 
               <Route path="create-event" element={<EventCreationForm />} />
               <Route path="edit/:id" element={<EditEventForm />} />
-              <Route path="statistics-seats" element={<StatisticsSeatsPage />} />
+              <Route
+                path="statistics-seats"
+                element={<StatisticsSeatsPage />}
+              />
               <Route
                 path="statistics-seats"
                 element={<StatisticsSeatsPage />}
@@ -165,7 +167,10 @@ function App() {
             <Route path="/admin/dashboard" element={<DashboardPage />} />
             <Route path="/admin/users" element={<UserManagementPage />} />
             <Route path="/admin/vouchers" element={<VoucherManagementPage />} />
-            <Route path="/admin/category-management" element={<CategoryManagementPage />} />
+            <Route
+              path="/admin/category-management"
+              element={<CategoryManagementPage />}
+            />
             <Route path="/admin/ads" element={<AdsManagement />} />
             <Route path="/admin/withdraw" element={<AdminWithdrawRequests />} />
             <Route
