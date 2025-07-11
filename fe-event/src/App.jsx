@@ -21,10 +21,13 @@ import EventManagementPage from "./pages/admin/EventManagementPage";
 import OrganizerManagementPage from "./pages/admin/OrganizerManagementPage";
 import UserManagementPage from "./pages/admin/UserManagementPage";
 import VoucherManagementPage from "./pages/admin/VoucherManagementPage";
+import OrganizerProfile from "./components/organizer/OrganizerProfile";
+import CategoryManagementPage from "./pages/admin/CategoryManagementPage";
+
+
 import AdsManagement from "./pages/admin/AdsManagement";
 import RegisterOrganizerForm from "./components/organizer/OrganizerRegistration";
 import PaymentAdsResultPage from "./components/organizer/PaymentAdsResult";
-
 import StatisticsSeatsPage from "./pages/StatisticsSeatsPage";
 import PaymentCancel from "./components/booking/Payment-cancel";
 import PaymentResult from "./components/booking/Payment-result";
@@ -41,6 +44,7 @@ import AdminReviewManagementPage from "./pages/admin/AdminReviewManagementPage";
 import AttendeeManager from "./components/organizer/AttendeeManager";
 
 
+import AdminWithdrawRequests from "./pages/admin/AdminWithdrawRequests";
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() => import("./components/authentication/LoginPage"));
 const RegisterPage = lazy(() =>
@@ -86,6 +90,7 @@ function App() {
             <Route path="/events/:eventId" element={<EventDetail />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/reviews/:showingTimeId" element={<ReviewPage />} />
+            <Route path="/test" element={<NotificationSocket />} />
           </Route>
 
           {/* Protected Routes for Authenticated Users */}
@@ -137,6 +142,7 @@ function App() {
 
               <Route path="create-event" element={<EventCreationForm />} />
               <Route path="edit/:id" element={<EditEventForm />} />
+              <Route path="statistics-seats" element={<StatisticsSeatsPage />} />
               <Route
                 path="statistics-seats"
                 element={<StatisticsSeatsPage />}
@@ -144,8 +150,7 @@ function App() {
 
               <Route path="reviews" element={<ReviewManagementPage />} />
               <Route path="attendees/:eventId" element={<AttendeeManager />} />
-
-
+              <Route path="withdraw" element={<WithdrawRequestPage />} />
             </Route>
           </Route>
 
@@ -159,7 +164,9 @@ function App() {
             <Route path="/admin/dashboard" element={<DashboardPage />} />
             <Route path="/admin/users" element={<UserManagementPage />} />
             <Route path="/admin/vouchers" element={<VoucherManagementPage />} />
+            <Route path="/admin/category-management" element={<CategoryManagementPage />} />
             <Route path="/admin/ads" element={<AdsManagement />} />
+            <Route path="/admin/withdraw" element={<AdminWithdrawRequests />} />
             <Route
               path="/admin/organizers"
               element={<OrganizerManagementPage />}

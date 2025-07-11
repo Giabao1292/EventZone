@@ -4,6 +4,7 @@ import com.example.backend.dto.request.OrganizerRequest;
 import com.example.backend.dto.response.*;
 import com.example.backend.model.Organizer;
 import com.example.backend.service.OrganizerService;
+import com.example.backend.util.StatusOrganizer;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +13,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @Slf4j
@@ -49,6 +52,26 @@ public class OrganizerController {
     @GetMapping("/organizers/types")
     public ResponseData<?> getOrgType() {
         return new ResponseData<>(HttpStatus.OK.value(), "Search organizer successfully", organizerService.findAllOrgType());
+    }
+
+    @GetMapping("/organizers/status")
+    public ResponseData<?> getOrgStatus(){
+        StatusOrganizer status = organizerService.getOrganizerStatus();
+        return new ResponseData<>(HttpStatus.OK.value(), "Search organizer successfully", status);
+    }
+
+    @PreAuthorize("hasRole('ORGANIZER')")
+    @GetMapping("/organizer/events")
+    public ResponseData<List<EventSummaryDTO>> getEventsByOrganizer() {
+        List<EventSummaryDTO> events = organizerService.getEventsByCurrentOrganizer();
+        return new ResponseData<>(HttpStatus.OK.value(), "Lấy danh sách sự kiện thành công", events);
+    }
+
+    @PreAuthorize("hasRole('ORGANIZER')")
+    @GetMapping("/organizer/view-buyers")
+    public ResponseData<List<BuyerSummaryDTO>> getBuyersForOrganizer() {
+        List<BuyerSummaryDTO> buyers = organizerService.getBuyersForCurrentOrganizer();
+        return new ResponseData<>(HttpStatus.OK.value(), "Danh sách người mua", buyers);
     }
 
 }

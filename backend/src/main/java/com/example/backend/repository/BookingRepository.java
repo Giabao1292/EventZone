@@ -1,6 +1,7 @@
 package com.example.backend.repository;
 
 
+import com.example.backend.dto.response.BuyerSummaryDTO;
 import com.example.backend.model.Booking;
 import com.example.backend.model.PaymentStatus;
 import jakarta.transaction.Transactional;
@@ -77,4 +78,26 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
     List<Booking> findByShowingTimeId(Integer showingTimeId);
 
 
+    @Query("""
+    SELECT new com.example.backend.dto.response.BuyerSummaryDTO(
+        u.fullName,
+        u.email,
+        u.phone,
+        e.eventTitle,
+        b.createdDatetime,
+        SUM(bs.quantity),
+        b.finalPrice
+    )
+    FROM Booking b
+    JOIN b.user u
+    JOIN b.tblBookingSeats bs
+    JOIN b.showingTime st
+    JOIN st.event e
+    WHERE e.organizer.id = :organizerId
+      AND b.paymentStatus = 'CONFIRMED'
+    GROUP BY u.fullName, u.email, u.phone, e.eventTitle, b.createdDatetime, b.finalPrice
+""")
+    List<BuyerSummaryDTO> findBuyersByOrganizerId(@Param("organizerId") Integer organizerId);
+
+    List<Booking> findByShowingTimeIdAndPaymentStatus(Integer showingTimeId, String paymentStatus);
 }

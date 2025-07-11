@@ -23,7 +23,8 @@ public class BookingHistoryDTO {
     private String paymentMethod;
     private String paymentStatus;
     private String checkinStatus;
-    private String imageUrl; // ✅ ảnh sự kiện
+    private String imageUrl;
+
     private List<String> seatNumbers;
 
     public BookingHistoryDTO(Booking booking) {

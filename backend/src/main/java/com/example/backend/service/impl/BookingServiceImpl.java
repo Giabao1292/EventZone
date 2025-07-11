@@ -89,7 +89,7 @@ public class BookingServiceImpl implements BookingService {
                     throw new RuntimeException("Not enough tickets in zone: " + zone.getZoneName());
                 }
 
-                // ✅ Trừ luôn số lượng vé zone
+                // Trừ luôn số lượng vé zone
                 zone.setCapacity(zone.getCapacity() - dto.getQuantity());
                 zoneRepository.save(zone);
 
@@ -250,7 +250,5 @@ public class BookingServiceImpl implements BookingService {
     public List<Integer> getConfirmedShowingTimeIdsByUserId(Integer userId) {
         return bookingRepository.findConfirmedShowingTimeIdsByUserId(userId);
     }
-
-
 
 }

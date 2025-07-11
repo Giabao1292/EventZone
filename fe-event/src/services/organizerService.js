@@ -4,7 +4,7 @@ export const register = async (formData) => {
   try {
     const response = await apiClient.post("/organizers", formData, {
       headers: { "Content-Type": "multipart/form-data" },
-      timeout: 25000,
+      timeout: 60000, // Tăng timeout lên 60 giây
     });
     return response.data;
   } catch (err) {
@@ -91,6 +91,19 @@ export const updateOrganizerStatus = async (orgId, status) => {
     console.error("❌ Error updating organizer status:", err);
     throw new Error(
       err.response?.data?.message || "Failed to update organizer status"
+    );
+  }
+};
+
+// Get organizer status
+export const getOrganizerStatus = async () => {
+  try {
+    const response = await apiClient.get("/organizers/status");
+    return response.data;
+  } catch (err) {
+    console.error("❌ Error fetching organizer status:", err);
+    throw new Error(
+      err.response?.data?.message || "Failed to fetch organizer status"
     );
   }
 };

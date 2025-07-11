@@ -11,11 +11,13 @@ import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.model.*;
 import com.example.backend.repository.*;
 import com.example.backend.service.EventService;
+import com.example.backend.util.StatusOrganizer;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PutMapping;
 
@@ -38,6 +40,7 @@ public class EventServiceImpl implements EventService {
     private final SearchCriteriaRepository searchCriteriaRepository;
 
     private final AddressRepository addressRepository;
+    private final UserRepository userRepository;
 
 
     @Override
@@ -385,6 +388,7 @@ public class EventServiceImpl implements EventService {
         Map<Long, Double> priceMap = minPriceProjections.stream().collect(Collectors.toMap(EventMinPriceProjection::getEventId, EventMinPriceProjection::getMinPrice));
         return filteredEvents.stream().map(event-> new EventHomeDTO(event, priceMap.get(event.getId().longValue()))).toList();
     }
+
 
     @Override
     public FeaturedEventResponse getFeaturedEventsForHome() {
