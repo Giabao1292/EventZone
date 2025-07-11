@@ -234,8 +234,6 @@ public class BookingServiceImpl implements BookingService {
                 .map(BookingHistoryDTO::new)
                 .toList();
     }
-
-
     @Override
     public List<Integer> getShowingTimeIdsByUserId(Integer userId) {
         return bookingRepository.findConfirmedShowingTimeIdsByUserId(userId);

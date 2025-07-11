@@ -46,7 +46,9 @@ export default function ViewBookingHistory() {
     const fetchQr = async () => {
       if (!selectedBooking) return;
       try {
-        const qrData = await QrCodeService.getQrCodeBase64(selectedBooking.bookingId);
+        const qrData = await QrCodeService.getQrCodeBase64(
+          selectedBooking.bookingId
+        );
         setQrImage(qrData);
       } catch (err) {
         console.error("Lỗi khi tải QR:", err);
@@ -218,7 +220,8 @@ export default function ViewBookingHistory() {
             Danh sách các sự kiện bạn đã đặt vé để dễ dàng theo dõi và quản lý.
           </p>
           <p className="text-orange-400 text-sm">
-            Bạn có thể xóa sự kiện khỏi danh sách bất cứ lúc nào hoặc nhấn vào sự kiện để xem chi tiết.
+            Bạn có thể xóa sự kiện khỏi danh sách bất cứ lúc nào hoặc nhấn vào
+            sự kiện để xem chi tiết.
           </p>
 
           {/* Search Bar */}
@@ -287,16 +290,10 @@ export default function ViewBookingHistory() {
       {reviewBooking && (
         <div className="fixed inset-0 z-[100000] bg-black/70 flex justify-center items-center p-6">
           <div className="bg-gray-900 rounded-2xl shadow-lg max-w-3xl w-full p-6 text-white relative">
-            <button
-              onClick={handleCloseReview}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
-              aria-label="Đóng form đánh giá"
-            >
-              <X size={24} />
-            </button>
             <ReviewSection
-              showingTimeId={reviewBooking.bookingId}
+              showingTimeId={reviewBooking.showingTimeId}
               canReview={true}
+              onClose={handleCloseReview} // Pass the onClose prop
             />
           </div>
         </div>
@@ -358,7 +355,9 @@ export default function ViewBookingHistory() {
                       <p className="text-sm text-gray-500">Thời gian diễn ra</p>
                       <p className="font-medium text-gray-900">
                         {selectedBooking.showTime
-                          ? new Date(selectedBooking.showTime).toLocaleString("vi-VN")
+                          ? new Date(selectedBooking.showTime).toLocaleString(
+                              "vi-VN"
+                            )
                           : "Chưa có thông tin"}
                       </p>
                     </div>
@@ -369,7 +368,9 @@ export default function ViewBookingHistory() {
                       <p className="text-sm text-gray-500">Ngày đặt vé</p>
                       <p className="font-medium text-gray-900">
                         {selectedBooking.bookedAt
-                          ? new Date(selectedBooking.bookedAt).toLocaleString("vi-VN")
+                          ? new Date(selectedBooking.bookedAt).toLocaleString(
+                              "vi-VN"
+                            )
                           : "Chưa có thông tin"}
                       </p>
                     </div>
@@ -499,7 +500,13 @@ export default function ViewBookingHistory() {
   );
 }
 
-const BookingCard = ({ booking, onViewDetails, onOpenReview, isEventEnded, index }) => {
+const BookingCard = ({
+  booking,
+  onViewDetails,
+  onOpenReview,
+  isEventEnded,
+  index,
+}) => {
   const {
     eventTitle,
     imageUrl,
