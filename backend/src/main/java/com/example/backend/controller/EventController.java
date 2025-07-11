@@ -53,45 +53,12 @@ public class EventController {
 
     @GetMapping("/home")
     public ResponseEntity<ResponseData<Map<String, List<EventHomeDTO>>>> getHomeEvents() {
-        List<Event> events = eventService.getApprovedEvents();
-        List<EventHomeDTO> ongoingEvents = new ArrayList<>();
-        List<EventHomeDTO> upcomingEvents = new ArrayList<>();
-        LocalDateTime now = LocalDateTime.now();
-
-        for (Event event : events) {
-            Set<ShowingTime> showings = event.getTblShowingTimes();
-            if (showings == null || showings.isEmpty()) continue;
-
-            boolean isOngoing = showings.stream()
-                    .anyMatch(st -> st.getSaleOpenTime() != null && st.getSaleCloseTime() != null &&
-                            !now.isBefore(st.getSaleOpenTime()) && !now.isAfter(st.getSaleCloseTime()));
-
-            boolean isUpcoming = showings.stream()
-                    .allMatch(st -> st.getSaleOpenTime() != null && now.isBefore(st.getSaleOpenTime()));
-
-            OptionalDouble lowestPriceOpt = showings.stream()
-                    .flatMap(st -> st.getSeats().stream())
-                    .mapToDouble(seat -> seat.getPrice().doubleValue())
-                    .min();
-
-            double lowestPrice = lowestPriceOpt.orElse(0);
-            EventHomeDTO dto = new EventHomeDTO(event, lowestPrice);
-
-            if (isOngoing) {
-                ongoingEvents.add(dto);
-            } else if (isUpcoming) {
-                upcomingEvents.add(dto);
-            }
-        }
-
-        Map<String, List<EventHomeDTO>> result = new HashMap<>();
-        result.put("ongoing", ongoingEvents);
-        result.put("upcoming", upcomingEvents);
-
+        Map<String, List<EventHomeDTO>> result = eventService.getHomeEventsGroupedByStatus();
         return ResponseEntity.ok(
                 new ResponseData<>(200, "Lấy sự kiện trang chủ thành công", result)
         );
     }
+
 
     @PreAuthorize("hasRole('ORGANIZER')")
     @PostMapping("/create")

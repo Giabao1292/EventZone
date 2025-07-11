@@ -23,8 +23,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -55,6 +54,56 @@ public class EventServiceImpl implements EventService {
     public List<Event> getApprovedEvents() {
         return eventRepository.findByStatus_StatusName("APPROVED");
     }
+    @Override
+    public Map<String, List<EventHomeDTO>> getHomeEventsGroupedByStatus() {
+        List<Event> events = getApprovedEvents();
+        List<EventHomeDTO> ongoingEvents = new ArrayList<>();
+        List<EventHomeDTO> upcomingEvents = new ArrayList<>();
+        LocalDateTime now = LocalDateTime.now();
+
+        for (Event event : events) {
+            Set<ShowingTime> showings = event.getTblShowingTimes();
+            if (showings == null || showings.isEmpty()) continue;
+
+            boolean hasOngoing = false;
+            boolean hasUpcoming = false;
+
+            // Check all showings to determine status
+            for (ShowingTime st : showings) {
+                if (st.getSaleOpenTime() != null && st.getSaleCloseTime() != null) {
+                    if (!now.isBefore(st.getSaleOpenTime()) && !now.isAfter(st.getSaleCloseTime())) {
+                        hasOngoing = true; // Mark as ongoing if any showing is open
+                    } else if (now.isBefore(st.getSaleOpenTime())) {
+                        hasUpcoming = true; // Mark as upcoming if any showing is upcoming
+                    }
+                }
+            }
+
+            // Skip if neither ongoing nor upcoming
+            if (!hasOngoing && !hasUpcoming) continue;
+
+            // Calculate lowest price
+            OptionalDouble lowestPriceOpt = showings.stream()
+                    .flatMap(st -> st.getSeats().stream())
+                    .mapToDouble(seat -> seat.getPrice().doubleValue())
+                    .min();
+            double lowestPrice = lowestPriceOpt.orElse(0);
+            EventHomeDTO dto = new EventHomeDTO(event, lowestPrice);
+
+            // Prioritize ongoing status
+            if (hasOngoing) {
+                ongoingEvents.add(dto);
+            } else {
+                upcomingEvents.add(dto);
+            }
+        }
+
+        Map<String, List<EventHomeDTO>> result = new HashMap<>();
+        result.put("ongoing", ongoingEvents);
+        result.put("upcoming", upcomingEvents);
+        return result;
+    }
+
     @Override
     public Event createEvent(EventRequest request) {
         Organizer organizer = organizerRepository.findById(request.getOrganizerId())
