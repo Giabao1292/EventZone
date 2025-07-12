@@ -7,6 +7,8 @@ import avatarDefault from "../assets/images/profile/avtDefault.jpg";
 import useAuth from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import NotificationDropdown from "../components/home/NotificationDropdown";
+import { FaRegStar } from "react-icons/fa";
+
 
 const Header = () => {
   const { isAuthenticated, user, logout } = useAuth();
@@ -140,6 +142,15 @@ const Header = () => {
               />
             </svg>
             Vé đã mua
+          </Link>
+
+          <Link
+              to="/reviewable"
+              className="flex items-center text-gray-200 hover:text-yellow-400 text-sm font-semibold transition-colors"
+              title="Đánh giá sự kiện"
+          >
+            <FaRegStar className="mr-2 text-lg" />
+            Đánh giá
           </Link>
         </div>
 
