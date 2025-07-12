@@ -268,4 +268,26 @@ public class EventController {
         return new ResponseData<>(HttpStatus.OK.value(), "Get list of events", listEvents);
     }
 
+
+    @GetMapping("/reviewable")
+    public ResponseEntity<ResponseData<List<EventResponse>>> getEventsForReviewByCategory(
+            @RequestParam int categoryId) {
+        List<EventResponse> responses = eventService.getEventsForReviewByCategory(categoryId);
+        return ResponseEntity.ok(new ResponseData<>(200, "Lấy sự kiện review thành công", responses));
+    }
+
+    @GetMapping("/reviewable/all")
+    public ResponseEntity<ResponseData<PageResponse<EventResponse>>> getEventsForReviewAllPaged(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Integer categoryId
+    ) {
+        PageResponse<EventResponse> responses = eventService.getEventsForReviewAllCategoriesPaged(page, size, search, categoryId);
+        return ResponseEntity.ok(new ResponseData<>(200, "Lấy sự kiện review thành công", responses));
+    }
+
+
+
+
 }

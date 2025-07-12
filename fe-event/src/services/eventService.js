@@ -501,3 +501,48 @@ export const getMyEvents = async (token) => {
     };
   }
 };
+
+// Lấy danh sách event review được theo category
+export const getEndedEventsByCategory = async (categoryId) => {
+  try {
+    const response = await apiClient.get(`/events/reviewable`, {
+      params: { categoryId },
+    });
+    // Đảm bảo trả về đúng kiểu mảng event cho FE xài luôn
+    // Nếu backend trả về dạng { code, message, data }
+    return response.data.data || [];
+  } catch (error) {
+    console.error("Error fetching ended/reviewable events:", error);
+    return [];
+  }
+};
+
+
+export const getReviewableEvents = async (page = 0, size = 20, search = "", categoryId = null) => {
+  try {
+    const params = new URLSearchParams();
+    params.append("page", page.toString());
+    params.append("size", size.toString());
+    if (search && search.trim()) {
+      params.append("search", `eventTitle:${search.trim()}`);
+    }
+    if (categoryId && categoryId !== "all") {
+      params.append("categoryId", categoryId);
+    }
+    // Giả sử BE định nghĩa endpoint này:
+    const response = await apiClient.get(`/events/reviewable/all?${params.toString()}`);
+    const data = response.data.data;
+    // Trả về PageResponse dạng { content: [...], totalElements, totalPages, number, size }
+    return data;
+  } catch (error) {
+    console.error("Lỗi khi lấy sự kiện reviewable:", error);
+    return {
+      content: [],
+      totalElements: 0,
+      totalPages: 1,
+      number: 0,
+      size: size,
+    };
+  }
+};
+

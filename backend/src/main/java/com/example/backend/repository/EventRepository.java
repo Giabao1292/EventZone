@@ -74,4 +74,16 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
             "WHERE e.status.statusName = 'APPROVED'")
     List<Event> findApprovedEventsWithShowingsAndSeats();
 
+    List<Event> findByCategory_CategoryIdAndStatus_StatusName(int categoryId, String statusName);
+
+    // Ví dụ JPQL
+    @Query("SELECT e FROM Event e JOIN e.tblShowingTimes st WHERE " +
+            "( :categoryId IS NULL OR e.category.categoryId = :categoryId ) " +
+            "AND ( :search IS NULL OR LOWER(e.eventTitle) LIKE LOWER(CONCAT('%', :search, '%')) ) " +
+            "AND (st.endTime < CURRENT_TIMESTAMP) " +
+            "AND e.status.statusName = 'APPROVED' " +
+            "GROUP BY e")
+    Page<Event> findEndedEvents(@Param("search") String search, @Param("categoryId") Integer categoryId, Pageable pageable);
+
+
 }
