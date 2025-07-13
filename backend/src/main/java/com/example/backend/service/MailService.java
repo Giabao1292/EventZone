@@ -20,6 +20,7 @@ import java.util.*;
 import com.example.backend.model.User;
 import com.example.backend.model.Event;
 import com.example.backend.model.ShowingTime;
+import org.springframework.scheduling.annotation.Async;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -121,6 +122,65 @@ public class MailService {
 
         mailSender.send(message);
     }
+
+    @Async
+    public void sendRescheduleEmailAsync(String toEmail, String eventTitle, String oldStartTime,
+                                         String oldEndTime, String newStartTime, String newEndTime) {
+        log.info("sendRescheduleEmailAsync called for email: {}", toEmail);
+        try {
+            // Giả sử sendRescheduleEmail nhận 6 tham số (không có fullName)
+            sendRescheduleEmail(toEmail, eventTitle, oldStartTime, oldEndTime, newStartTime, newEndTime);
+            log.info("Reschedule email sent successfully to {}", toEmail);
+        } catch (MessagingException e) {
+            log.error("Failed to send reschedule email notification asynchronously", e);
+        }
+    }
+
+
+
+    public void sendRescheduleEmail(String toEmail, String eventTitle, String oldStartTime,
+                                    String oldEndTime, String newStartTime, String newEndTime) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        Context context = new Context();
+        Map<String, Object> properties = new HashMap<>();
+
+        // Nếu bạn có tên người dùng thì thêm vào context, hoặc để mặc định "Bạn"
+        properties.put("fullName", "Bạn");  // Hoặc lấy từ param nếu có
+        properties.put("eventTitle", eventTitle);
+        properties.put("oldStartTime", oldStartTime);
+        properties.put("oldEndTime", oldEndTime);
+        properties.put("newStartTime", newStartTime);
+        properties.put("newEndTime", newEndTime);
+        context.setVariables(properties);
+
+        helper.setTo(toEmail);
+        helper.setFrom(emailFrom);
+        helper.setSubject("[Thông báo] Suất chiếu đã dời lịch");
+        helper.setText(templateEngine.process("reschedule-email.html", context), true);
+
+        mailSender.send(message);
+    }
+
+
+    public void sendRejectRescheduleEmail(String toEmail, String fullName, String eventTitle, String rejectReason) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        Context context = new Context();
+        context.setVariable("fullName", fullName);
+        context.setVariable("eventTitle", eventTitle);
+        context.setVariable("rejectReason", rejectReason);
+
+        helper.setTo(toEmail);
+        helper.setFrom(emailFrom);
+        helper.setSubject("[Thông báo] Yêu cầu dời lịch bị từ chối");
+        helper.setText(templateEngine.process("reject-reschedule-email.html", context), true);
+
+        mailSender.send(message);
+    }
+
 
 
 }

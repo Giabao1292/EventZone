@@ -13,6 +13,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Slf4j
@@ -121,4 +123,56 @@ public class NotificationService {
         List<Long> listIds = user.getTblNotifications().stream().filter(Notification::getIsRead).map(Notification::getId).toList();
         notificationRepository.deleteAllById(listIds);
     }
+
+    public void notifyRescheduleToBuyers(List<User> buyers, String eventTitle, String oldStart, String oldEnd, String newStart, String newEnd, String redirectPath) {
+        String title = "Thông báo dời lịch suất chiếu";
+        String content = "Suất chiếu của sự kiện '" + eventTitle + "' bạn đã mua đã thay đổi thời gian. Vui lòng kiểm tra lại lịch mới.";
+
+        for (User user : buyers) {
+            NotificationResponse dto = NotificationResponse.builder()
+                    .title(title)
+                    .content(content)
+                    .redirectPath(redirectPath)
+                    .build();
+            sendNotificationToUser(user.getUsername(), dto);
+            Notification entity = createNotification(user, dto);
+            notificationRepository.save(entity);
+        }
+    }
+
+    // Thông báo cho organizer khi yêu cầu DỜI LỊCH của họ được duyệt
+    public void notifyRescheduleApproved(User organizer, String eventTitle, String oldStart, String oldEnd, String newStart, String newEnd, String redirectPath) {
+        String title = "Yêu cầu dời lịch đã được phê duyệt";
+        String content = "Yêu cầu dời lịch suất chiếu của sự kiện '" + eventTitle + "' đã được admin phê duyệt.<br/>"
+                + "<b>Thời gian cũ:</b> " + oldStart + " - " + oldEnd + "<br/>"
+                + "<b>Thời gian mới:</b> " + newStart + " - " + newEnd;
+        NotificationResponse dto = NotificationResponse.builder()
+                .title(title)
+                .content(content)
+                .redirectPath(redirectPath)
+                .build();
+        sendNotificationToUser(organizer.getUsername(), dto);
+        Notification entity = createNotification(organizer, dto);
+        notificationRepository.save(entity);
+    }
+
+    // Thông báo cho organizer khi yêu cầu dời lịch BỊ TỪ CHỐI
+    public void notifyRescheduleRejected(User organizer, String eventTitle, String rejectReason, String redirectPath) {
+        NotificationResponse dto = NotificationResponse.builder()
+                .title("Yêu cầu dời lịch bị từ chối")
+                .content("Yêu cầu dời lịch cho sự kiện <b>" + eventTitle + "</b> đã bị từ chối. <br/>Lý do: <b>" + rejectReason + "</b>")
+                .redirectPath(redirectPath)
+                .build();
+        sendNotificationToUser(organizer.getUsername(), dto);
+        Notification entity = createNotification(organizer, dto);
+        notificationRepository.save(entity);
+    }
+
+
+
+
+
+
+
+
 }

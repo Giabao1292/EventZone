@@ -111,6 +111,7 @@ public class BookingServiceImpl implements BookingService {
 
         return bookingRepository.save(booking);
     }
+
     @Override
     @Transactional
     public Booking confirmBooking(Integer bookingId, String paymentMethod) throws IOException {
@@ -234,10 +235,7 @@ public class BookingServiceImpl implements BookingService {
                 .map(BookingHistoryDTO::new)
                 .toList();
     }
-    @Override
-    public List<Integer> getShowingTimeIdsByUserId(Integer userId) {
-        return bookingRepository.findConfirmedShowingTimeIdsByUserId(userId);
-    }
+
 
     @Override
     public List<Booking> findByUserIdAndPaymentStatus(Integer userId, String paymentStatus) {
@@ -247,7 +245,8 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public List<Integer> getConfirmedShowingTimeIdsByUserId(Integer userId) {
-        return bookingRepository.findConfirmedShowingTimeIdsByUserId(userId);
+        return bookingRepository.findConfirmedShowingTimeIdsByUserId(userId, "CONFIRMED");
+
     }
 
 }
