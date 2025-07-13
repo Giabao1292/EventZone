@@ -1,27 +1,23 @@
 package com.example.backend.repository;
 
-
 import com.example.backend.dto.response.BuyerSummaryDTO;
 import com.example.backend.model.Booking;
-import com.example.backend.model.PaymentStatus;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 public interface BookingRepository extends JpaRepository<Booking, Integer> {
     @EntityGraph(attributePaths = {
             "tblBookingSeats",
-            "tblBookingSeats.seat",          // ⚠️ PHẢI CÓ DÒNG NÀY
-            "tblBookingSeats.zone",          // nếu có zone
+            "tblBookingSeats.seat",
+            "tblBookingSeats.zone",
             "showingTime",
             "showingTime.event",
             "showingTime.address"
@@ -37,7 +33,7 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
 
     default void deleteExpiredHolds(LocalDateTime expirationTime) {
         List<Booking> expiredBookings = findAllByPaymentStatusAndCreatedDatetimeBefore("HOLD", expirationTime);
-        deleteAll(expiredBookings); // Hibernate sẽ xử lý cascade
+        deleteAll(expiredBookings);
     }
 
     List<Booking> findAllByPaymentStatusAndCreatedDatetimeBefore(String status, LocalDateTime time);
@@ -68,12 +64,14 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
 
     List<Booking> findByUserIdAndPaymentStatus(Integer userId, String paymentStatus);
 
+    @Query("SELECT b.showingTime.id FROM Booking b WHERE b.user.id = :userId AND b.paymentStatus = :paymentStatus")
+    List<Integer> findConfirmedShowingTimeIdsByUserId(@Param("userId") Integer userId,
+                                                      @Param("paymentStatus") String paymentStatus);
 
-    @Query("SELECT b.showingTime.id FROM Booking b WHERE b.user.id = :userId AND b.paymentStatus = 'CONFIRMED'")
-    List<Integer> findConfirmedShowingTimeIdsByUserId(@Param("userId") Integer userId);
+    @Query("SELECT b FROM Booking b WHERE b.showingTime.id = :showingTimeId AND b.paymentStatus = :paymentStatus")
+    List<Booking> findByShowingTimeIdAndPaymentStatus(@Param("showingTimeId") Integer showingTimeId,
+                                                      @Param("paymentStatus") String paymentStatus);
 
-    @Query("SELECT b FROM Booking b WHERE b.showingTime.id = :showingTimeId AND b.paymentStatus = :status")
-    List<Booking> findByShowingTimeIdAndPaymentStatus(Integer showingTimeId, String status);
 
     List<Booking> findByShowingTimeId(Integer showingTimeId);
 
@@ -96,7 +94,7 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
       AND b.paymentStatus = 'CONFIRMED'
     GROUP BY u.fullName, u.email, u.phone, e.eventTitle, b.createdDatetime, b.finalPrice
 """)
-
     List<BuyerSummaryDTO> findBuyersByOrganizerId(@Param("organizerId") Integer organizerId);
+
 
 }

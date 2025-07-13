@@ -42,9 +42,19 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<EventResponse> getPosterImagesByCategory(int categoryId) {
-        // Chỉ lấy event đã duyệt
+        LocalDateTime now = LocalDateTime.now();
         List<Event> events = eventRepository.findByCategory_CategoryIdAndStatus_StatusName(categoryId, "APPROVED");
-        return events.stream()
+        // LỌC: Chỉ lấy event còn ít nhất 1 suất chiếu chưa kết thúc
+        List<Event> filtered = events.stream()
+                .filter(ev ->
+                        ev.getTblShowingTimes() != null &&
+                                ev.getTblShowingTimes().stream().anyMatch(
+                                        st -> st.getEndTime() != null && st.getEndTime().isAfter(now)
+                                )
+                )
+                .collect(Collectors.toList());
+
+        return filtered.stream()
                 .map(this::mapToEventResponse)
                 .collect(Collectors.toList());
     }
@@ -160,6 +170,9 @@ public class EventServiceImpl implements EventService {
             stDto.setSaleOpenTime(st.getSaleOpenTime());
             stDto.setSaleCloseTime(st.getSaleCloseTime());
 
+            // Thêm dòng này để trả về status cho FE!
+            stDto.setStatus(st.getStatus() != null ? st.getStatus().name() : null);
+
             // Mapping Address (nếu có)
             Address address = st.getAddress();
             if (address != null) {
@@ -242,7 +255,6 @@ public class EventServiceImpl implements EventService {
         dto.setVenueName(venueName);
 
         // Nếu có field maxCapacity (thêm vào entity Event nếu cần)
-        // dto.setMaxCapacity(event.getMaxCapacity()); // Nếu có trong entity Event
         dto.setMaxCapacity(null);
 
         dto.setStartTime(event.getStartTime() != null ? event.getStartTime().toString() : null);

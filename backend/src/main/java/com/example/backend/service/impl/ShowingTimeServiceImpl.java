@@ -3,10 +3,7 @@ package com.example.backend.service.impl;
 import com.example.backend.dto.request.CreateMultipleShowingTimeRequest;
 import com.example.backend.dto.request.ShowingTimeRequest;
 import com.example.backend.dto.request.UpdateShowingTimeRequest;
-import com.example.backend.dto.response.LayoutDTO;
-import com.example.backend.dto.response.SeatDTO;
-import com.example.backend.dto.response.ShowingTimeAdmin;
-import com.example.backend.dto.response.ZoneDTO;
+import com.example.backend.dto.response.*;
 import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.model.*;
 import com.example.backend.repository.*;
@@ -274,6 +271,33 @@ public  class ShowingTimeServiceImpl implements ShowingTimeService {
         });
     }
 
+
+
+    @Override
+    public List<ShowingTimeDTO> getShowingTimesByEventId(int eventId) {
+        Event event = eventRepo.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy event id=" + eventId));
+
+        List<ShowingTime> showingTimes = event.getTblShowingTimes().stream().toList();
+
+        return showingTimes.stream()
+                .map(st -> ShowingTimeDTO.builder()
+                        .id(st.getId())
+                        .startTime(st.getStartTime())
+                        .endTime(st.getEndTime())
+                        .saleOpenTime(st.getSaleOpenTime())
+                        .saleCloseTime(st.getSaleCloseTime())
+                        .layoutMode(st.getLayoutMode())
+                        .address(new AddressDTO(
+                                st.getAddress().getId(),
+                                st.getAddress().getVenueName(),
+                                st.getAddress().getLocation(),
+                                st.getAddress().getCity()
+                        ))
+                        .status(st.getStatus() != null ? st.getStatus().name() : null) // <-- map status
+                        .build())
+                .collect(Collectors.toList());
+    }
 
 
 

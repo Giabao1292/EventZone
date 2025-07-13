@@ -3,6 +3,7 @@ spring:
     level:
       org.springframework.security: DEBUG
       com.example.backend: DEBUG
+
   profiles:
     active: dev
   application:
