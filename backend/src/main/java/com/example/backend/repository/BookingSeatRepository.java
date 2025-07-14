@@ -53,5 +53,5 @@ public interface BookingSeatRepository extends JpaRepository<BookingSeat, Intege
             @Param("toDate") LocalDateTime toDate,
             @Param("organizerId") Integer organizerId
     );
-
+    boolean existsBySeatIdAndStatusIn(Integer seatId, List<String> statuses);
 }

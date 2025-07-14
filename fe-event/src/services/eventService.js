@@ -90,11 +90,11 @@ export const getEventDetails = async (eventId) => {
           startDate: event.startTime ? event.startTime.split("T")[0] : "",
           endDate: event.endTime ? event.endTime.split("T")[0] : "",
           startTime: event.startTime
-              ? event.startTime.split("T")[1]?.substring(0, 5)
-              : "",
+            ? event.startTime.split("T")[1]?.substring(0, 5)
+            : "",
           endTime: event.endTime
-              ? event.endTime.split("T")[1]?.substring(0, 5)
-              : "",
+            ? event.endTime.split("T")[1]?.substring(0, 5)
+            : "",
           location: event.address,
           address: event.address,
           maxParticipants: 500,
@@ -152,9 +152,9 @@ export const getEventCategories = async () => {
 
 // Cập nhật trạng thái sự kiện (duyệt/từ chối...)
 export const updateEventStatus = async (
-    eventId,
-    status,
-    rejectionReason = null
+  eventId,
+  status,
+  rejectionReason = null
 ) => {
   try {
     const body = {
@@ -165,13 +165,21 @@ export const updateEventStatus = async (
     return response.data;
   } catch (error) {
     console.error(
-        "Error updating event status:",
-        error.response?.data || error.message
+      "Error updating event status:",
+      error.response?.data || error.message
     );
     throw error;
   }
 };
-
+export const getRecommendedEvents = async () => {
+  try {
+    const response = await apiClient.get("/events/recommend");
+    return response.data.data || [];
+  } catch (error) {
+    console.error("❌ Lỗi khi lấy sự kiện gợi ý:", error);
+    return [];
+  }
+};
 // Lấy showing times của 1 event
 export const getEventShowingTimes = async (eventId) => {
   try {
@@ -189,11 +197,11 @@ export const getEventShowingTimes = async (eventId) => {
 
 // Lấy danh sách attendee cho 1 showing time của event (phân trang)
 export const getEventAttendees = async (
-    eventId,
-    startTime,
-    page = 0,
-    size = 10,
-    search = []
+  eventId,
+  startTime,
+  page = 0,
+  size = 10,
+  search = []
 ) => {
   try {
     const params = new URLSearchParams();
@@ -206,7 +214,7 @@ export const getEventAttendees = async (
     });
 
     const response = await apiClient.get(
-        `/events/${eventId}/attendees?${params}`
+      `/events/${eventId}/attendees?${params}`
     );
     return response.data;
   } catch (error) {
@@ -234,7 +242,7 @@ export const searchAttendeeByQR = async (eventId, startTime, qrToken) => {
     params.append("startTime", startTime);
     params.append("search", `qrToken:${qrToken}`);
     const response = await apiClient.get(
-        `/events/${eventId}/attendees?${params}`
+      `/events/${eventId}/attendees?${params}`
     );
     return response.data;
   } catch (error) {
@@ -250,7 +258,7 @@ export const getEventAnalytics = async (eventId, startTime) => {
     params.append("startTime", startTime);
 
     const response = await apiClient.get(
-        `/events/${eventId}/analytics?${params}`
+      `/events/${eventId}/analytics?${params}`
     );
     return response.data;
   } catch (error) {
@@ -302,7 +310,7 @@ export const buildSearchParams = (statusName, eventTitle) => {
 export const getEventsByStatus = async (organizerId, statusId) => {
   try {
     const res = await apiClient.get(
-        `/events/organizer/${organizerId}/status/${statusId}`
+      `/events/organizer/${organizerId}/status/${statusId}`
     );
     return res.data.data || [];
   } catch (error) {
@@ -318,12 +326,12 @@ export const mapApiEventDetailToComponent = (apiEventDetail) => {
     title: apiEventDetail.eventName || apiEventDetail.eventTitle || "",
     description: apiEventDetail.description || "",
     date:
-        apiEventDetail.startDate ||
-        (apiEventDetail.startTime ? apiEventDetail.startTime.split("T")[0] : ""),
+      apiEventDetail.startDate ||
+      (apiEventDetail.startTime ? apiEventDetail.startTime.split("T")[0] : ""),
     time: apiEventDetail.startTime || "",
     endDate:
-        apiEventDetail.endDate ||
-        (apiEventDetail.endTime ? apiEventDetail.endTime.split("T")[0] : ""),
+      apiEventDetail.endDate ||
+      (apiEventDetail.endTime ? apiEventDetail.endTime.split("T")[0] : ""),
     endTime: apiEventDetail.endTime || "",
     location: apiEventDetail.location || apiEventDetail.address || "",
     price: apiEventDetail.price || 0,
@@ -332,9 +340,9 @@ export const mapApiEventDetailToComponent = (apiEventDetail) => {
     category: apiEventDetail.categoryName || "",
     rejectionReason: apiEventDetail.rejectionReason || "",
     imageUrl:
-        apiEventDetail.thumbnailUrl ||
-        apiEventDetail.bannerUrl ||
-        "/placeholder.svg?height=200&width=300",
+      apiEventDetail.thumbnailUrl ||
+      apiEventDetail.bannerUrl ||
+      "/placeholder.svg?height=200&width=300",
     organizerId: "",
     organizerName: apiEventDetail.organizerName || "",
     organizerEmail: apiEventDetail.organizerEmail || "",
@@ -359,8 +367,8 @@ export const mapApiEventToComponent = (apiEvent) => {
     startDate: apiEvent.startTime ? apiEvent.startTime.split("T")[0] : "",
     endDate: apiEvent.endTime ? apiEvent.endTime.split("T")[0] : "",
     time: apiEvent.startTime
-        ? apiEvent.startTime.split("T")[1]?.substring(0, 5)
-        : "",
+      ? apiEvent.startTime.split("T")[1]?.substring(0, 5)
+      : "",
     location: apiEvent.address || "",
     price: 0,
     maxTickets: 0,
@@ -393,8 +401,8 @@ export const userSearchEvents = async (searchParams = []) => {
 
     const queryString = params.toString();
     const url = queryString
-        ? `/events/public?${queryString}`
-        : "/events/public";
+      ? `/events/public?${queryString}`
+      : "/events/public";
     const response = await apiClient.get(url);
     return response.data.data || [];
   } catch (error) {
@@ -441,13 +449,13 @@ export const getEventStats = (events) => {
       const stats = {
         total: events.length,
         pending: events.filter(
-            (e) => mapApiStatusToDisplay(e.status) === "pending"
+          (e) => mapApiStatusToDisplay(e.status) === "pending"
         ).length,
         approved: events.filter(
-            (e) => mapApiStatusToDisplay(e.status) === "approved"
+          (e) => mapApiStatusToDisplay(e.status) === "approved"
         ).length,
         rejected: events.filter(
-            (e) => mapApiStatusToDisplay(e.status) === "rejected"
+          (e) => mapApiStatusToDisplay(e.status) === "rejected"
         ).length,
       };
       return stats;
@@ -474,7 +482,7 @@ export const getEventStats = (events) => {
 export const getAllEvents = async () => {
   try {
     const response = await apiClient.get("/events", {
-      params: { page: 0, size: 1000 }
+      params: { page: 0, size: 1000 },
     });
     // Trả về mảng cho FE dùng dropdown select
     return response.data.data?.content || [];

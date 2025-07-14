@@ -19,7 +19,8 @@ public interface EventService {
 
     Event submitEvent(int eventId);
 
-    EventDetailDTO getEventDetailById(int eventId);
+    EventDetailDTO getEventDetailById(int eventId, String userEmail);
+
 
     PageResponse<EventSummaryAdmin> searchEvent(Pageable pageable, String... search);
 
@@ -40,4 +41,5 @@ public interface EventService {
 
     FeaturedEventResponse getFeaturedEventsForHome();
 
+    List<EventHomeDTO> recommendEvents(String email);
 }
