@@ -18,7 +18,7 @@ import java.util.List;
 public interface BookingService {
     Booking holdBooking(BookingRequest request, User user);
 
-    Booking confirmBooking(Integer bookingId, String payment) throws IOException;
+    Booking confirmBooking(Integer bookingId, String paymentMethod) throws IOException;
 
     PageResponse<AttendeeResponse> searchAttendees(Pageable pageable, int eventId, LocalDateTime startTime, String[] search);
 
@@ -28,12 +28,7 @@ public interface BookingService {
 
     List<BookingHistoryDTO> getBookingHistory(String username);
 
-    List<Integer> getShowingTimeIdsByUserId(Integer userId);
-
-    List<Booking> findByUserIdAndPaymentStatus(Integer userId, String paymentStatus);
-
     List<Integer> getConfirmedShowingTimeIdsByUserId(Integer userId);
 
-
-
+    List<Booking> findByUserIdAndPaymentStatus(Integer userId, String paymentStatus);
 }

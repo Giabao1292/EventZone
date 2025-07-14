@@ -45,6 +45,9 @@ import AttendeeManager from "./components/organizer/AttendeeManager";
 import AdminWithdrawRequests from "./pages/admin/AdminWithdrawRequests";
 import WithdrawRequestPage from "./components/organizer/WithdrawRequestPage";
 import NotificationSocket from "./ui/NotificationSocket";
+import ReviewSectionPage from "./pages/ReviewSectionPage";
+
+
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() => import("./components/authentication/LoginPage"));
 const RegisterPage = lazy(() =>
@@ -110,6 +113,7 @@ function App() {
                 path="/register-organizer"
                 element={<RegisterOrganizerForm />}
               />
+              <Route path="/reviewable" element={<ReviewSectionPage />} />
             </Route>
             <Route path="/book/:showingId" element={<BookingPage />}>
               <Route

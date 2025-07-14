@@ -11,8 +11,11 @@ import java.util.List;
 import java.util.Map;
 
 public interface EventService {
+
     List<Event> getApprovedEvents();
+
     Map<String, List<EventHomeDTO>> getHomeEventsGroupedByStatus();
+
     List<EventResponse> getPosterImagesByCategory(int categoryId);
 
     Event createEvent(EventRequest request);
@@ -42,4 +45,8 @@ public interface EventService {
     FeaturedEventResponse getFeaturedEventsForHome();
 
     List<EventHomeDTO> recommendEvents(String email);
+    List<EventResponse> getEventsForReviewByCategory(int categoryId);
+
+    PageResponse<EventResponse> getEventsForReviewAllCategoriesPaged(int page, int size, String search, Integer categoryId);
+
 }

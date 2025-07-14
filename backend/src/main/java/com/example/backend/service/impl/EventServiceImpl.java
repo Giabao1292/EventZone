@@ -14,9 +14,7 @@ import com.example.backend.service.EventService;
 import com.example.backend.util.StatusOrganizer;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -49,16 +47,30 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<EventResponse> getPosterImagesByCategory(int categoryId) {
-        List<Event> events = eventRepository.findByCategory_CategoryId(categoryId);
-        return events.stream()
+        LocalDateTime now = LocalDateTime.now();
+        List<Event> events = eventRepository.findByCategory_CategoryIdAndStatus_StatusName(categoryId, "APPROVED");
+        // LỌC: Chỉ lấy event còn ít nhất 1 suất chiếu chưa kết thúc
+        List<Event> filtered = events.stream()
+                .filter(ev ->
+                        ev.getTblShowingTimes() != null &&
+                                ev.getTblShowingTimes().stream().anyMatch(
+                                        st -> st.getEndTime() != null && st.getEndTime().isAfter(now)
+                                )
+                )
+                .collect(Collectors.toList());
+
+        return filtered.stream()
                 .map(this::mapToEventResponse)
                 .collect(Collectors.toList());
     }
+
 
     @Override
     public List<Event> getApprovedEvents() {
         return eventRepository.findByStatus_StatusName("APPROVED");
     }
+
+
     @Override
     public Map<String, List<EventHomeDTO>> getHomeEventsGroupedByStatus() {
         List<Event> events = getApprovedEvents();
@@ -239,7 +251,11 @@ public class EventServiceImpl implements EventService {
             stDto.setSaleOpenTime(st.getSaleOpenTime());
             stDto.setSaleCloseTime(st.getSaleCloseTime());
 
-            // Mapping Address
+
+            // Thêm dòng này để trả về status cho FE!
+            stDto.setStatus(st.getStatus() != null ? st.getStatus().name() : null);
+
+            // Mapping Address (nếu có)
             Address address = st.getAddress();
             if (address != null) {
                 AddressDTO addrDto = new AddressDTO();
@@ -314,7 +330,8 @@ public class EventServiceImpl implements EventService {
         dto.setLocation(location);
         dto.setCity(city);
         dto.setVenueName(venueName);
-        dto.setMaxCapacity(null); // Hoặc lấy từ event nếu có
+        dto.setMaxCapacity(null);
+
         dto.setStartTime(event.getStartTime() != null ? event.getStartTime().toString() : null);
         dto.setEndTime(event.getEndTime() != null ? event.getEndTime().toString() : null);
         dto.setStatusId(event.getStatus() != null ? event.getStatus().getId() : null);
@@ -552,5 +569,38 @@ public class EventServiceImpl implements EventService {
 
         return new FeaturedEventResponse(ongoing, upcoming);
     }
+
+
+    @Override
+    public List<EventResponse> getEventsForReviewByCategory(int categoryId) {
+        LocalDateTime now = LocalDateTime.now();
+        List<Event> events = eventRepository.findByCategory_CategoryIdAndStatus_StatusName(categoryId, "APPROVED");
+        // Lọc event có ít nhất 1 showing đã kết thúc
+        return events.stream()
+                .filter(ev -> ev.getTblShowingTimes().stream().anyMatch(st -> st.getEndTime().isBefore(now)))
+                .map(this::mapToEventResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public PageResponse<EventResponse> getEventsForReviewAllCategoriesPaged(int page, int size, String search, Integer categoryId) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("startTime").descending());
+
+        // Viết 1 query repo custom: tìm event đã kết thúc, theo search & category (nếu có)
+        Page<Event> eventPage = eventRepository.findEndedEvents(search, categoryId, pageable);
+
+        List<EventResponse> content = eventPage.getContent().stream()
+                .map(this::mapToEventResponse)
+                .toList();
+
+        return PageResponse.<EventResponse>builder()
+                .content(content)
+                .totalElements((int) eventPage.getTotalElements())
+                .totalPages(eventPage.getTotalPages())
+                .number(eventPage.getNumber())
+                .size(eventPage.getSize())
+                .build();
+    }
+
 
 }

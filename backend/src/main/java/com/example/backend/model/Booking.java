@@ -59,7 +59,7 @@ public class Booking {
     @NotNull
     @ColumnDefault("'pending'")
     @Column(name = "payment_status", nullable = false)
-    private String paymentStatus;
+    private String  paymentStatus;
 
     @Column(name = "paid_at")
     private LocalDateTime paidAt;

@@ -55,3 +55,4 @@ public interface BookingSeatRepository extends JpaRepository<BookingSeat, Intege
     );
     boolean existsBySeatIdAndStatusIn(Integer seatId, List<String> statuses);
 }
+

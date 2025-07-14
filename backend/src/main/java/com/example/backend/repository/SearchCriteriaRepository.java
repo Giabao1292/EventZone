@@ -232,4 +232,7 @@ public class SearchCriteriaRepository {
         log.info("User end search Event search...");
         return entityManager.createQuery(criteriaQuery).getResultList();
     }
+
+
+
 }

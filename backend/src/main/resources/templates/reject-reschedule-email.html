@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Yêu cầu dời lịch bị từ chối</title>
+    <style>
+        body {
+            background: #f4f6fa;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            background: #fff;
+            margin: 40px auto;
+            border-radius: 12px;
+            max-width: 520px;
+            box-shadow: 0 2px 16px rgba(32,41,57,0.09);
+            padding: 32px 28px 28px 28px;
+        }
+        .title {
+            color: #e53935;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        .event-title {
+            font-size: 16px;
+            color: #0067b8;
+            font-weight: 500;
+        }
+        .reason-box {
+            background: #fff7f6;
+            border-left: 4px solid #e53935;
+            padding: 12px 18px;
+            margin: 18px 0 12px 0;
+            color: #a12323;
+            font-size: 15px;
+            border-radius: 5px;
+        }
+        .info {
+            color: #555;
+            font-size: 15px;
+            margin-bottom: 18px;
+        }
+        .footer {
+            margin-top: 36px;
+            color: #888;
+            font-size: 14px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="title">Yêu cầu dời lịch đã bị từ chối</div>
+    <div class="info">
+        Xin chào <b th:text="${fullName}">Bạn</b>,<br><br>
+        Yêu cầu dời lịch cho sự kiện <span class="event-title" th:text="${eventTitle}">[Tên sự kiện]</span> của bạn đã bị <b style="color: #e53935;">từ chối</b>.
+    </div>
+    <div class="reason-box">
+        <b>Lý do từ chối:</b><br>
+        <span th:text="${rejectReason}">Không rõ lý do</span>
+    </div>
+    <div class="info">
+        Nếu bạn cần hỗ trợ thêm, vui lòng liên hệ với ban quản trị hoặc gửi lại yêu cầu với thông tin phù hợp.<br>
+        Cảm ơn bạn đã sử dụng hệ thống của chúng tôi.
+    </div>
+    <div class="footer">
+        Trân trọng,<br>
+        <b>Hệ thống quản lý sự kiện</b>
+    </div>
+</div>
+</body>
+</html>
