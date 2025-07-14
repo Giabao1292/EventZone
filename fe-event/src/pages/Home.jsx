@@ -13,7 +13,7 @@ import {
   getEventsByCategory,
 } from "../services/categoryService";
 import { getActiveAdsToday } from "../services/adsService";
-import { getHomeEvents } from "../services/eventService";
+import { getHomeEvents, getRecommendedEvents } from "../services/eventService";
 import AdEventCard from "../ui/AdEventCard";
 import BackgroundEffect from "../ui/BackGround";
 import SearchBar from "../components/home/SearchBar";
@@ -39,6 +39,7 @@ export default function Home() {
     ongoing: [],
     upcoming: [],
   });
+  const [recommendedEvents, setRecommendedEvents] = useState([]);
   const [wishlistEventIds, setWishlistEventIds] = useState(new Set());
 
   useEffect(() => {
@@ -69,10 +70,16 @@ export default function Home() {
       try {
         const ads = await getActiveAdsToday();
         setTrendingAds(ads || []);
+
         const homeEvents = await getHomeEvents();
         setFeaturedEvents(homeEvents || { ongoing: [], upcoming: [] });
+
+        const recommended = await getRecommendedEvents();
+        console.log("Dữ liệu sự kiện đề xuất:", recommended); // Debug
+        setRecommendedEvents(recommended || []);
       } catch (error) {
         console.error("Lỗi tải dữ liệu trang chủ:", error);
+        toast.error("Không thể tải dữ liệu trang chủ. Vui lòng thử lại sau.");
       }
     };
 
@@ -90,6 +97,7 @@ export default function Home() {
         setEventsByCategory(eventsMap);
       } catch (error) {
         console.error("Lỗi tải danh mục:", error);
+        toast.error("Không thể tải danh mục. Vui lòng thử lại sau.");
       }
     };
 
@@ -105,6 +113,7 @@ export default function Home() {
         setWishlistEventIds(ids);
       } catch (err) {
         console.error("Error loading wishlist:", err.message);
+        toast.error("Không thể tải danh sách yêu thích.");
       }
     };
 
@@ -126,7 +135,7 @@ export default function Home() {
       setWishlistEventIds(updatedSet);
     } catch (error) {
       console.error("Failed to update wishlist:", error.message);
-      toast.error("Lỗi khi cập nhật yêu thích");
+      // toast.error("Lỗi khi cập nhật yêu thích");
     }
   };
 
@@ -238,12 +247,31 @@ export default function Home() {
                 isUpcoming={true}
                 isFavorite={wishlistEventIds.has(ev.id)}
                 onToggleFavorite={toggleFavorite}
-                onToggleTrack={(eventId, isTracking) => {
-                  console.log(`Event ${eventId} tracking: ${isTracking}`);
-                }}
               />
             ))}
           </div>
+        </div>
+      )}
+
+      {/* 🎯 Gợi ý cho bạn */}
+      {recommendedEvents.length > 0 ? (
+        <div className="relative z-10 px-6 pb-10">
+          <h2 className="text-xl font-semibold mb-4">🎯 Dành riêng cho bạn</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {recommendedEvents.map((ev) => (
+              <EventCard
+                key={ev.id}
+                event={ev}
+                isFavorite={wishlistEventIds.has(ev.id)}
+                onToggleFavorite={toggleFavorite}
+              />
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="relative z-10 px-6 pb-10">
+          <h2 className="text-xl font-semibold mb-4">🎯 Dành riêng cho bạn</h2>
+          <p>Không có sự kiện đề xuất nào hiện tại.</p>
         </div>
       )}
 

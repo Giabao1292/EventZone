@@ -9,9 +9,9 @@ function BackgroundEffect({ image }) {
           backgroundSize: "cover",
           backgroundPosition: "center top",
           backgroundRepeat: "no-repeat",
-          maxWidth: "1440px",
-          maxHeight: "100%",
-          margin: "0 auto",
+          backgroundAttachment: "fixed", // Giữ background cố định
+          width: "100%",
+          height: "100vh", // Chỉ cao bằng viewport height
         }}
       />
       <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80" />

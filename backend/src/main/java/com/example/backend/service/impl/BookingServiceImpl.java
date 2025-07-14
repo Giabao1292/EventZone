@@ -50,6 +50,7 @@ public class BookingServiceImpl implements BookingService {
     private final SearchCriteriaRepository searchCriteriaRepository;
 
     @Override
+    @Transactional
     public Booking holdBooking(BookingRequest request, User user) {
         ShowingTime showingTime = showingTimeRepository.findById(request.getShowingTimeId())
                 .orElseThrow(() -> new RuntimeException("Showing time not found"));
@@ -63,10 +64,20 @@ public class BookingServiceImpl implements BookingService {
         BigDecimal total = BigDecimal.ZERO;
         Set<BookingSeat> bookingSeats = new LinkedHashSet<>();
 
+        // Xử lý ghế riêng lẻ
         if (request.getSeats() != null) {
             for (BookingRequest.SeatBookingDTO dto : request.getSeats()) {
-                Seat seat = seatRepository.findById(dto.getSeatId())
+                Seat seat = seatRepository.findByIdForUpdate(dto.getSeatId())
                         .orElseThrow(() -> new RuntimeException("Seat not found"));
+
+                // Kiểm tra nếu ghế đã bị giữ hoặc đặt
+                boolean seatAlreadyTaken = bookingSeatRepository.existsBySeatIdAndStatusIn(
+                        seat.getId(),
+                        List.of("HOLD", "BOOKED")
+                );
+                if (seatAlreadyTaken) {
+                    throw new RuntimeException("Seat " + seat.getSeatLabel() + " is already held or booked.");
+                }
 
                 BookingSeat bs = new BookingSeat();
                 bs.setSeat(seat);
@@ -80,16 +91,17 @@ public class BookingServiceImpl implements BookingService {
             }
         }
 
+        // Xử lý zone
         if (request.getZones() != null) {
             for (BookingRequest.ZoneBookingDTO dto : request.getZones()) {
-                Zone zone = zoneRepository.findById(dto.getZoneId())
+                Zone zone = zoneRepository.findByIdForUpdate(dto.getZoneId())
                         .orElseThrow(() -> new RuntimeException("Zone not found"));
 
                 if (zone.getCapacity() < dto.getQuantity()) {
                     throw new RuntimeException("Not enough tickets in zone: " + zone.getZoneName());
                 }
 
-                // Trừ luôn số lượng vé zone
+                // Trừ capacity tạm thời
                 zone.setCapacity(zone.getCapacity() - dto.getQuantity());
                 zoneRepository.save(zone);
 
@@ -135,13 +147,16 @@ public class BookingServiceImpl implements BookingService {
         return bookingRepository.save(booking);
     }
 
-
+    @Transactional
     @Scheduled(fixedRate = 60000)
     public void removeExpiredHolds() {
-        LocalDateTime threshold = LocalDateTime.now().minusMinutes(3);
-        List<Booking> expired = bookingRepository.findAllByPaymentStatusAndCreatedDatetimeBefore("HOLD", threshold);
+        LocalDateTime threshold = LocalDateTime.now().minusMinutes(5);
 
-        for (Booking booking : expired) {
+        List<Booking> expiredBookings = bookingRepository
+                .findAllByPaymentStatusAndCreatedDatetimeBefore("PENDING", threshold);
+
+        for (Booking booking : expiredBookings) {
+            // Cập nhật lại capacity cho các zone nếu cần
             for (BookingSeat bs : booking.getTblBookingSeats()) {
                 if (bs.getZone() != null) {
                     Zone zone = bs.getZone();
@@ -149,9 +164,9 @@ public class BookingServiceImpl implements BookingService {
                     zoneRepository.save(zone);
                 }
             }
-        }
 
-        bookingRepository.deleteAll(expired);
+            bookingRepository.delete(booking);
+        }
     }
     private Page<Booking> findAll(Pageable pageable,int eventId, LocalDateTime startTime) {
         Page<Long> ids = bookingRepository.findBookingIdByEventId(eventId, startTime, pageable);

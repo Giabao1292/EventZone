@@ -16,7 +16,7 @@ const DepositStep = ({ eventData, eventId, loading, setLoading }) => {
         eventId,
         paymentMethod,
         amount: depositAmount,
-        description: `Deposit for event ${eventData.event_title}`,
+        description: `Deposit for event`,
       });
 
       console.log("Deposit response:", response.data); // Debug

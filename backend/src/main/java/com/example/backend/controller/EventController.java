@@ -14,6 +14,7 @@ import com.example.backend.service.EventService;
 import com.example.backend.service.OrganizerService;
 import com.example.backend.service.VNPayService;
 import com.example.backend.service.*;
+import com.sun.security.auth.UserPrincipal;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import vn.payos.PayOS;
 import vn.payos.type.CheckoutResponseData;
@@ -150,18 +152,30 @@ public class EventController {
     }
 
     @GetMapping("/detail/{eventId}")
-    public ResponseEntity<ResponseData<EventDetailDTO>> getEventDetail(@PathVariable int eventId) {
-        EventDetailDTO detail = eventService.getEventDetailById(eventId);
-
-        if (detail == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ResponseData<>(404, "Không tìm thấy sự kiện", null));
-        }
-
-        return ResponseEntity.ok(
-                new ResponseData<>(200, "Lấy thông tin chi tiết sự kiện thành công", detail)
-        );
+    public ResponseEntity<ResponseData<EventDetailDTO>> getEventDetail(
+            @PathVariable int eventId,
+            Authentication authentication
+    ) {
+        String userEmail = authentication != null ? authentication.getName() : null;
+        EventDetailDTO dto = eventService.getEventDetailById(eventId, userEmail);
+        return ResponseEntity.ok(new ResponseData<>(200, "Lấy chi tiết sự kiện thành công", dto));
     }
+    @GetMapping("/recommend")
+    public ResponseEntity<ResponseData<List<EventHomeDTO>>> recommendEvents(
+            Authentication authentication) {
+        try {
+            String email = authentication.getName();
+
+            List<EventHomeDTO> recommendations = eventService.recommendEvents(email);
+
+            return ResponseEntity.ok(new ResponseData<>(200, "Gợi ý sự kiện thành công", recommendations));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ResponseData<>(500, "Lỗi khi gọi Flask model: " + e.getMessage(), null));
+        }
+    }
+
 
 
     @PreAuthorize("hasAnyRole('ORGANIZER', 'ADMIN')")

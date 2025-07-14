@@ -89,7 +89,7 @@
         @GetMapping("/verify")
         public ResponseData<?> verify(@RequestParam Integer orderId,
                                       @RequestParam String paymentMethod,
-                                      @RequestParam String vnp_ResponseCode,
+                                      @RequestParam(required = false) String vnp_ResponseCode,
                                       HttpServletRequest request) {
             try {
                 if ("PAYOS".equalsIgnoreCase(paymentMethod)) {
