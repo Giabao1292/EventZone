@@ -1,8 +1,8 @@
 package com.example.backend.repository;
 
+import com.example.backend.dto.projection.RevenueBucketView;
 import com.example.backend.dto.response.BuyerSummaryDTO;
 import com.example.backend.model.Booking;
-import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -41,18 +42,21 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
     @Query("SELECT b.id FROM Booking b JOIN b.showingTime st JOIN st.event e WHERE e.id = :eventId AND st.startTime = :startTime")
     Page<Long> findBookingIdByEventId(Integer eventId, LocalDateTime startTime, Pageable pageable);
 
+    @Query("SELECT b.id FROM Booking b")
+    Page<Long> findAllBookingId(Pageable pageable);
+
     @Query("""
-    SELECT DISTINCT b FROM Booking b
-    LEFT JOIN FETCH b.tblBookingSeats bs
-    LEFT JOIN FETCH bs.seat
-    LEFT JOIN FETCH bs.zone
-    LEFT JOIN FETCH b.user u
-    LEFT JOIN FETCH u.tblReviews
-    LEFT JOIN FETCH b.showingTime st
-    LEFT JOIN FETCH st.event e
-    LEFT JOIN FETCH u.organizer o
-    WHERE b.id IN :ids
-    """)
+            SELECT DISTINCT b FROM Booking b
+            LEFT JOIN FETCH b.tblBookingSeats bs
+            LEFT JOIN FETCH bs.seat
+            LEFT JOIN FETCH bs.zone
+            LEFT JOIN FETCH b.user u
+            LEFT JOIN FETCH u.tblReviews
+            LEFT JOIN FETCH b.showingTime st
+            LEFT JOIN FETCH st.event e
+            LEFT JOIN FETCH u.organizer o
+            WHERE b.id IN :ids
+            """)
     List<Booking> findBookingById(@Param("ids") List<Long> ids);
 
     @EntityGraph(attributePaths = {"tblBookingSeats"})
@@ -76,25 +80,61 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
     List<Booking> findByShowingTimeId(Integer showingTimeId);
 
     @Query("""
-    SELECT new com.example.backend.dto.response.BuyerSummaryDTO(
-        u.fullName,
-        u.email,
-        u.phone,
-        e.eventTitle,
-        b.createdDatetime,
-        SUM(bs.quantity),
-        b.finalPrice
-    )
-    FROM Booking b
-    JOIN b.user u
-    JOIN b.tblBookingSeats bs
-    JOIN b.showingTime st
-    JOIN st.event e
-    WHERE e.organizer.id = :organizerId
-      AND b.paymentStatus = 'CONFIRMED'
-    GROUP BY u.fullName, u.email, u.phone, e.eventTitle, b.createdDatetime, b.finalPrice
-""")
+                SELECT new com.example.backend.dto.response.BuyerSummaryDTO(
+                    u.fullName,
+                    u.email,
+                    u.phone,
+                    e.eventTitle,
+                    b.createdDatetime,
+                    SUM(bs.quantity),
+                    b.finalPrice
+                )
+                FROM Booking b
+                JOIN b.user u
+                JOIN b.tblBookingSeats bs
+                JOIN b.showingTime st
+                JOIN st.event e
+                WHERE e.organizer.id = :organizerId
+                  AND b.paymentStatus = 'CONFIRMED'
+                GROUP BY u.fullName, u.email, u.phone, e.eventTitle, b.createdDatetime, b.finalPrice
+            """)
     List<BuyerSummaryDTO> findBuyersByOrganizerId(@Param("organizerId") Integer organizerId);
 
+    @Query(value = """
+            SELECT bucket,
+                   SUM(ads)     AS ads,
+                   SUM(booking) AS booking
+            FROM (
+                SELECT DATE_FORMAT(b.created_datetime, :format) AS bucket,
+                       0 AS ads,
+                       CASE WHEN :type = 'ads' THEN 0
+                            ELSE SUM(b.final_price) END AS booking
+                FROM tbl_booking b
+                WHERE b.payment_status = 'paid'
+                  AND b.created_datetime BETWEEN :from AND :to
+                GROUP BY bucket
+            
+                UNION ALL
+            
+                SELECT DATE_FORMAT(e.created_at, :format) AS bucket,
+                       CASE WHEN :type = 'booking' THEN 0
+                            ELSE SUM(e.total_price) END AS ads,
+                       0 AS booking
+                FROM tbl_event_ads e
+                WHERE e.status = 'APPROVED'
+                  AND e.created_at BETWEEN :from AND :to
+                GROUP BY bucket
+            ) t
+            GROUP BY bucket
+            ORDER BY bucket
+            """, nativeQuery = true)
+    List<RevenueBucketView> findRevenueInTimeSeries(@Param("format") String format,
+                                                    @Param("type") String type,
+                                                    @Param("from") LocalDate from,
+                                                    @Param("to") LocalDate to);
 
+    @Query("""
+             SELECT DISTINCT b FROM Booking b LEFT JOIN FETCH b.showingTime st LEFT JOIN FETCH st.event e LEFT JOIN FETCH b.user u LEFT JOIN FETCH b.tblBookingSeats bs WHERE b.id IN :ids
+            """)
+    List<Booking> findAllBookingById(List<Long> ids);
 }

@@ -499,7 +499,7 @@ export default function OrganizerManagementPage() {
 
   // Fetch organizers data
   const fetchOrganizers = async (
-    page = 0,
+    page = currentPage,
     filters = searchFilters,
     sort = sortBy,
     direction = sortDirection
@@ -554,7 +554,7 @@ export default function OrganizerManagementPage() {
   useEffect(() => {
     fetchOrganizers();
     fetchOrganizerTypes();
-  }, []);
+  }, [pageSize, currentPage, searchFilters, sortBy, sortDirection]);
 
   // Handle search filter changes
   const handleFilterChange = (key, value) => {
@@ -579,14 +579,12 @@ export default function OrganizerManagementPage() {
   // Handle pagination
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
-    fetchOrganizers(newPage, searchFilters, sortBy, sortDirection);
   };
 
   // Handle page size change
   const handlePageSizeChange = (newPageSize) => {
     setPageSize(newPageSize);
     setCurrentPage(0);
-    fetchOrganizers(0, searchFilters, sortBy, sortDirection);
   };
 
   // Handle sorting
@@ -1033,26 +1031,25 @@ export default function OrganizerManagementPage() {
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
-        {totalPages > 1 && (
-          <div className="flex items-center gap-2 mb-4 space-y-4">
-            <label className="text-sm font-medium text-gray-700">
-              Page Size:
-            </label>
-            <select
-              value={pageSize.toString()}
-              onChange={(e) =>
-                handlePageSizeChange(Number.parseInt(e.target.value))
-              }
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white min-w-[60px]"
-            >
-              {[5, 10, 20, 50].map((size) => (
-                <option key={size} value={size.toString()}>
-                  {size}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+
+        <div className="flex items-center gap-2 mb-4 space-y-4">
+          <label className="text-sm font-medium text-gray-700">
+            Page Size:
+          </label>
+          <select
+            value={pageSize.toString()}
+            onChange={(e) =>
+              handlePageSizeChange(Number.parseInt(e.target.value))
+            }
+            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white min-w-[60px]"
+          >
+            {[5, 10, 20, 50].map((size) => (
+              <option key={size} value={size.toString()}>
+                {size}
+              </option>
+            ))}
+          </select>
+        </div>
 
         {/* Table */}
         <div className="rounded-md bg-white border border-slate-200">

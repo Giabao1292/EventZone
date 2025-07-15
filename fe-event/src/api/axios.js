@@ -15,7 +15,11 @@ const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     const token = getToken();
-    const noAuthPaths = ["/auth/login", "/auth/register", "/auth/refresh-token"];
+    const noAuthPaths = [
+      "/auth/login",
+      "/auth/register",
+      "/auth/refresh-token",
+    ];
 
     // ❌ Không gắn token cho các request login/register/refresh-token
     if (token && !noAuthPaths.some((path) => config.url.includes(path))) {
@@ -26,7 +30,6 @@ apiClient.interceptors.request.use(
   },
   (error) => Promise.reject(error)
 );
-
 
 apiClient.interceptors.response.use(
   (response) => response,

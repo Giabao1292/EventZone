@@ -80,3 +80,23 @@ export const createRole = async (roleName) => {
   });
   return res.data;
 };
+export const getTopClients = async (params = {}) => {
+  try {
+    const response = await apiClient.get("/users/top", { params });
+    // Trả về phần 'data' của response, nơi chứa danh sách top clients
+    // Dựa trên cấu trúc ResponseData của bạn: { code, message, data }
+    if (response.data && response.data.code === 200) {
+      return response.data.data;
+    } else {
+      // Xử lý trường hợp API trả về code khác 200 hoặc cấu trúc không mong muốn
+      throw new Error(
+        response.data.message ||
+          "Failed to fetch top clients: Invalid response."
+      );
+    }
+  } catch (error) {
+    console.error("Error fetching top clients:", error);
+    // Ném lỗi để component gọi có thể bắt và xử lý
+    throw error;
+  }
+};

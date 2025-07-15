@@ -36,4 +36,5 @@ public interface UserService {
 
     List<RoleResponseDTO> getListRole();
 
+    List<TopClientResponse> getTopBooking(Pageable pageable);
 }

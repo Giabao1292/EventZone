@@ -24,8 +24,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.example.backend.util.Comparable.userComparator;
 
 @Slf4j
 @Service
@@ -247,4 +250,23 @@ public class UserServiceImpl implements UserService {
                         .roleName(role.getRoleName()).build()).toList();
     }
 
+
+    @Override
+    public List<TopClientResponse> getTopBooking(Pageable pageable) {
+        List<Long> pageIds = userRepository.getTopClientIds(pageable);
+        List<User> users = userRepository.getTopClienByIds(pageIds);
+        List<TopClientResponse> topClients = new ArrayList<>(users.stream().map(user -> TopClientResponse.builder()
+                        .fullName(user.getFullName())
+                        .email(user.getEmail())
+                        .profileUrl(user.getProfileUrl())
+                        .numberOfBookings(user.getTblBookings().size())
+                        .expenditure(user.getTblBookings().stream()
+                                .map(Booking::getFinalPrice)
+                                .reduce(BigDecimal.ZERO, BigDecimal::add))
+                        .status(user.getStatus())
+                        .build())
+                .toList());
+        topClients.sort(userComparator);
+        return topClients;
+    }
 }
