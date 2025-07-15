@@ -33,16 +33,18 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
 
     List<Event> findByOrganizer_IdAndStatus_Id(Integer organizerId, Integer statusId);
 
-
-    @Query("SELECT e.id FROM Event e")
+    @Query("SELECT e.id FROM Event e " +
+            "LEFT JOIN e.status s " +
+            "WHERE s.statusName != 'DRAFT'")
     Page<Integer> findAllEventIds(Pageable pageable);
 
-    @Query("SELECT e FROM Event e LEFT JOIN FETCH e.status s" +
+    @Query("SELECT DISTINCT e FROM Event e LEFT JOIN FETCH e.status s" +
             " LEFT JOIN FETCH e.organizer o" +
             " LEFT JOIN FETCH e.category c" +
             " LEFT JOIN FETCH e.tblShowingTimes tst" +
             " LEFT JOIN FETCH tst.address a" +
-            " LEFT JOIN FETCH o.orgType ot")
+            " LEFT JOIN FETCH o.orgType ot" +
+            " WHERE e.id in :ids")
     List<Event> findAllEventByIds(List<Integer> ids);
 
     @Query(value = """

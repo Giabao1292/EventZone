@@ -35,8 +35,6 @@ export const logout = async () => {
 export const loginWithGoogle = async ({ idToken }) => {
   const res = await apiClient.post("auth/google", { idToken });
   const { accessToken, refreshToken, roles } = res.data.data;
-
   saveToken(accessToken, refreshToken);
-
   return { accessToken, roles };
 };

@@ -136,18 +136,42 @@ const EventManagementPage = () => {
   const filteredEvents = events;
 
   const getStatusBadge = (status) => {
+    // Map trạng thái ↔︎ label, icon, màu
     const statusConfig = {
-      pending: { label: "Chờ duyệt", variant: "secondary", icon: Clock },
-      approved: { label: "Đã duyệt", variant: "default", icon: CheckCircle },
-      rejected: { label: "Bị từ chối", variant: "destructive", icon: XCircle },
-      published: { label: "Đã xuất bản", variant: "outline", icon: FileText },
+      pending: {
+        label: "Chờ duyệt",
+        icon: Clock,
+        color: "bg-yellow-100 text-yellow-800",
+      },
+      approved: {
+        label: "Đã duyệt",
+        icon: CheckCircle,
+        color: "bg-green-100 text-green-800",
+      },
+      rejected: {
+        label: "Bị từ chối",
+        icon: XCircle,
+        color: "bg-red-100 text-red-800",
+      },
+      published: {
+        label: "Đã xuất bản",
+        icon: FileText,
+        color: "bg-blue-100 text-blue-800",
+      },
     };
 
-    const config = statusConfig[status];
+    // Đảm bảo key luôn dạng lowercase
+    const key = (status || "").toLowerCase();
+    const config = statusConfig[key];
+    if (!config) return null; // fallback nếu status không khớp
+
     const Icon = config.icon;
 
     return (
-      <Badge variant={config.variant} className="flex items-center gap-1">
+      <Badge
+        variant="outline"
+        className={`flex items-center gap-1 ${config.color}`}
+      >
         <Icon className="w-3 h-3" />
         {config.label}
       </Badge>

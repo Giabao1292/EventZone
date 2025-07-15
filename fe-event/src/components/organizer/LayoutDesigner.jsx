@@ -11,10 +11,12 @@ import {
   ZoomOut,
   Edit,
   Users,
+  Brain,
 } from "lucide-react";
 import {
   saveShowingLayout,
   getLayoutByShowingTime,
+  generateAILayout,
 } from "../../services/layoutService";
 
 const GRID_SIZE = 30;
@@ -79,6 +81,10 @@ export default function LayoutDesigner({ onSave }) {
   const [showAddTypeModal, setShowAddTypeModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingProperties, setEditingProperties] = useState({});
+  const [aiContent, setAiContent] = useState("");
+  const [showAIContentModal, setShowAIContentModal] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [isAILoading, setIsAILoading] = useState(false);
 
   useEffect(() => {
     console.log("Location State:", location.state); // Debug log
@@ -227,6 +233,48 @@ export default function LayoutDesigner({ onSave }) {
 
   const getSeatTypeData = (typeName) =>
     seatTypes.find((t) => t.name === typeName) || seatTypes[0];
+
+  const handleAIGenerate = async () => {
+    if (!aiPrompt.trim()) {
+      showToast("Vui lòng nhập prompt cho AI!", "warning");
+      return;
+    }
+    try {
+      setIsAILoading(true);
+      const aiResponse = await generateAILayout(aiPrompt);
+      console.log("AI Response in handleAIGenerate:", aiResponse); // Debug log
+      if (!aiResponse) {
+        throw new Error("Không nhận được phản hồi từ AI");
+      }
+      setAiContent(aiResponse.content || "Không có nội dung từ AI.");
+      setShowAIContentModal(true);
+      // Optionally update seats and seatTypes if provided in the response
+      if (aiResponse.seats) {
+        setSeats(aiResponse.seats);
+      }
+      if (aiResponse.seatTypes) {
+        setSeatTypes(aiResponse.seatTypes);
+      }
+      showToast("Đã tạo layout từ AI!", "success");
+    } catch (error) {
+      let errorMessage = error.message;
+      if (error.message.includes("timeout")) {
+        errorMessage = "Yêu cầu AI mất quá lâu để xử lý. Vui lòng thử lại sau.";
+      } else if (error.message.includes("Network Error")) {
+        errorMessage =
+          "Không thể kết nối đến máy chủ AI. Vui lòng kiểm tra kết nối mạng hoặc trạng thái máy chủ.";
+      } else if (
+        error.message.includes("Phản hồi từ API không chứa dữ liệu hợp lệ")
+      ) {
+        errorMessage =
+          "Phản hồi từ AI không hợp lệ. Vui lòng kiểm tra cấu hình máy chủ.";
+      }
+      showToast(errorMessage, "error");
+      console.error("Lỗi khi gọi AI:", error);
+    } finally {
+      setIsAILoading(false);
+    }
+  };
 
   const renderSeat = (seat) => {
     const typeData = getSeatTypeData(seat.type);
@@ -593,6 +641,62 @@ export default function LayoutDesigner({ onSave }) {
             </div>
           </div>
 
+          {/* AI Generate Section */}
+          <div className="mb-4 p-3 bg-slate-700 rounded">
+            <h3 className="font-medium mb-2 text-sm">Tạo với AI</h3>
+            <div className="space-y-2">
+              <textarea
+                placeholder="Nhập yêu cầu cho AI (ví dụ: Tạo layout cho 50 ghế VIP)"
+                className="w-full p-2 bg-slate-800 border border-slate-600 rounded text-sm resize-none"
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                rows={4}
+                style={{ minHeight: "80px" }}
+                disabled={isAILoading}
+              />
+              <button
+                onClick={handleAIGenerate}
+                className={`w-full flex items-center justify-center gap-1 px-2 py-2 rounded text-xs ${
+                  isAILoading
+                    ? "bg-purple-700 cursor-not-allowed"
+                    : "bg-purple-500 hover:bg-purple-600"
+                }`}
+                disabled={isAILoading}
+              >
+                {isAILoading ? (
+                  <div className="flex items-center gap-2">
+                    <svg
+                      className="animate-spin h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                      />
+                    </svg>
+                    Đang xử lý...
+                  </div>
+                ) : (
+                  <>
+                    <Brain size={14} />
+                    Tạo từ AI
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
           {/* Tools */}
           <div className="mb-4">
             <label className="block text-sm font-medium mb-2">Công cụ</label>
@@ -835,6 +939,26 @@ export default function LayoutDesigner({ onSave }) {
                   className="px-3 py-2 bg-blue-500 hover:bg-blue-600 rounded"
                 >
                   Lưu
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* AI Content Modal */}
+        {showAIContentModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-slate-800 rounded p-4 w-full max-w-md">
+              <h3 className="text-lg font-bold mb-3">Nội dung từ AI</h3>
+              <div className="bg-slate-700 p-3 rounded text-sm whitespace-pre-wrap max-h-96 overflow-y-auto">
+                {aiContent}
+              </div>
+              <div className="flex justify-end gap-2 mt-4">
+                <button
+                  onClick={() => setShowAIContentModal(false)}
+                  className="px-3 py-2 bg-slate-600 hover:bg-slate-500 rounded"
+                >
+                  Đóng
                 </button>
               </div>
             </div>

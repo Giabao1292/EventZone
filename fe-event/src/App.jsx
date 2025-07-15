@@ -38,6 +38,7 @@ import ReviewPage from "./components/review/ReviewPage";
 import ViewBookingHistory from "./pages/ViewBookingHistory";
 import ReviewManagementPage from "./pages/ReviewManagementPage";
 import NotificationSocket from "./pages/NotificationSocket";
+import RevenueDashboard from "./pages/admin/RevenueManagementPage";
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() => import("./components/authentication/LoginPage"));
 const RegisterPage = lazy(() =>
@@ -159,6 +160,7 @@ function App() {
             />
             <Route path="/admin/events" element={<EventManagementPage />} />
             <Route path="/admin/profile" element={<ProfilePage />} />
+            <Route path="/admin/revenue" element={<RevenueDashboard />} />
           </Route>
           <Route path="/book/:showingId/*" element={<BookingPage />} />
         </Routes>

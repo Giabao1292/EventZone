@@ -1,10 +1,7 @@
 package com.example.backend.service.impl;
 
 import com.example.backend.dto.request.BookingRequest;
-import com.example.backend.dto.response.AnalyticAttendeesResponse;
-import com.example.backend.dto.response.AttendeeResponse;
-import com.example.backend.dto.response.BookingHistoryDTO;
-import com.example.backend.dto.response.PageResponse;
+import com.example.backend.dto.response.*;
 import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.model.*;
 import com.example.backend.repository.*;
@@ -230,5 +227,38 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public List<Integer> getConfirmedShowingTimeIdsByUserId(Integer userId) {
         return bookingRepository.findConfirmedShowingTimeIdsByUserId(userId);
+    }
+
+
+    private Page<Booking> findAll(Pageable pageable) {
+        Page<Long> ids = bookingRepository.findAllBookingId(pageable);
+        List<Booking> bookings =  bookingRepository.findAllBookingById(ids.getContent());
+        return new PageImpl<>(bookings, pageable, ids.getTotalElements());
+    }
+
+
+    @Override
+    public PageResponse<BookingResponseDTO> searchBooking(Pageable pageable, String[] search) {
+        Page<Booking> page = search != null && search.length != 0 ? searchCriteriaRepository.searchBooking(pageable, search) : findAll(pageable);
+        List<BookingResponseDTO> bookingResponseDTOS = page.getContent().stream().map(booking ->
+                BookingResponseDTO.builder()
+                        .bookingId(booking.getId())
+                        .fullName(booking.getUser().getFullName())
+                        .email(booking.getUser().getEmail())
+                        .eventTitle(booking.getShowingTime().getEvent().getEventTitle())
+                        .finalPrice(booking.getFinalPrice())
+                        .paymentMethod(booking.getPaymentMethod())
+                        .paymentStatus(booking.getPaymentStatus())
+                        .showingTime(booking.getShowingTime().getStartTime())
+                        .numberOfSeats(booking.getTblBookingSeats().size())
+                        .paidAt(booking.getPaidAt())
+                        .build()).toList();
+        return PageResponse.<BookingResponseDTO>builder()
+                .content(bookingResponseDTOS)
+                .totalPages(page.getTotalPages())
+                .number(page.getNumber())
+                .size(page.getSize())
+                .totalElements((int)page.getTotalElements())
+                .build();
     }
 }

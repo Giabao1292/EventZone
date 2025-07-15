@@ -1,10 +1,7 @@
 package com.example.backend.repository.criteria;
 
 import com.example.backend.exception.ResourceNotFoundException;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.From;
-import jakarta.persistence.criteria.Path;
-import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
@@ -63,7 +60,6 @@ public class SearchCriteriaBuilder implements Consumer<SearchCriteria> {
         }
         return criteriaBuilder.greaterThan(cast(path), trimmed);
     }
-
 
     private Predicate buildEqualsOrLike(Path<?> path, Class<?> type, Object value) {
         if (type.equals(String.class)) {

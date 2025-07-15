@@ -2,13 +2,20 @@ package com.example.backend.service.impl;
 
 
 import com.example.backend.dto.request.EventAdsRequest;
+import com.example.backend.dto.response.BookingResponseDTO;
 import com.example.backend.dto.response.EventAdsResponse;
+import com.example.backend.dto.response.EventAdsRevenueResponse;
+import com.example.backend.dto.response.PageResponse;
 import com.example.backend.model.*;
 import com.example.backend.repository.EventAdsRepository;
 import com.example.backend.repository.EventRepository;
 import com.example.backend.repository.OrganizerRepository;
+import com.example.backend.repository.SearchCriteriaRepository;
 import com.example.backend.service.EventAdsService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -22,6 +29,7 @@ public class EventAdsServiceImpl implements EventAdsService {
     private final EventAdsRepository eventAdsRepository;
     private final EventRepository eventRepository;
     private final OrganizerRepository organizerRepository;
+    private final SearchCriteriaRepository searchCriteriaRepository;
 
     public EventAds holdAds(EventAdsRequest request, User user) {
         Event event = eventRepository.findById(Math.toIntExact(request.getEventId()))
@@ -108,4 +116,35 @@ public class EventAdsServiceImpl implements EventAdsService {
         return eventAdsRepository.findByStatus(status);
     }
 
+
+    private Page<EventAds> findAll(Pageable pageable) {
+        Page<Long> ids = eventAdsRepository.findAllIdsEventAds(pageable);
+        List<EventAds> eventAds = eventAdsRepository.findAllEventAdsByIds(ids.getContent());
+        return new PageImpl<>(eventAds, pageable, ids.getTotalElements());
+    }
+    @Override
+    public PageResponse<EventAdsRevenueResponse> searchEventAds(Pageable pageable, String[] search) {
+        Page<EventAds> eventAdsPage = search != null && search.length != 0 ? searchCriteriaRepository.searchEventAds(pageable, search) : findAll(pageable);
+        List<EventAdsRevenueResponse> listEventAds = eventAdsPage.getContent().stream().map(eventAds ->
+            EventAdsRevenueResponse.builder()
+                    .eventAdsId(eventAds.getId())
+                    .eventTitle(eventAds.getEvent().getEventTitle())
+                    .organizerName(eventAds.getOrganizer().getOrgName())
+                    .startDate(eventAds.getStartDate())
+                    .endDate(eventAds.getEndDate())
+                    .totalPrice(eventAds.getTotalPrice())
+                    .paymentGateway(eventAds.getPaymentGateway().name())
+                    .status(eventAds.getStatus().name())
+                    .refundStatus(eventAds.getRefundStatus().name())
+                    .createdAt(eventAds.getCreatedAt())
+                    .build()
+        ).toList();
+        return PageResponse.<EventAdsRevenueResponse>builder()
+                .content(listEventAds)
+                .totalPages(eventAdsPage.getTotalPages())
+                .number(eventAdsPage.getNumber())
+                .size(eventAdsPage.getSize())
+                .totalElements((int)eventAdsPage.getTotalElements())
+                .build();
+    }
 }

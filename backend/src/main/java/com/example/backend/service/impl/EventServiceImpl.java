@@ -208,11 +208,11 @@ public class EventServiceImpl implements EventService {
 
     private Page<Event> findAllEvents(Pageable pageable) {
         Page<Integer> eventIds = eventRepository.findAllEventIds(pageable);
+
         return new PageImpl<>(eventRepository.findAllEventByIds(eventIds.getContent()), pageable, eventIds.getTotalElements());
     }
     @Override
     public PageResponse<EventSummaryAdmin> searchEvent(Pageable pageable, String... search) {
-
         Page<Event> events = search != null && search.length != 0 ? searchCriteriaRepository.searchEvents(pageable, search) : findAllEvents(pageable) ;
         List<EventSummaryAdmin> eventSummaryAdminList = events.getContent().stream()
                 .filter(event -> !event.getStatus().getStatusName().equalsIgnoreCase("DRAFT"))

@@ -161,132 +161,19 @@ export default function SidebarNavigation() {
             </li>
 
             {/* Ecommerce Accordion */}
-            <div className="sidebar-item">
-              <button
-                onClick={() => toggleAccordion("ecommerce")}
-                className={`sidebar-link gap-3 py-2.5 my-1 text-base flex items-center relative rounded-md w-full justify-between ${
-                  openAccordions["ecommerce"]
-                    ? "text-blue-600"
+            <li className="sidebar-item">
+              <a
+                className={`sidebar-link gap-3 py-2.5 my-1 text-base flex items-center relative rounded-md w-full ${
+                  pathname === "/components/alerts"
+                    ? "text-blue-600 bg-blue-50"
                     : "text-gray-500"
                 }`}
-                aria-expanded={openAccordions["ecommerce"]}
+                href="/admin/revenue"
               >
-                <div className="flex items-center gap-3">
-                  <i className="ti ti-basket ps-2 text-2xl"></i>
-                  <span>Ecommerce</span>
-                </div>
-                <div className="mr-5">
-                  {openAccordions["ecommerce"] ? (
-                    <svg
-                      className="size-4"
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="m18 15-6-6-6 6"></path>
-                    </svg>
-                  ) : (
-                    <svg
-                      className="size-4"
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="m6 9 6 6 6-6"></path>
-                    </svg>
-                  )}
-                </div>
-              </button>
-              <div
-                className={`w-full overflow-hidden transition-all duration-300 ${
-                  openAccordions["ecommerce"] ? "block" : "hidden"
-                }`}
-              >
-                <a
-                  className="gap-4 py-2.5 my-1 px-[14px] text-sm flex items-center justify-between relative rounded-md text-gray-500 w-full hover:bg-gray-50"
-                  href="/ecommerce/shop-one"
-                >
-                  <div className="flex items-center gap-4">
-                    <i className="ti ti-circle text-xs"></i>{" "}
-                    <span>Shop One</span>
-                  </div>
-                  <span className="text-white bg-blue-700 rounded-3xl px-2 text-xs py-0.5">
-                    Pro
-                  </span>
-                </a>
-                <a
-                  className="gap-4 py-2.5 my-1 px-[14px] text-sm flex items-center justify-between relative rounded-md text-gray-500 w-full hover:bg-gray-50"
-                  href="/ecommerce/shop-two"
-                >
-                  <div className="flex items-center gap-4">
-                    <i className="ti ti-circle text-xs"></i>{" "}
-                    <span>Shop Two</span>
-                  </div>
-                  <span className="text-white bg-blue-700 rounded-3xl px-2 text-xs py-0.5">
-                    Pro
-                  </span>
-                </a>
-                <a
-                  className="gap-4 py-2.5 my-1 px-[14px] text-sm flex items-center justify-between relative rounded-md text-gray-500 w-full hover:bg-gray-50"
-                  href="/ecommerce/details-one"
-                >
-                  <div className="flex items-center gap-4">
-                    <i className="ti ti-circle text-xs"></i>{" "}
-                    <span>Details One</span>
-                  </div>
-                  <span className="text-white bg-blue-700 rounded-3xl px-2 text-xs py-0.5">
-                    Pro
-                  </span>
-                </a>
-                <a
-                  className="gap-4 py-2.5 my-1 px-[14px] text-sm flex items-center justify-between relative rounded-md text-gray-500 w-full hover:bg-gray-50"
-                  href="/ecommerce/details-two"
-                >
-                  <div className="flex items-center gap-4">
-                    <i className="ti ti-circle text-xs"></i>{" "}
-                    <span>Details Two</span>
-                  </div>
-                  <span className="text-white bg-blue-700 rounded-3xl px-2 text-xs py-0.5">
-                    Pro
-                  </span>
-                </a>
-                <a
-                  className="gap-4 py-2.5 my-1 px-[14px] text-sm flex items-center justify-between relative rounded-md text-gray-500 w-full hover:bg-gray-50"
-                  href="/ecommerce/list"
-                >
-                  <div className="flex items-center gap-4">
-                    <i className="ti ti-circle text-xs"></i> <span>List</span>
-                  </div>
-                  <span className="text-white bg-blue-700 rounded-3xl px-2 text-xs py-0.5">
-                    Pro
-                  </span>
-                </a>
-                <a
-                  className="gap-4 py-2.5 my-1 px-[14px] text-sm flex items-center justify-between relative rounded-md text-gray-500 w-full hover:bg-gray-50"
-                  href="/ecommerce/checkout"
-                >
-                  <div className="flex items-center gap-4">
-                    <i className="ti ti-circle text-xs"></i>{" "}
-                    <span>Checkout</span>
-                  </div>
-                  <span className="text-white bg-blue-700 rounded-3xl px-2 text-xs py-0.5">
-                    Pro
-                  </span>
-                </a>
-              </div>
-            </div>
+                <i className="ti ti-report-money ps-2 text-2xl text-emerald-500"></i>{" "}
+                <span>Revenue Management</span>
+              </a>
+            </li>
 
             {/* User Profile Accordion */}
             <div className="sidebar-item">
