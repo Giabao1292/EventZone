@@ -23,7 +23,26 @@ export const voucherServices = {
       throw error;
     }
   },
+  getMyVouchers: async () => {
+    try {
+      const response = await apiClient.get("/vouchers/me");
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching my vouchers:", error);
+      throw error;
+    }
+  },
 
+  // Đổi voucher (redeem)
+  redeemVoucher: async (voucherId) => {
+    try {
+      const response = await apiClient.post(`/vouchers/${voucherId}/redeem`);
+      return response.data;
+    } catch (error) {
+      console.error("Error redeeming voucher:", error);
+      throw error;
+    }
+  },
   // Tạo voucher mới
   createVoucher: async (voucherData) => {
     try {

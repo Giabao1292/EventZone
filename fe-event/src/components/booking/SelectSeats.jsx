@@ -36,6 +36,9 @@ export default function SelectSeats() {
   const [error, setError] = useState(null);
   const [zoneSelections, setZoneSelections] = useState([]);
   const [seatSelections, setSeatSelections] = useState([]);
+  const [vouchers, setVouchers] = useState([]);
+  const [selectedVoucher, setSelectedVoucher] = useState(null);
+  const [voucherError, setVoucherError] = useState(null);
   const isLayoutLoaded = useRef(false);
 
   const fetchLayout = useCallback(async () => {
@@ -69,9 +72,42 @@ export default function SelectSeats() {
     }
   }, [showingId, event, showing]);
 
+  const fetchVouchers = useCallback(async () => {
+    try {
+      const { data } = await apiClient.get("/vouchers/me");
+      console.log("Raw voucher API response:", data);
+      if (data.code === 200) {
+        const validVouchers = data.data.redeemedVouchers.filter((voucher) => {
+          const now = new Date();
+          const validFrom = new Date(voucher.validFrom);
+          const validUntil = new Date(voucher.validUntil);
+          return now >= validFrom && now <= validUntil && voucher.status === 1;
+        });
+        console.log("Valid redeemed vouchers:", validVouchers);
+        setVouchers(validVouchers);
+        const welcomeVoucher = validVouchers.find(
+          (v) => v.voucherCode === "WELCOME10"
+        );
+        if (welcomeVoucher) {
+          setSelectedVoucher(welcomeVoucher);
+          console.log("Auto-selected Voucher:", welcomeVoucher);
+        } else {
+          console.log("No WELCOME10 voucher found in valid redeemed vouchers");
+        }
+      } else {
+        setVoucherError("Không thể tải danh sách voucher");
+        console.log("Voucher API error:", data.message);
+      }
+    } catch (err) {
+      console.error("Lỗi tải voucher:", err);
+      setVoucherError("Không thể tải danh sách voucher");
+    }
+  }, []);
+
   useEffect(() => {
     fetchLayout();
-  }, [fetchLayout]);
+    fetchVouchers();
+  }, [fetchLayout, fetchVouchers]);
 
   if (loading) {
     return (
@@ -104,9 +140,12 @@ export default function SelectSeats() {
 
   const { eventTitle, startTime, location, zones = [], seats = [] } = layout;
 
-  const total =
+  const totalBeforeDiscount =
     zoneSelections.reduce((sum, s) => sum + s.zone.price * s.qty, 0) +
     seatSelections.reduce((sum, s) => sum + s.price, 0);
+  const total = selectedVoucher
+    ? Math.max(0, totalBeforeDiscount - selectedVoucher.discountAmount)
+    : totalBeforeDiscount;
 
   const priceList = [
     ...zones.map((z) => ({
@@ -179,6 +218,78 @@ export default function SelectSeats() {
         return [...cur, seat];
       }
     });
+  };
+
+  const validateVoucher = (voucher, total) => {
+    if (!voucher) {
+      console.log("No voucher selected for validation");
+      return true;
+    }
+    const now = new Date();
+    const validFrom = new Date(voucher.validFrom);
+    const validUntil = new Date(voucher.validUntil);
+    console.log("Validating voucher:", {
+      voucher,
+      total,
+      now,
+      validFrom,
+      validUntil,
+    });
+    if (now < validFrom || now > validUntil) {
+      setVoucherError("Voucher đã hết hạn");
+      console.log("Voucher validation failed: Expired");
+      return false;
+    }
+    if (voucher.discountAmount > total) {
+      setVoucherError("Giá trị voucher lớn hơn tổng đơn hàng");
+      console.log("Voucher validation failed: Discount exceeds total");
+      return false;
+    }
+    console.log("Voucher validation passed");
+    return true;
+  };
+
+  const handleVoucherChange = (e) => {
+    const voucher = vouchers.find(
+      (v) => v.voucherId === Number(e.target.value)
+    );
+    setSelectedVoucher(voucher || null);
+    setVoucherError(null);
+    console.log("Selected Voucher:", voucher);
+  };
+
+  const handleContinue = () => {
+    if (
+      selectedVoucher &&
+      !validateVoucher(selectedVoucher, totalBeforeDiscount)
+    ) {
+      console.log("Voucher validation failed:", {
+        selectedVoucher,
+        totalBeforeDiscount,
+      });
+      return;
+    }
+    const payload = [
+      ...zoneSelections.map((s) => ({
+        type: "zone",
+        zoneId: s.zone.id,
+        qty: s.qty,
+        price: s.zone.price,
+        zoneName: s.zone.name,
+      })),
+      ...seatSelections.map((s) => ({
+        type: "seat",
+        seatId: s.id,
+        seatLabel: s.label,
+        price: s.price,
+        qty: 1,
+      })),
+      ...(selectedVoucher
+        ? [{ type: "voucher", voucherId: selectedVoucher.voucherId }]
+        : []),
+    ];
+    console.log("Payload sent to handleStep1Complete:", payload);
+    handleStep1Complete(payload);
   };
 
   const renderMap = () => {
@@ -495,34 +606,52 @@ export default function SelectSeats() {
           {/* Total & Continue Button */}
           <div className="bg-slate-800/90 backdrop-blur-sm border border-slate-700 rounded-xl shadow-lg p-6">
             <div className="space-y-4">
+              {/* Voucher Selection */}
+              {vouchers.length > 0 && (
+                <div className="mb-4">
+                  <label className="block text-white font-semibold mb-2">
+                    Chọn Voucher
+                  </label>
+                  <select
+                    value={selectedVoucher?.voucherId || ""}
+                    onChange={handleVoucherChange}
+                    className="w-full p-2 rounded-lg bg-slate-700 text-white border border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    aria-label="Chọn voucher giảm giá"
+                  >
+                    <option value="">Không sử dụng voucher</option>
+                    {vouchers.map((voucher) => (
+                      <option key={voucher.voucherId} value={voucher.voucherId}>
+                        {voucher.voucherName} (
+                        {voucher.discountAmount.toLocaleString("vi-VN")}₫)
+                      </option>
+                    ))}
+                  </select>
+                  {voucherError && (
+                    <p className="text-red-400 text-sm mt-2">{voucherError}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Total Price */}
               <div className="flex justify-between items-center pb-4 border-b border-slate-600">
                 <span className="text-lg font-semibold text-white">
                   Tổng cộng:
                 </span>
-                <span className="text-2xl font-bold text-blue-400">
-                  {total.toLocaleString("vi-VN")}₫
-                </span>
+                <div className="text-right">
+                  {selectedVoucher && (
+                    <span className="block text-sm text-slate-300 line-through">
+                      {totalBeforeDiscount.toLocaleString("vi-VN")}₫
+                    </span>
+                  )}
+                  <span className="text-2xl font-bold text-blue-400">
+                    {total.toLocaleString("vi-VN")}₫
+                  </span>
+                </div>
               </div>
 
+              {/* Continue Button */}
               <button
-                onClick={() =>
-                  handleStep1Complete([
-                    ...zoneSelections.map((s) => ({
-                      type: "zone",
-                      zoneId: s.zone.id,
-                      qty: s.qty,
-                      price: s.zone.price,
-                      zoneName: s.zone.name,
-                    })),
-                    ...seatSelections.map((s) => ({
-                      type: "seat",
-                      seatId: s.id,
-                      seatLabel: s.label,
-                      price: s.price,
-                      qty: 1,
-                    })),
-                  ])
-                }
+                onClick={handleContinue}
                 disabled={zoneSelections.length + seatSelections.length === 0}
                 className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-slate-600 disabled:to-slate-600 disabled:cursor-not-allowed text-white py-4 rounded-xl text-lg font-semibold transition-all shadow-lg hover:shadow-xl"
               >

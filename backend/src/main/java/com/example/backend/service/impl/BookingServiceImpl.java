@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -48,7 +49,9 @@ public class BookingServiceImpl implements BookingService {
     private final ImageService imageService;
     private final QrCodeService qrCodeService;
     private final SearchCriteriaRepository searchCriteriaRepository;
-
+    private final UserVoucherRepository userVoucherRepository;
+    private final VoucherRepository voucherRepository;
+    private final UserRepository userRepository;
     @Override
     @Transactional
     public Booking holdBooking(BookingRequest request, User user) {
@@ -64,18 +67,15 @@ public class BookingServiceImpl implements BookingService {
         BigDecimal total = BigDecimal.ZERO;
         Set<BookingSeat> bookingSeats = new LinkedHashSet<>();
 
-        // Xử lý ghế riêng lẻ
+        // Process seat bookings
         if (request.getSeats() != null) {
             for (BookingRequest.SeatBookingDTO dto : request.getSeats()) {
                 Seat seat = seatRepository.findByIdForUpdate(dto.getSeatId())
                         .orElseThrow(() -> new RuntimeException("Seat not found"));
 
-                // Kiểm tra nếu ghế đã bị giữ hoặc đặt
-                boolean seatAlreadyTaken = bookingSeatRepository.existsBySeatIdAndStatusIn(
-                        seat.getId(),
-                        List.of("HOLD", "BOOKED")
-                );
-                if (seatAlreadyTaken) {
+                boolean seatTaken = bookingSeatRepository.existsBySeatIdAndStatusIn(
+                        seat.getId(), List.of("HOLD", "BOOKED"));
+                if (seatTaken) {
                     throw new RuntimeException("Seat " + seat.getSeatLabel() + " is already held or booked.");
                 }
 
@@ -85,13 +85,12 @@ public class BookingServiceImpl implements BookingService {
                 bs.setQuantity(1);
                 bs.setPrice(dto.getPrice());
                 bs.setStatus("HOLD");
-
-                total = total.add(dto.getPrice());
                 bookingSeats.add(bs);
+                total = total.add(dto.getPrice());
             }
         }
 
-        // Xử lý zone
+        // Process zone bookings
         if (request.getZones() != null) {
             for (BookingRequest.ZoneBookingDTO dto : request.getZones()) {
                 Zone zone = zoneRepository.findByIdForUpdate(dto.getZoneId())
@@ -101,7 +100,6 @@ public class BookingServiceImpl implements BookingService {
                     throw new RuntimeException("Not enough tickets in zone: " + zone.getZoneName());
                 }
 
-                // Trừ capacity tạm thời
                 zone.setCapacity(zone.getCapacity() - dto.getQuantity());
                 zoneRepository.save(zone);
 
@@ -111,38 +109,95 @@ public class BookingServiceImpl implements BookingService {
                 bs.setQuantity(dto.getQuantity());
                 bs.setPrice(dto.getPrice().multiply(BigDecimal.valueOf(dto.getQuantity())));
                 bs.setStatus("HOLD");
-
-                total = total.add(bs.getPrice());
                 bookingSeats.add(bs);
+                total = total.add(bs.getPrice());
             }
         }
 
         booking.setOriginalPrice(total);
-        booking.setFinalPrice(total);
+
+        // Handle voucher if provided
+        BigDecimal discountAmount = BigDecimal.ZERO;
+        BigDecimal finalPrice = total;
+
+        if (request.getVoucherId() != null) {
+            Voucher voucher = voucherRepository.findById(request.getVoucherId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Voucher not found"));
+
+            if (voucher.getStatus() != 1 || voucher.getValidUntil().isBefore(LocalDate.now())) {
+                throw new IllegalArgumentException("Voucher is inactive or expired");
+            }
+
+            if (user.getScore() < voucher.getRequiredPoints()) {
+                throw new IllegalArgumentException("Not enough points to redeem this voucher");
+            }
+
+            UserVoucher userVoucher = userVoucherRepository
+                    .findByUserIdAndVoucherIdAndIsUsedFalse(user.getId(), request.getVoucherId())
+                    .orElseThrow(() -> new IllegalArgumentException("You must redeem this voucher before using it"));
+
+            discountAmount = voucher.getDiscountAmount();
+            finalPrice = total.subtract(discountAmount).max(BigDecimal.ZERO);
+            booking.setVoucher(voucher);
+        }
+
+        booking.setDiscountAmount(discountAmount);
+        booking.setFinalPrice(finalPrice);
         booking.setTblBookingSeats(bookingSeats);
 
         return bookingRepository.save(booking);
     }
+
 
     @Override
     @Transactional
     public Booking confirmBooking(Integer bookingId, String paymentMethod) throws IOException {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy booking"));
+        
 
-        if (!"PENDING".equals(booking.getPaymentStatus())) {
-            throw new RuntimeException("Booking không hợp lệ để xác nhận");
+        User user = booking.getUser();
+
+        // Handle voucher if any
+        if (booking.getVoucher() != null) {
+            Voucher voucher = booking.getVoucher();
+
+            if (user.getScore() < voucher.getRequiredPoints()) {
+                throw new IllegalArgumentException("Không đủ điểm để sử dụng voucher này");
+            }
+
+            // Trừ điểm
+            user.setScore(user.getScore() - voucher.getRequiredPoints());
+            userRepository.save(user);
+
+            // Đánh dấu voucher đã dùng
+            UserVoucher userVoucher = userVoucherRepository
+                    .findByUserIdAndVoucherIdAndIsUsedFalse(user.getId(), voucher.getId())
+                    .orElseThrow(() -> new RuntimeException("Voucher chưa được redeem hoặc đã được sử dụng"));
+            userVoucher.setUsed(true);
+            userVoucherRepository.save(userVoucher);
         }
+
+        // Tạo mã QR và cập nhật thông tin thanh toán
         String token = UUID.randomUUID().toString();
         String publicId = imageService.uploadQRCodeImage(qrCodeService.generateQRCodeImage(token));
+
         booking.setQrToken("TK" + token);
         booking.setQrPublicId(publicId);
         booking.setPaymentMethod(paymentMethod);
         booking.setPaymentStatus("CONFIRMED");
         booking.setCheckinStatus(CheckIn.NOT_CHECKED_IN);
         booking.setPaidAt(LocalDateTime.now());
-        booking.getTblBookingSeats().forEach(bs -> bs.setStatus("BOOKED"));
+
+        // Cập nhật trạng thái seat
+        for (BookingSeat bs : booking.getTblBookingSeats()) {
+            bs.setStatus("BOOKED");
+        }
         bookingSeatRepository.saveAll(booking.getTblBookingSeats());
+
+        // Cộng điểm thưởng
+        user.setScore(user.getScore() + 20);
+        userRepository.save(user);
 
         return bookingRepository.save(booking);
     }
