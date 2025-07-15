@@ -1,5 +1,7 @@
 package com.example.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -23,6 +25,7 @@ public class Voucher {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "voucher_id", nullable = false)
     private Integer id;
+
 
     @Size(max = 50)
     @NotNull
@@ -59,6 +62,7 @@ public class Voucher {
     private Integer status;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "voucher")
+    @JsonManagedReference
     private Set<Booking> tblBookings = new LinkedHashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "voucher")

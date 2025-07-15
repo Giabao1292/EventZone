@@ -41,12 +41,11 @@ import ReviewManagementPage from "./pages/ReviewManagementPage";
 import AdminReviewManagementPage from "./pages/admin/AdminReviewManagementPage";
 import AttendeeManager from "./components/organizer/AttendeeManager";
 
-
 import AdminWithdrawRequests from "./pages/admin/AdminWithdrawRequests";
 import WithdrawRequestPage from "./components/organizer/WithdrawRequestPage";
 import NotificationSocket from "./ui/NotificationSocket";
 import ReviewSectionPage from "./pages/ReviewSectionPage";
-
+import MyVouchers from "./pages/MyVouchers";
 
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() => import("./components/authentication/LoginPage"));
@@ -102,6 +101,7 @@ function App() {
               <Route path="/wishlist" element={<WishlistPage />} />
               <Route path="/booking-history" element={<ViewBookingHistory />} />
               <Route path="payment" element={<PaymentPage />} />
+              <Route path="/vouchers" element={<MyVouchers />} />
 
               <Route path="/payment-result" element={<PaymentResult />} />
               <Route path="/payment-cancel" element={<PaymentCancel />} />
@@ -183,7 +183,10 @@ function App() {
             />
             <Route path="/admin/events" element={<EventManagementPage />} />
             <Route path="/admin/profile" element={<ProfilePage />} />
-            <Route path="/admin/reviews" element={<AdminReviewManagementPage />} />
+            <Route
+              path="/admin/reviews"
+              element={<AdminReviewManagementPage />}
+            />
           </Route>
           <Route path="/book/:showingId/*" element={<BookingPage />} />
         </Routes>

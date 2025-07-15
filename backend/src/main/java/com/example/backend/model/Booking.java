@@ -37,6 +37,7 @@ public class Booking {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JsonBackReference
     @JoinColumn(name = "voucher_id")
     private Voucher voucher;
 
