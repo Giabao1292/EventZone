@@ -181,7 +181,6 @@ const EventManagementPage = () => {
         icon: FileText,
         color: "bg-blue-100 text-blue-800",
       },
-      co,
     };
     // Đảm bảo key luôn dạng lowercase
     const key = (status || "").toLowerCase();
