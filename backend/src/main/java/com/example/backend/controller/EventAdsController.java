@@ -49,7 +49,7 @@ public class EventAdsController {
 
             if ("PAYOS".equalsIgnoreCase(paymentMethod)) {
                 PaymentData paymentData = PaymentData.builder()
-                        .orderCode(adsId.longValue())
+                        .orderCode(System.currentTimeMillis())
                         .amount(amount)
                         .description(description)
                         .returnUrl("http://localhost:5173/ads-payment-result?adsId=" + adsId)
