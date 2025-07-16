@@ -125,7 +125,6 @@ public class UserServiceImpl implements UserService {
                 .user(user)
                 .event(event)
                 .build();
-
         wishlistRepository.save(wishlistItem);
     }
 

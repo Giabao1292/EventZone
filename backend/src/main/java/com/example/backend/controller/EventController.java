@@ -7,38 +7,26 @@ import com.example.backend.dto.request.UpdateStatusEvent;
 import com.example.backend.dto.response.*;
 import com.example.backend.model.Event;
 import com.example.backend.model.Organizer;
-import com.example.backend.model.Seat;
-import com.example.backend.model.ShowingTime;
 import com.example.backend.repository.EventRepository;
-import com.example.backend.service.EventService;
-import com.example.backend.service.OrganizerService;
-import com.example.backend.service.VNPayService;
 import com.example.backend.service.*;
-import com.sun.security.auth.UserPrincipal;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import vn.payos.PayOS;
 import vn.payos.type.CheckoutResponseData;
 import vn.payos.type.PaymentData;
 import vn.payos.type.PaymentLinkData;
 
-
-
 import java.time.LocalDateTime;
-
-import java.util.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 
 @RestController
@@ -51,7 +39,6 @@ public class EventController {
     private final OrganizerService organizerService;
     private final BookingService bookingService;
     private final ShowingTimeService showingTimeService;
-    private final EventRepository eventRepository;
 
     @GetMapping("/home")
     public ResponseEntity<ResponseData<Map<String, List<EventHomeDTO>>>> getHomeEvents() {
@@ -160,6 +147,7 @@ public class EventController {
         EventDetailDTO dto = eventService.getEventDetailById(eventId, userEmail);
         return ResponseEntity.ok(new ResponseData<>(200, "Lấy chi tiết sự kiện thành công", dto));
     }
+
     @GetMapping("/recommend")
     public ResponseEntity<ResponseData<List<EventHomeDTO>>> recommendEvents(
             Authentication authentication) {
@@ -175,8 +163,6 @@ public class EventController {
                     .body(new ResponseData<>(500, "Lỗi khi gọi Flask model: " + e.getMessage(), null));
         }
     }
-
-
 
     @PreAuthorize("hasAnyRole('ORGANIZER', 'ADMIN')")
     @GetMapping
@@ -216,7 +202,6 @@ public class EventController {
         return ResponseEntity
                 .ok(new ResponseData<>(200, "Chỉnh sửa thông tin sự kiện thành công", updatedEvent.getId()));
     }
-
 
 
     @PreAuthorize("hasRole('ORGANIZER')")
@@ -272,10 +257,11 @@ public class EventController {
 
     @PreAuthorize("hasAnyRole({'ORGANIZER', 'ADMIN'})")
     @GetMapping("/{eventId}/showing-times")
-    public ResponseData<List<ShowingTimeAdmin>> getShowingTime(@PathVariable int eventId){
+    public ResponseData<List<ShowingTimeAdmin>> getShowingTime(@PathVariable int eventId) {
         List<ShowingTimeAdmin> showingTimeAdminList = showingTimeService.getListShowingTime(eventId);
         return new ResponseData<>(HttpStatus.OK.value(), "Get list showing time successful", showingTimeAdminList);
     }
+
     @GetMapping("/public")
     public ResponseData<List<EventHomeDTO>> userSearchEvents(@RequestParam(name = "search", required = false) String... search) {
         List<EventHomeDTO> listEvents = eventService.userSearchEvent(search);
@@ -301,9 +287,11 @@ public class EventController {
         return ResponseEntity.ok(new ResponseData<>(200, "Lấy sự kiện review thành công", responses));
     }
 
-
-
-
-
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/top")
+    public ResponseData<List<EventHomeDTO>> getTopEvents(Pageable pageable) {
+        List<EventHomeDTO> listEvents = eventService.getTopEvents(pageable);
+        return new ResponseData<>(HttpStatus.OK.value(), "Get list of events", listEvents);
+    }
 
 }

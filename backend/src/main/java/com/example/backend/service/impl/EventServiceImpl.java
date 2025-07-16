@@ -11,11 +11,10 @@ import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.model.*;
 import com.example.backend.repository.*;
 import com.example.backend.service.EventService;
-import com.example.backend.util.StatusOrganizer;
+import com.example.backend.util.Comparable;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.client.RestTemplate;
@@ -336,18 +335,11 @@ public class EventServiceImpl implements EventService {
         dto.setEndTime(event.getEndTime() != null ? event.getEndTime().toString() : null);
         dto.setStatusId(event.getStatus() != null ? event.getStatus().getId() : null);
         dto.setShowingTimes(showingTimeDTOs);
-
         return dto;
     }
 
-
-
-
-
-
     private Page<Event> findAllEvents(Pageable pageable) {
         Page<Integer> eventIds = eventRepository.findAllEventIds(pageable);
-
         return new PageImpl<>(eventRepository.findAllEventByIds(eventIds.getContent()), pageable, eventIds.getTotalElements());
     }
 
@@ -524,7 +516,11 @@ public class EventServiceImpl implements EventService {
         List<EventMinPriceProjection> minPriceProjections = eventRepository.findMinPriceByEventIds(filteredEvents.stream().map(event -> event.getId().longValue()).toList());
 
         //Map giúp tìm kiếm lowestPrice với O(1)
-        Map<Long, Double> priceMap = minPriceProjections.stream().collect(Collectors.toMap(EventMinPriceProjection::getEventId, EventMinPriceProjection::getMinPrice));
+        Map<Long, Double> priceMap = minPriceProjections.stream()
+                .collect(Collectors.toMap(
+                        EventMinPriceProjection::getEventId,
+                        p -> p.getMinPrice() == 9999999999.0 ? 0.0 : p.getMinPrice()
+                ));
         return filteredEvents.stream().map(event-> new EventHomeDTO(event, priceMap.get(event.getId().longValue()))).toList();
     }
 
@@ -601,6 +597,17 @@ public class EventServiceImpl implements EventService {
                 .size(eventPage.getSize())
                 .build();
     }
-
-
+    @Override
+    public List<EventHomeDTO> getTopEvents(Pageable pageable){
+        List<Event> events = eventRepository.getTopEventsIds(pageable);
+        List<EventMinPriceProjection> minPriceProjections = eventRepository.findMinPriceByEventIds(events.stream().map(event -> event.getId().longValue()).toList());
+        Map<Long, Double> priceMap = minPriceProjections.stream()
+                .collect(Collectors.toMap(
+                        EventMinPriceProjection::getEventId,
+                        p -> p.getMinPrice() == 9999999999.0 ? 0.0 : p.getMinPrice()
+                ));
+        List<EventHomeDTO> eventHomeDTOS = new ArrayList<>(events.stream().map(event -> new EventHomeDTO(event, priceMap.get(event.getId().longValue()))).toList());
+        eventHomeDTOS.sort(Comparable.eventHomeDTOComparator);
+        return eventHomeDTOS;
+    }
 }

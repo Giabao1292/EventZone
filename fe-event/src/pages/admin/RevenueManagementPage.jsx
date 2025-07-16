@@ -228,24 +228,44 @@ export default function RevenueDashboard() {
   }, []);
 
   const getStatusBadge = (status) => {
+    const baseClass =
+      "inline-flex items-center py-2 px-4 rounded-3xl font-semibold";
+
     switch (status?.toLowerCase()) {
       case "paid":
-      case "completed":
+      case "confirmed":
       case "approved":
         return (
-          <Badge className="bg-green-400 text-green-800">Hoàn thành</Badge>
+          <Badge className={`${baseClass} bg-green-100 !text-green-700`}>
+            Hoàn thành
+          </Badge>
         );
       case "pending":
         return (
-          <Badge className="bg-yellow-400 text-yellow-800">Đang xử lý</Badge>
+          <Badge className={`${baseClass} bg-yellow-100 !text-yellow-700`}>
+            Đang xử lý
+          </Badge>
         );
       case "failed":
       case "rejected":
-        return <Badge className="bg-red-500 text-red-800">Thất bại</Badge>;
+      case "cancelled":
+        return (
+          <Badge className={`${baseClass} bg-red-100 !text-red-700`}>
+            Thất bại
+          </Badge>
+        );
       case "refunded":
-        return <Badge className="bg-gray-400 text-gray-800">Hoàn tiền</Badge>;
+        return (
+          <Badge className={`${baseClass} bg-gray-100 !text-gray-700`}>
+            Hoàn tiền
+          </Badge>
+        );
       default:
-        return <Badge variant="secondary">{status}</Badge>;
+        return (
+          <Badge className={`${baseClass} bg-gray-200 !text-gray-800`}>
+            {status}
+          </Badge>
+        );
     }
   };
 
@@ -618,10 +638,10 @@ export default function RevenueDashboard() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tất cả</SelectItem>
-                  <SelectItem value="pending">Đang xử lý</SelectItem>
-                  <SelectItem value="paid">Đã thanh toán</SelectItem>
-                  <SelectItem value="failed">Thất bại</SelectItem>
-                  <SelectItem value="refunded">Hoàn tiền</SelectItem>
+                  <SelectItem value="PENDING">Đang xử lý</SelectItem>
+                  <SelectItem value="CONFIRMED">Đã thanh toán</SelectItem>
+                  <SelectItem value="CANCELLED">Thất bại</SelectItem>
+                  <SelectItem value="REFUNDED">Hoàn tiền</SelectItem>
                 </SelectContent>
               </Select>
               <Input
