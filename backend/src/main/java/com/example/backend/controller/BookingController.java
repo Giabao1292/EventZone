@@ -60,7 +60,7 @@ public class BookingController {
             String checkoutUrl;
             if ("PAYOS".equalsIgnoreCase(paymentMethod)) {
                 PaymentData paymentData = PaymentData.builder()
-                        .orderCode(bookingId.longValue())
+                        .orderCode(System.currentTimeMillis())
                         .amount(amount)
                         .description(description)
                         .returnUrl("http://localhost:5173/payment-result?orderId=" + bookingId)

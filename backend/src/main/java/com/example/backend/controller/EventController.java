@@ -96,7 +96,7 @@ public class EventController {
 
             if ("PAYOS".equalsIgnoreCase(paymentMethod)) {
                 PaymentData paymentData = PaymentData.builder()
-                        .orderCode(eventId.longValue())
+                        .orderCode(System.currentTimeMillis())
                         .amount(amount)
                         .description(description)
                         .returnUrl("http://localhost:5173/deposit-result?eventId=" + eventId)

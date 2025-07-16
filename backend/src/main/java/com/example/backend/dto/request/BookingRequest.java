@@ -22,7 +22,6 @@ public class    BookingRequest {
         @NotNull
         private BigDecimal price;
     }
-
     @Data
     public static class ZoneBookingDTO {
         @NotNull
