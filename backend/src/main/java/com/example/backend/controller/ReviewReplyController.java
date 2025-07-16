@@ -22,6 +22,7 @@ public class ReviewReplyController {
         this.reviewReplyService = reviewReplyService;
     }
 
+
     @GetMapping("/review/{reviewId}")
     public ResponseEntity<ResponseData<List<ReviewReplyResponse>>> getRepliesByReview(
             @PathVariable Integer reviewId) {
