@@ -296,7 +296,7 @@ const EventDetail = () => {
                           <p className="text-red-600 font-semibold">
                             Sự kiện đã kết thúc. Không thể mua vé.
                           </p>
-                          {canReview && (
+                          {user && isAfterEnd && (
                               <button
                                   className="mt-2 px-5 py-2 rounded-lg border border-emerald-500 text-emerald-600 font-semibold bg-white hover:bg-emerald-50 transition"
                                   onClick={() => navigate(`/reviews/${st.id}`)}
@@ -304,6 +304,8 @@ const EventDetail = () => {
                                 Xem đánh giá
                               </button>
                           )}
+
+
                         </>
                     ) : (
                         <button

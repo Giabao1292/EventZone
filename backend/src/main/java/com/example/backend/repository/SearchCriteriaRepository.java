@@ -293,4 +293,6 @@ public class SearchCriteriaRepository {
         log.info("End count EventAds search...");
         return count;
     }
+
+
 }
