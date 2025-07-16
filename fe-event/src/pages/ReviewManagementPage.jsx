@@ -287,10 +287,12 @@ const ReviewManagementPage = () => {
             setEmojiPickerReviewId(null);
         }
     });
+    useClickOutside(modalEmojiRef, () => {
+        setShowEmoji((prev) => ({ ...prev, ["modal"]: false }));
+    });
 
-    if (showModal && modalEmojiRef.current) {
-        useClickOutside(modalEmojiRef, () => setShowEmoji((prev) => ({ ...prev, ["modal"]: false })));
-    }
+
+
 
     const currentEvent = events.find((ev) => ev.id === selectedEvent);
     const currentShowingTime = showingTimes.find((st) => st.id === selectedShowingTime);
