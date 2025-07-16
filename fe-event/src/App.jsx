@@ -40,12 +40,11 @@ import ViewBookingHistory from "./pages/ViewBookingHistory";
 import ReviewManagementPage from "./pages/ReviewManagementPage";
 import AdminReviewManagementPage from "./pages/admin/AdminReviewManagementPage";
 import AttendeeManager from "./components/organizer/AttendeeManager";
-
 import AdminWithdrawRequests from "./pages/admin/AdminWithdrawRequests";
 import WithdrawRequestPage from "./components/organizer/WithdrawRequestPage";
-import NotificationSocket from "./ui/NotificationSocket";
 import ReviewSectionPage from "./pages/ReviewSectionPage";
 import MyVouchers from "./pages/MyVouchers";
+import RevenueDashboard from "./pages/admin/RevenueManagementPage";
 
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() => import("./components/authentication/LoginPage"));
@@ -92,7 +91,6 @@ function App() {
             <Route path="/events/:eventId" element={<EventDetail />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/reviews/:showingTimeId" element={<ReviewPage />} />
-            <Route path="/test" element={<NotificationSocket />} />
           </Route>
 
           {/* Protected Routes for Authenticated Users */}
@@ -187,6 +185,7 @@ function App() {
               path="/admin/reviews"
               element={<AdminReviewManagementPage />}
             />
+            <Route path="/admin/revenue" element={<RevenueDashboard />} />
           </Route>
           <Route path="/book/:showingId/*" element={<BookingPage />} />
         </Routes>

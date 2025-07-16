@@ -2,10 +2,7 @@ package com.example.backend.service;
 
 
 import com.example.backend.dto.request.BookingRequest;
-import com.example.backend.dto.response.AnalyticAttendeesResponse;
-import com.example.backend.dto.response.AttendeeResponse;
-import com.example.backend.dto.response.BookingHistoryDTO;
-import com.example.backend.dto.response.PageResponse;
+import com.example.backend.dto.response.*;
 import com.example.backend.model.Booking;
 import com.example.backend.model.PaymentStatus;
 import com.example.backend.model.User;
@@ -31,5 +28,9 @@ public interface BookingService {
 
     List<Integer> getConfirmedShowingTimeIdsByUserId(Integer userId);
 
+
     List<Booking> findByUserIdAndPaymentStatus(Integer userId, String paymentStatus);
+
+    PageResponse<BookingResponseDTO> searchBooking(Pageable pageable, String[] search);
+
 }

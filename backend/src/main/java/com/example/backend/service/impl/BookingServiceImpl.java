@@ -1,10 +1,7 @@
 package com.example.backend.service.impl;
 
 import com.example.backend.dto.request.BookingRequest;
-import com.example.backend.dto.response.AnalyticAttendeesResponse;
-import com.example.backend.dto.response.AttendeeResponse;
-import com.example.backend.dto.response.BookingHistoryDTO;
-import com.example.backend.dto.response.PageResponse;
+import com.example.backend.dto.response.*;
 import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.model.*;
 import com.example.backend.repository.*;
@@ -29,10 +26,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.example.backend.util.CheckIn.CHECKED_IN;
@@ -252,10 +246,15 @@ public class BookingServiceImpl implements BookingService {
                     .distinct()
                     .collect(Collectors.joining(", "));
 
-            String zoneNames = booking.getTblBookingSeats().stream()
+            //đếm số lượng đã đặt trong khu vưc
+            Map<String, Integer> zoneCountMap = booking.getTblBookingSeats().stream()
                     .filter(bs -> bs.getZone() != null)
-                    .map(bs -> bs.getZone().getZoneName())
-                    .distinct()
+                    .collect(Collectors.groupingBy(
+                            bs -> bs.getZone().getZoneName(),
+                            Collectors.summingInt(BookingSeat::getQuantity)
+                    ));
+            String zoneNames = zoneCountMap.entrySet().stream()
+                    .map(e -> e.getKey() + " x" + e.getValue())
                     .collect(Collectors.joining(", "));
 
             return AttendeeResponse.builder()
@@ -292,19 +291,53 @@ public class BookingServiceImpl implements BookingService {
         bookingRepository.save(booking);
     }
 
+//    @Override
+//    public AnalyticAttendeesResponse getAnalytics(int eventId, LocalDateTime startTime) {
+//        List<Booking> bookings = bookingRepository.findByShowingTimeStartTimeAndShowingTimeEventId(startTime, eventId);
+//        int numberOfCheckIns = (int)bookings.stream().filter(booking->booking.getCheckinStatus().equals(CHECKED_IN)).count();
+//        double averageAttendees = numberOfCheckIns * 100.0 / bookings.size();
+//        return AnalyticAttendeesResponse.builder()
+//                .numberOfCheckIns(numberOfCheckIns)
+//                .numberOfSeats(bookings.stream().mapToInt(booking -> booking.getTblBookingSeats().size()).sum())
+//                .sale(bookings.stream().mapToLong(booking-> booking.getFinalPrice().longValue()).sum())
+//                .averageAttendees(averageAttendees)
+//                .numberOfAttendees(bookings.size())
+//                .build();
+//    }
+
     @Override
     public AnalyticAttendeesResponse getAnalytics(int eventId, LocalDateTime startTime) {
-        List<Booking> bookings = bookingRepository.findByShowingTimeStartTimeAndShowingTimeEventId(startTime, eventId);
-        int numberOfCheckIns = (int)bookings.stream().filter(booking->booking.getCheckinStatus().equals(CHECKED_IN)).count();
-        double averageAttendees = numberOfCheckIns * 100.0 / bookings.size();
+        // Lấy danh sách booking đã CONFIRMED
+        List<Booking> bookings = bookingRepository.findByShowingTimeStartTimeAndShowingTimeEventIdAndPaymentStatus(
+                startTime, eventId, "CONFIRMED"
+        );
+
+        // Tổng số ghế đã đặt (tức là tổng quantity các BookingSeat)
+        int totalSeats = bookings.stream()
+                .flatMap(booking -> booking.getTblBookingSeats().stream())
+                .mapToInt(BookingSeat::getQuantity)
+                .sum();
+
+        // Tổng số ghế đã check-in (của booking đã check-in)
+        int checkedInSeats = bookings.stream()
+                .filter(booking -> booking.getCheckinStatus() == CHECKED_IN)
+                .flatMap(booking -> booking.getTblBookingSeats().stream())
+                .mapToInt(BookingSeat::getQuantity)
+                .sum();
+
+        // Tỷ lệ tham dự
+        double averageAttendees = totalSeats > 0 ? checkedInSeats * 100.0 / totalSeats : 0;
+
         return AnalyticAttendeesResponse.builder()
-                .numberOfCheckIns(numberOfCheckIns)
-                .numberOfSeats(bookings.stream().mapToInt(booking -> booking.getTblBookingSeats().size()).sum())
-                .sale(bookings.stream().mapToLong(booking-> booking.getFinalPrice().longValue()).sum())
+                .numberOfCheckIns(checkedInSeats)
+                .numberOfSeats(totalSeats)
+                .sale(bookings.stream().mapToLong(booking -> booking.getFinalPrice().longValue()).sum())
                 .averageAttendees(averageAttendees)
-                .numberOfAttendees(bookings.size())
+                .numberOfAttendees(totalSeats)
                 .build();
     }
+
+
 
     @Override
     @Transactional(readOnly = true)
@@ -329,4 +362,35 @@ public class BookingServiceImpl implements BookingService {
 
     }
 
+    private Page<Booking> findAll(Pageable pageable) {
+        Page<Long> ids = bookingRepository.findAllBookingId(pageable);
+        List<Booking> bookings =  bookingRepository.findAllBookingById(ids.getContent());
+        return new PageImpl<>(bookings, pageable, ids.getTotalElements());
+    }
+
+
+    @Override
+    public PageResponse<BookingResponseDTO> searchBooking(Pageable pageable, String[] search) {
+        Page<Booking> page = search != null && search.length != 0 ? searchCriteriaRepository.searchBooking(pageable, search) : findAll(pageable);
+        List<BookingResponseDTO> bookingResponseDTOS = page.getContent().stream().map(booking ->
+                BookingResponseDTO.builder()
+                        .bookingId(booking.getId())
+                        .fullName(booking.getUser().getFullName())
+                        .email(booking.getUser().getEmail())
+                        .eventTitle(booking.getShowingTime().getEvent().getEventTitle())
+                        .finalPrice(booking.getFinalPrice())
+                        .paymentMethod(booking.getPaymentMethod())
+                        .paymentStatus(booking.getPaymentStatus())
+                        .showingTime(booking.getShowingTime().getStartTime())
+                        .numberOfSeats(booking.getTblBookingSeats().size())
+                        .paidAt(booking.getPaidAt())
+                        .build()).toList();
+        return PageResponse.<BookingResponseDTO>builder()
+                .content(bookingResponseDTOS)
+                .totalPages(page.getTotalPages())
+                .number(page.getNumber())
+                .size(page.getSize())
+                .totalElements((int)page.getTotalElements())
+                .build();
+    }
 }

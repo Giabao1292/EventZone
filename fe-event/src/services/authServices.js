@@ -46,7 +46,7 @@ export const resendVerificationEmail = async (email) => {
 
 export const verifyRegisterApi = async (verifyToken) => {
   const res = await apiClient.get(
-      `/auth/verify-email?verifyToken=${verifyToken}`
+    `/auth/verify-email?verifyToken=${verifyToken}`
   );
   const { accessToken, refreshToken } = res.data.data || {};
   if (accessToken) {

@@ -25,6 +25,4 @@ public interface OrganizerRepository extends JpaRepository<Organizer, Integer> {
 
     @Query("SELECT o FROM Organizer o LEFT JOIN FETCH o.orgType ot LEFT JOIN FETCH o.user u WHERE o.id in :ids")
     List<Organizer> findALlOrganizersByIds(List<Integer> ids);
-
-
 }
