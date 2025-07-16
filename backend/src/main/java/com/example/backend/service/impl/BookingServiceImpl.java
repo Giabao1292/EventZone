@@ -230,22 +230,38 @@ public class BookingServiceImpl implements BookingService {
                 : findAll(pageable, eventId, startTime);
 
         List<AttendeeResponse> attendeeResponseList = bookingPage.getContent().stream().map(booking -> {
-            String seatLabels = booking.getTblBookingSeats().stream()
+            // Ghế chỉ định cụ thể
+            List<BookingSeat> seatBookings = booking.getTblBookingSeats().stream()
                     .filter(bs -> bs.getSeat() != null)
+                    .toList();
+            String seatLabels = seatBookings.stream()
                     .map(bs -> bs.getSeat().getSeatLabel())
                     .distinct()
                     .collect(Collectors.joining(", "));
+            int seatLabelCount = seatBookings.stream()
+                    .mapToInt(BookingSeat::getQuantity)
+                    .sum();
 
-            //đếm số lượng đã đặt trong khu vưc
+            // Ghế đặt theo zone (chưa chỉ định ghế cụ thể)
             Map<String, Integer> zoneCountMap = booking.getTblBookingSeats().stream()
-                    .filter(bs -> bs.getZone() != null)
+                    .filter(bs -> bs.getZone() != null && bs.getSeat() == null)
                     .collect(Collectors.groupingBy(
                             bs -> bs.getZone().getZoneName(),
                             Collectors.summingInt(BookingSeat::getQuantity)
                     ));
+
             String zoneNames = zoneCountMap.entrySet().stream()
                     .map(e -> e.getKey() + " x" + e.getValue())
                     .collect(Collectors.joining(", "));
+
+            String zoneSeatCounts = zoneCountMap.values().stream()
+                    .map(String::valueOf)
+                    .collect(Collectors.joining(","));
+
+            int zoneCount = zoneCountMap.values().stream().mapToInt(i -> i).sum();
+
+            // Tổng số ghế = ghế chỉ định cụ thể + ghế theo zone
+            int totalSeats = seatLabelCount + zoneCount;
 
             return AttendeeResponse.builder()
                     .id(booking.getId().intValue())
@@ -254,11 +270,12 @@ public class BookingServiceImpl implements BookingService {
                     .fullName(booking.getUser().getFullName())
                     .checkInStatus(booking.getCheckinStatus())
                     .checkInTime(booking.getCheckinTime())
-                    .numberOfSeats(booking.getTblBookingSeats().size())
+                    .numberOfSeats(totalSeats)
                     .paidAt(booking.getPaidAt())
                     .qrToken(booking.getQrToken())
                     .seatLabels(seatLabels)
                     .zoneNames(zoneNames)
+                    .zoneSeatCounts(zoneSeatCounts)
                     .build();
         }).toList();
 
@@ -270,6 +287,8 @@ public class BookingServiceImpl implements BookingService {
                 .content(attendeeResponseList)
                 .build();
     }
+
+
 
 
 

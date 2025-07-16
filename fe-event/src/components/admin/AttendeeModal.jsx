@@ -19,6 +19,22 @@ import {
 } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 
+// Hàm đếm số lượng seatLabels (ngăn trường hợp seatLabels là "" hoặc null)
+const countSeatLabels = (seatLabels) => {
+  if (!seatLabels || seatLabels.trim() === "") return 0;
+  return seatLabels.split(",").filter((x) => x.trim() !== "").length;
+};
+
+// Hàm đếm tổng số ghế theo zoneSeatCounts: "2,3,1" => 6
+const sumZoneSeats = (zoneSeatCounts) => {
+  if (!zoneSeatCounts || zoneSeatCounts.trim() === "") return 0;
+  return zoneSeatCounts
+      .split(",")
+      .map((x) => parseInt(x.trim()))
+      .filter((x) => !isNaN(x))
+      .reduce((a, b) => a + b, 0);
+};
+
 const AttendeeModal = ({
                          isOpen,
                          onClose,
@@ -47,6 +63,13 @@ const AttendeeModal = ({
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  // Tổng số ghế: seatLabels + zoneSeatCounts
+  const getSeatCount = () => {
+    const seatsByLabel = countSeatLabels(attendee.seatLabels);
+    const seatsByZone = sumZoneSeats(attendee.zoneSeatCounts);
+    return seatsByLabel + seatsByZone;
   };
 
   return (
@@ -101,7 +124,7 @@ const AttendeeModal = ({
                   <Users className="w-5 h-5 text-orange-600" />
                   <div>
                     <p className="text-sm text-gray-600">Số ghế</p>
-                    <p className="font-medium">{attendee.numberOfSeats} ghế</p>
+                    <p className="font-medium">{getSeatCount()} ghế</p>
                   </div>
                 </div>
 
@@ -118,30 +141,14 @@ const AttendeeModal = ({
 
                 {/* Hiển thị Khu vực nếu có */}
                 {attendee.zoneNames && attendee.zoneNames.trim() !== "" && (
-                    <div className="flex items-center gap-3">
-                      <Users className="w-5 h-5 text-cyan-600" />
-                      <div>
-                        <p className="text-sm text-gray-600">Khu vực</p>
-                        <p className="font-medium">
-                          {attendee.zoneNames
-                              ? attendee.zoneNames.split(",").map((zone, i) => {
-                                // Lấy số lượng ghế ở mỗi zone theo zoneSeatCounts, fallback "1"
-                                const count = attendee.zoneSeatCounts
-                                    ? (attendee.zoneSeatCounts.split(",")[i] || "1").trim()
-                                    : "1";
-                                return (
-                                    <span key={zone.trim()}>
-                                          {zone.trim()} x{count}
-                                      {i !== attendee.zoneNames.split(",").length - 1 ? ", " : ""}
-                                    </span>
-                                );
-                              })
-                              : "Chưa chọn khu vực"}
-                        </p>
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4" />
+                      <span>
+                    <p className="text-sm text-gray-600">Khu vực</p>
+                        {attendee.zoneNames || "Chưa chọn khu vực"}
+                  </span>
                     </div>
                 )}
-
               </div>
             </div>
 
@@ -164,7 +171,9 @@ const AttendeeModal = ({
                     <Clock className="w-5 h-5 text-blue-600" />
                     <div>
                       <p className="text-sm text-gray-600">Thời gian check-in</p>
-                      <p className="font-medium">{formatDateTime(attendee.checkInTime)}</p>
+                      <p className="font-medium">
+                        {formatDateTime(attendee.checkInTime)}
+                      </p>
                     </div>
                   </div>
               )}
