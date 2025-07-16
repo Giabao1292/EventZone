@@ -181,6 +181,28 @@ public class MailService {
         mailSender.send(message);
     }
 
+    public void sendApproveRescheduleToOrganizer(
+            String toEmail, String fullName, String eventTitle,
+            String oldStartTime, String oldEndTime, String newStartTime, String newEndTime) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        Context context = new Context();
+        context.setVariable("fullName", fullName);
+        context.setVariable("eventTitle", eventTitle);
+        context.setVariable("oldStartTime", oldStartTime);
+        context.setVariable("oldEndTime", oldEndTime);
+        context.setVariable("newStartTime", newStartTime);
+        context.setVariable("newEndTime", newEndTime);
+
+        helper.setTo(toEmail);
+        helper.setFrom(emailFrom);
+        helper.setSubject("[Thông báo] Yêu cầu dời lịch đã được phê duyệt");
+        helper.setText(templateEngine.process("approve-reschedule-organizer.html", context), true);
+
+        mailSender.send(message);
+    }
+
 
 
 }

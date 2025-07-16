@@ -100,6 +100,8 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
             """)
     List<BuyerSummaryDTO> findBuyersByOrganizerId(@Param("organizerId") Integer organizerId);
 
+    List<Booking> findByShowingTimeStartTimeAndShowingTimeEventIdAndPaymentStatus(LocalDateTime startTime, int eventId, String paymentStatus);
+
     @Query(value = """
             SELECT bucket,
                    SUM(ads)     AS ads,
