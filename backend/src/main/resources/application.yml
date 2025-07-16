@@ -70,5 +70,5 @@ vnpay:
   pay_url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
   return_url: http://localhost:5173/payment-result
 openrouter:
-  secret_key: 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
+  secret_key: ${OPENROUTER_KEY}
   api_url: https://openrouter.ai/api/v1/chat/completions
