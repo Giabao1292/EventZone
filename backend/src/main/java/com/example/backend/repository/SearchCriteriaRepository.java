@@ -117,7 +117,7 @@ public class SearchCriteriaRepository {
 
         Join<Event, EventStatus> joinStatus = eventRoot.join("status");
         Predicate predicate = getSearchPredicate(List.of(eventRoot, joinStatus), criteriaBuilder, search);
-        criteriaQuery.select(eventRoot).where(predicate).orderBy(criteriaBuilder.asc(eventRoot.get("createdAt")));
+        criteriaQuery.select(eventRoot).where(predicate).orderBy(criteriaBuilder.desc(eventRoot.get("createdAt")));
         List<Event> events = entityManager.createQuery(criteriaQuery).setMaxResults(pageable.getPageSize()).setFirstResult((int)pageable.getOffset()).getResultList();
         Long count = countEventsSearch(criteriaBuilder ,search);
         return new PageImpl<>(events, pageable, count);
@@ -246,7 +246,7 @@ public class SearchCriteriaRepository {
         Join<Booking, ShowingTime> joinShowingTime = bookingRoot.join("showingTime", JoinType.LEFT);
         Join<ShowingTime, Event> joinEvent = joinShowingTime.join("event", JoinType.LEFT);
         Predicate predicate = getSearchPredicate(List.of(bookingRoot, joinUser, joinShowingTime, joinEvent), criteriaBuilder, search);
-        criteriaQuery.select(bookingRoot).where(predicate);
+        criteriaQuery.select(bookingRoot).where(predicate).orderBy(criteriaBuilder.desc(bookingRoot.get("paidAt")));
         List<Booking> bookings = entityManager.createQuery(criteriaQuery).setMaxResults(pageable.getPageSize()).setFirstResult((int)pageable.getOffset()).getResultList();
         Long count = countBookingSearch(criteriaBuilder,search);
         log.info("End search Booking...");
@@ -275,7 +275,7 @@ public class SearchCriteriaRepository {
         Join<EventAds, Event> joinEvent = eventAdsRoot.join("event", JoinType.LEFT);
         Join<EventAds, Organizer> joinOrganizer = eventAdsRoot.join("organizer", JoinType.LEFT);
         Predicate predicate = getSearchPredicate(List.of(eventAdsRoot, joinEvent, joinOrganizer), criteriaBuilder, search);
-        criteriaQuery.select(eventAdsRoot).where(predicate);
+        criteriaQuery.select(eventAdsRoot).where(predicate).orderBy(criteriaBuilder.desc(eventAdsRoot.get("createdAt")));
         List<EventAds> bookings = entityManager.createQuery(criteriaQuery).setMaxResults(pageable.getPageSize()).setFirstResult((int)pageable.getOffset()).getResultList();
         Long count = countEventAdsSearch(criteriaBuilder,search);
         log.info("End search EventAds...");

@@ -20,7 +20,7 @@ import {
   CartesianGrid,
   ResponsiveContainer,
 } from "recharts";
-
+import StatusBadge from "../../components/ui/status-badge";
 import { Button } from "../../components/ui/button";
 import {
   Card,
@@ -227,47 +227,47 @@ export default function RevenueDashboard() {
     loadEventAds();
   }, []);
 
-  const getStatusBadge = (status) => {
-    const baseClass =
-      "inline-flex items-center py-2 px-4 rounded-3xl font-semibold";
+  // const getStatusBadge = (status) => {
+  //   const baseClass =
+  //     "inline-flex items-center py-2 px-4 rounded-3xl font-semibold";
 
-    switch (status?.toLowerCase()) {
-      case "paid":
-      case "confirmed":
-      case "approved":
-        return (
-          <Badge className={`${baseClass} bg-green-100 !text-green-700`}>
-            Hoàn thành
-          </Badge>
-        );
-      case "pending":
-        return (
-          <Badge className={`${baseClass} bg-yellow-100 !text-yellow-700`}>
-            Đang xử lý
-          </Badge>
-        );
-      case "failed":
-      case "rejected":
-      case "cancelled":
-        return (
-          <Badge className={`${baseClass} bg-red-100 !text-red-700`}>
-            Thất bại
-          </Badge>
-        );
-      case "refunded":
-        return (
-          <Badge className={`${baseClass} bg-gray-100 !text-gray-700`}>
-            Hoàn tiền
-          </Badge>
-        );
-      default:
-        return (
-          <Badge className={`${baseClass} bg-gray-200 !text-gray-800`}>
-            {status}
-          </Badge>
-        );
-    }
-  };
+  //   switch (status?.toLowerCase()) {
+  //     case "paid":
+  //     case "confirmed":
+  //     case "approved":
+  //       return (
+  //         <Badge className={`${baseClass} bg-green-100 !text-green-700`}>
+  //           Hoàn thành
+  //         </Badge>
+  //       );
+  //     case "pending":
+  //       return (
+  //         <Badge className={`${baseClass} bg-yellow-100 !text-yellow-700`}>
+  //           Đang xử lý
+  //         </Badge>
+  //       );
+  //     case "failed":
+  //     case "rejected":
+  //     case "cancelled":
+  //       return (
+  //         <Badge className={`${baseClass} bg-red-100 !text-red-700`}>
+  //           Thất bại
+  //         </Badge>
+  //       );
+  //     case "refunded":
+  //       return (
+  //         <Badge className={`${baseClass} bg-gray-100 !text-gray-700`}>
+  //           Hoàn tiền
+  //         </Badge>
+  //       );
+  //     default:
+  //       return (
+  //         <Badge className={`${baseClass} bg-gray-200 !text-gray-800`}>
+  //           {status}
+  //         </Badge>
+  //       );
+  //   }
+  // };
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -333,10 +333,10 @@ export default function RevenueDashboard() {
               </SelectContent>
             </Select>
 
-            <Button variant="outline" size="sm">
+            {/* <Button variant="outline" size="sm">
               <Download className="h-4 w-4 mr-2" />
               Xuất báo cáo
-            </Button>
+            </Button> */}
           </div>
         </div>
 
@@ -774,7 +774,7 @@ export default function RevenueDashboard() {
                     </TableCell>
                     <TableCell>{booking.paymentMethod}</TableCell>
                     <TableCell>
-                      {getStatusBadge(booking.paymentStatus)}
+                      <StatusBadge status={booking.paymentStatus} />
                     </TableCell>
                     <TableCell>
                       {booking.paidAt
@@ -964,7 +964,9 @@ export default function RevenueDashboard() {
                       {formatCurrency(ad.totalPrice)}
                     </TableCell>
                     <TableCell>{ad.paymentGateway}</TableCell>
-                    <TableCell>{getStatusBadge(ad.status)}</TableCell>
+                    <TableCell>
+                      <StatusBadge status={ad.status} />
+                    </TableCell>
                     <TableCell>
                       {new Date(ad.createdAt).toLocaleDateString("vi-VN")}
                     </TableCell>
