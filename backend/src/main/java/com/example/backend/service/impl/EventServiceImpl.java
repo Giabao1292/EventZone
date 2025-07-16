@@ -18,11 +18,14 @@ import org.springframework.data.domain.*;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.client.RestTemplate;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -38,7 +41,9 @@ public class EventServiceImpl implements EventService {
 
     private final AddressRepository addressRepository;
     private final UserRepository userRepository;
+    private final EventViewRepository eventViewRepository;
 
+    private final RestTemplate restTemplate;
 
     @Override
     public List<EventResponse> getPosterImagesByCategory(int categoryId) {
@@ -96,12 +101,20 @@ public class EventServiceImpl implements EventService {
 
             // Calculate lowest price
             OptionalDouble lowestPriceOpt = showings.stream()
-                    .flatMap(st -> st.getSeats().stream())
-                    .mapToDouble(seat -> seat.getPrice().doubleValue())
+                    .flatMap(st -> {
+                        Stream<BigDecimal> seatPrices = st.getSeats() != null
+                                ? st.getSeats().stream().map(Seat::getPrice)
+                                : Stream.empty();
+                        Stream<BigDecimal> zonePrices = st.getZones() != null
+                                ? st.getZones().stream().map(Zone::getPrice)
+                                : Stream.empty();
+                        return Stream.concat(seatPrices, zonePrices);
+                    })
+                    .mapToDouble(BigDecimal::doubleValue)
                     .min();
+
             double lowestPrice = lowestPriceOpt.orElse(0);
             EventHomeDTO dto = new EventHomeDTO(event, lowestPrice);
-
             // Prioritize ongoing status
             if (hasOngoing) {
                 ongoingEvents.add(dto);
@@ -113,6 +126,57 @@ public class EventServiceImpl implements EventService {
         Map<String, List<EventHomeDTO>> result = new HashMap<>();
         result.put("ongoing", ongoingEvents);
         result.put("upcoming", upcomingEvents);
+        return result;
+    }
+
+    @Override
+    public List<EventHomeDTO> recommendEvents(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản"));
+
+        Integer userId = user.getId();
+        String url = "http://localhost:5000/recommend?user_id=" + userId;
+        Map<String, List<Integer>> response = restTemplate.getForObject(url, Map.class);
+        List<Integer> recommendedEventIds = response.get("recommendations");
+
+        if (recommendedEventIds == null || recommendedEventIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        List<EventHomeDTO> result = new ArrayList<>();
+
+        for (Integer eventId : recommendedEventIds) {
+            Optional<Event> optionalEvent = eventRepository.findById(eventId);
+            if (optionalEvent.isEmpty()) continue;
+
+            Event event = optionalEvent.get();
+
+            Set<ShowingTime> showings = event.getTblShowingTimes();
+            if (showings == null || showings.isEmpty()) continue;
+
+            boolean hasValidShowing = false;
+            for (ShowingTime st : showings) {
+                if (st.getSaleOpenTime() != null && st.getSaleCloseTime() != null &&
+                        (now.isBefore(st.getSaleCloseTime()))) {
+                    hasValidShowing = true;
+                    break;
+                }
+            }
+
+            if (!hasValidShowing) continue;
+
+            // Tính giá thấp nhất
+            OptionalDouble lowestPriceOpt = showings.stream()
+                    .flatMap(st -> st.getSeats().stream())
+                    .mapToDouble(seat -> seat.getPrice().doubleValue())
+                    .min();
+
+            double lowestPrice = lowestPriceOpt.orElse(0);
+            EventHomeDTO dto = new EventHomeDTO(event, lowestPrice);
+            result.add(dto);
+        }
+
         return result;
     }
 
@@ -156,11 +220,28 @@ public class EventServiceImpl implements EventService {
 
 
     @Override
-    public EventDetailDTO getEventDetailById(int eventId) {
+    @Transactional
+    public EventDetailDTO getEventDetailById(int eventId, String userEmail) {
         Event event = eventRepository.findEventDetail(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sự kiện với ID = " + eventId));
 
-        // Mapping danh sách ShowingTime (nếu có)
+        // ✅ Ghi nhận lượt xem nếu có email
+        if (userEmail != null && !userEmail.isBlank()) {
+            try {
+                Optional<User> user = userRepository.findByEmail(userEmail);
+                if (user.isPresent()) {
+                    EventView view = EventView.builder()
+                            .event(event)
+                            .user(user.get())
+                            .build();
+                    eventViewRepository.save(view);
+                }
+            } catch (Exception e) {
+                e.printStackTrace(); // Không crash hệ thống
+            }
+        }
+
+        // Mapping danh sách ShowingTime
         List<ShowingTimeDTO> showingTimeDTOs = event.getTblShowingTimes().stream().map(st -> {
             ShowingTimeDTO stDto = new ShowingTimeDTO();
             stDto.setId(st.getId());
@@ -169,6 +250,7 @@ public class EventServiceImpl implements EventService {
             stDto.setLayoutMode(st.getLayoutMode());
             stDto.setSaleOpenTime(st.getSaleOpenTime());
             stDto.setSaleCloseTime(st.getSaleCloseTime());
+
 
             // Thêm dòng này để trả về status cho FE!
             stDto.setStatus(st.getStatus() != null ? st.getStatus().name() : null);
@@ -184,7 +266,7 @@ public class EventServiceImpl implements EventService {
                 stDto.setAddress(addrDto);
             }
 
-            // Mapping Seats (nếu có)
+            // Mapping Seats
             if (st.getSeats() != null) {
                 List<SeatDTO> seatDTOs = st.getSeats().stream().map(seat -> {
                     SeatDTO seatDTO = new SeatDTO();
@@ -200,7 +282,7 @@ public class EventServiceImpl implements EventService {
                 stDto.setSeats(seatDTOs);
             }
 
-            // Mapping Zones (nếu có)
+            // Mapping Zones
             if (st.getZones() != null) {
                 List<ZoneDTO> zoneDTOs = st.getZones().stream().map(zone -> {
                     ZoneDTO zoneDTO = new ZoneDTO();
@@ -222,11 +304,11 @@ public class EventServiceImpl implements EventService {
             return stDto;
         }).collect(Collectors.toList());
 
-        // Lấy thông tin địa điểm chung (nếu muốn lấy luôn từ ShowingTime đầu)
+        // Lấy thông tin địa điểm tổng hợp từ suất chiếu đầu tiên
         String location = null;
         String city = null;
         String venueName = null;
-        if (event.getTblShowingTimes() != null && !event.getTblShowingTimes().isEmpty()) {
+        if (!event.getTblShowingTimes().isEmpty()) {
             ShowingTime firstST = event.getTblShowingTimes().iterator().next();
             if (firstST.getAddress() != null) {
                 location = firstST.getAddress().getLocation();
@@ -235,48 +317,42 @@ public class EventServiceImpl implements EventService {
             }
         }
 
-        // Tạo và mapping đầy đủ các field cho EventDetailDTO
+        // Mapping vào DTO
         EventDetailDTO dto = new EventDetailDTO();
         dto.setId(event.getId());
         dto.setEventTitle(event.getEventTitle());
         dto.setDescription(event.getDescription());
-
-        // Lấy categoryId từ entity Category (KHÔNG BAO GIỜ DÙNG event.getCategoryId())
         dto.setCategoryId(event.getCategory() != null ? event.getCategory().getCategoryId() : null);
-
         dto.setBannerText(event.getBannerText());
         dto.setHeaderImage(event.getHeaderImage());
         dto.setPosterImage(event.getPosterImage());
         dto.setAgeRating(event.getAgeRating());
-
-        // Địa điểm tổng hợp từ ShowingTime đầu (nếu muốn lấy theo event, sửa lại field event)
         dto.setLocation(location);
         dto.setCity(city);
         dto.setVenueName(venueName);
-
-        // Nếu có field maxCapacity (thêm vào entity Event nếu cần)
         dto.setMaxCapacity(null);
 
         dto.setStartTime(event.getStartTime() != null ? event.getStartTime().toString() : null);
         dto.setEndTime(event.getEndTime() != null ? event.getEndTime().toString() : null);
-
-        // Lấy statusId từ entity EventStatus (nếu có)
         dto.setStatusId(event.getStatus() != null ? event.getStatus().getId() : null);
-
         dto.setShowingTimes(showingTimeDTOs);
 
         return dto;
     }
 
 
+
+
+
+
     private Page<Event> findAllEvents(Pageable pageable) {
         Page<Integer> eventIds = eventRepository.findAllEventIds(pageable);
+
         return new PageImpl<>(eventRepository.findAllEventByIds(eventIds.getContent()), pageable, eventIds.getTotalElements());
     }
 
     @Override
     public PageResponse<EventSummaryAdmin> searchEvent(Pageable pageable, String... search) {
-
         Page<Event> events = search != null && search.length != 0 ? searchCriteriaRepository.searchEvents(pageable, search) : findAllEvents(pageable) ;
         List<EventSummaryAdmin> eventSummaryAdminList = events.getContent().stream()
                 .filter(event -> !event.getStatus().getStatusName().equalsIgnoreCase("DRAFT"))

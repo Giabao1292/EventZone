@@ -1,7 +1,9 @@
 // src/pages/DashboardPage.jsx
 import React from "react";
 // import { LayoutDashboard } from 'lucide-react'; // Không cần nếu không dùng icon này ở đây
-
+import { useEffect, useState } from "react";
+import dayjs from "dayjs";
+import { fetchRevenueChartData } from "../../services/revenueService";
 // Import các component con
 import ProfitExpensesChart from "../../components/dashboard/ProfitExpensesChart";
 import TrafficDistributionCard from "../../components/dashboard/TrafficDistributionCard";
@@ -11,18 +13,29 @@ import TopPayingClientsTable from "../../components/dashboard/TopPayingClientsTa
 import ProductCard from "../../components/dashboard/ProductCard";
 
 const DashboardPage = () => {
+  const [revenueData, setRevenueData] = useState(null);
+
+  useEffect(() => {
+    const from = dayjs().subtract(6, "day").format("YYYY-MM-DD");
+    const to = dayjs().format("YYYY-MM-DD");
+
+    fetchRevenueChartData(from, to).then(setRevenueData).catch(console.error);
+  }, []);
+
+  if (!revenueData) return <p className="text-center">Loading…</p>;
+
   return (
     <>
-      {" "}
-      {/* Sử dụng React Fragment để không có thẻ div bọc ngoài */}
-      {/* Hàng 1: Profit & Expenses, Traffic Distribution, Product Sales */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-x-6 gap-x-0 lg:gap-y-0 gap-y-6">
+      {/* Hàng 1: biểu đồ & donut */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-x-6 gap-y-6">
         <div className="col-span-2">
-          <ProfitExpensesChart />
+          {/* truyền revenueDetails cho cột */}
+          <ProfitExpensesChart revenueDetails={revenueData.revenueDetails} />
         </div>
 
         <div className="flex flex-col gap-6">
-          <TrafficDistributionCard />
+          {/* truyền toàn bộ revenueData cho donut */}
+          <TrafficDistributionCard revenueData={revenueData} />
           <ProductSalesSparkline />
         </div>
       </div>

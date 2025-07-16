@@ -14,6 +14,7 @@ import {
   X,
   MapPin,
   CreditCard,
+  Star,
 } from "lucide-react";
 import QrCodeService from "../services/qrCodeService";
 import jsPDF from "jspdf";
@@ -32,7 +33,13 @@ export default function ViewBookingHistory() {
     const fetchBookings = async () => {
       try {
         const data = await ViewBookingHistoryService.getBookings();
-        setBookings(data);
+        // Sort bookings by booking date (newest first)
+        const sortedData = data.sort((a, b) => {
+          const dateA = new Date(a.bookedAt || 0);
+          const dateB = new Date(b.bookedAt || 0);
+          return dateB - dateA;
+        });
+        setBookings(sortedData);
       } catch (err) {
         console.error("Lỗi khi tải lịch sử đặt vé:", err.message);
       } finally {
@@ -63,8 +70,20 @@ export default function ViewBookingHistory() {
     return new Date(endTime) < new Date();
   };
 
+  const canReview = (booking) => {
+    return (
+      booking.paymentStatus === "CONFIRMED" && isEventEnded(booking.endTime)
+    );
+  };
+
   const filteredBookings = bookings.filter((b) =>
     b.eventTitle?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Separate bookings into those needing reviews and others
+  const reviewableBookings = filteredBookings.filter(canReview);
+  const regularBookings = filteredBookings.filter(
+    (booking) => !canReview(booking)
   );
 
   const handleViewDetails = (booking) => {
@@ -203,6 +222,81 @@ export default function ViewBookingHistory() {
     });
   };
 
+  const BookingSection = ({
+    title,
+    bookings,
+    icon,
+    emptyMessage,
+    gradientFrom,
+    gradientTo,
+    borderColor,
+  }) => (
+    <div className="mb-16">
+      <div className="relative mb-8">
+        {/* Decorative background */}
+        <div
+          className={`absolute inset-0 bg-gradient-to-r ${gradientFrom} ${gradientTo} rounded-2xl blur-xl opacity-30`}
+        ></div>
+
+        {/* Section header */}
+        <div
+          className={`relative bg-gray-800/60 backdrop-blur-sm border ${borderColor} rounded-2xl p-6`}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <div
+                className={`flex items-center justify-center w-12 h-12 bg-gradient-to-r ${gradientFrom} ${gradientTo} rounded-xl mr-4 shadow-lg`}
+              >
+                {icon}
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-1">{title}</h2>
+                <p className="text-gray-400 text-sm">
+                  {bookings.length === 0
+                    ? "Chưa có vé nào"
+                    : `${bookings.length} vé`}
+                </p>
+              </div>
+            </div>
+            <div
+              className={`px-4 py-2 bg-gradient-to-r ${gradientFrom} ${gradientTo} rounded-full`}
+            >
+              <span className="text-white font-bold text-lg">
+                {bookings.length}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {bookings.length === 0 ? (
+        <div className="text-center py-16">
+          <div
+            className={`w-20 h-20 bg-gradient-to-r ${gradientFrom} ${gradientTo} rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg`}
+          >
+            {icon}
+          </div>
+          <h3 className="text-xl font-semibold text-white mb-2">Trống</h3>
+          <p className="text-gray-400 text-lg">{emptyMessage}</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {bookings.map((booking, index) => (
+            <BookingCard
+              key={booking.bookingId}
+              booking={booking}
+              onViewDetails={handleViewDetails}
+              onOpenReview={handleOpenReview}
+              isEventEnded={isEventEnded}
+              index={index}
+              sectionGradient={`${gradientFrom} ${gradientTo}`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gray-900 text-white relative">
       <BackgroundEffect image={backgroundImage} />
@@ -240,7 +334,7 @@ export default function ViewBookingHistory() {
         </div>
       </div>
 
-      {/* List */}
+      {/* Booking Sections */}
       <div className="relative z-10 px-6 pb-20 max-w-7xl mx-auto">
         {filteredBookings.length === 0 ? (
           <div className="text-center py-16">
@@ -271,18 +365,29 @@ export default function ViewBookingHistory() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredBookings.map((booking, index) => (
-              <BookingCard
-                key={booking.bookingId}
-                booking={booking}
-                onViewDetails={handleViewDetails}
-                onOpenReview={handleOpenReview}
-                isEventEnded={isEventEnded}
-                index={index}
-              />
-            ))}
-          </div>
+          <>
+            {/* All Bookings Section */}
+            <BookingSection
+              title="🎫 Tất cả vé đã đặt"
+              bookings={regularBookings}
+              icon={<Ticket className="w-6 h-6 text-blue-400" />}
+              emptyMessage="Không có vé nào khác"
+              gradientFrom="from-blue-500/20"
+              gradientTo="to-purple-500/20"
+              borderColor="border-blue-500/30"
+            />
+
+            {/* Reviews Needed Section */}
+            <BookingSection
+              title="⭐ Cần đánh giá"
+              bookings={reviewableBookings}
+              icon={<Star className="w-6 h-6 text-yellow-400" />}
+              emptyMessage="Không có sự kiện nào cần đánh giá"
+              gradientFrom="from-yellow-500/20"
+              gradientTo="to-orange-500/20"
+              borderColor="border-yellow-500/30"
+            />
+          </>
         )}
       </div>
 
@@ -293,7 +398,7 @@ export default function ViewBookingHistory() {
             <ReviewSection
               showingTimeId={reviewBooking.showingTimeId}
               canReview={true}
-              onClose={handleCloseReview} // Pass the onClose prop
+              onClose={handleCloseReview}
             />
           </div>
         </div>
@@ -506,6 +611,7 @@ const BookingCard = ({
   onOpenReview,
   isEventEnded,
   index,
+  sectionGradient,
 }) => {
   const {
     eventTitle,
@@ -527,9 +633,11 @@ const BookingCard = ({
     });
   };
 
+  const canReview = paymentStatus === "CONFIRMED" && isEventEnded(endTime);
+
   return (
     <div
-      className="bg-gray-800/60 backdrop-blur-sm border border-gray-700 rounded-2xl overflow-hidden hover:border-orange-500/50 hover:shadow-xl transition-all duration-300 group"
+      className="bg-gray-800/60 backdrop-blur-sm border border-gray-700 rounded-2xl overflow-hidden hover:border-orange-500/50 hover:shadow-2xl hover:shadow-orange-500/10 transition-all duration-300 group relative"
       style={{
         animationName: "fadeInUp",
         animationDuration: "0.6s",
@@ -538,59 +646,83 @@ const BookingCard = ({
         animationDelay: `${index * 100}ms`,
       }}
     >
+      {/* Hover gradient effect */}
+      <div
+        className={`absolute inset-0 bg-gradient-to-r ${sectionGradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-2xl`}
+      ></div>
+
       <div className="relative">
         <img
           src={imageUrl}
           alt={eventTitle}
           className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
         />
-        <div className="absolute top-3 right-3">
+
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+
+        {/* Status badges */}
+        <div className="absolute top-3 right-3 flex flex-col gap-2">
+          {canReview && (
+            <span className="px-3 py-1 bg-yellow-500/90 text-yellow-100 border border-yellow-400/50 rounded-full text-xs font-medium backdrop-blur-sm shadow-lg">
+              ⭐ Có thể đánh giá
+            </span>
+          )}
           <span
-            className={`px-2 py-1 rounded-full text-xs font-medium ${
+            className={`px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm shadow-lg ${
               checkinStatus === "Đã check-in"
-                ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                : "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+                ? "bg-green-500/90 text-green-100 border border-green-400/50"
+                : "bg-blue-500/90 text-blue-100 border border-blue-400/50"
             }`}
           >
-            {checkinStatus || "Chưa check-in"}
+            {checkinStatus === "Đã check-in"
+              ? "✓ Đã check-in"
+              : "⏳ Chưa check-in"}
+          </span>
+        </div>
+
+        {/* Price badge */}
+        <div className="absolute bottom-3 left-3">
+          <span className="px-3 py-1 bg-orange-500/90 text-orange-100 rounded-full text-sm font-bold backdrop-blur-sm shadow-lg">
+            {finalPrice ? `${finalPrice.toLocaleString()} đ` : "Miễn phí"}
           </span>
         </div>
       </div>
-      <div className="p-5 flex flex-col justify-between h-[280px]">
+
+      <div className="relative p-6 flex flex-col justify-between h-[220px]">
         <div>
-          <h3 className="text-lg font-semibold text-white mb-2 line-clamp-2 group-hover:text-orange-400 transition-colors">
+          <h3 className="text-lg font-bold text-white mb-3 line-clamp-2 group-hover:text-orange-400 transition-colors">
             {eventTitle}
           </h3>
-          <div className="space-y-2 text-sm text-gray-300">
-            <p className="flex items-center">
-              <span className="text-green-400 mr-2">💰</span>
-              {finalPrice ? `${finalPrice.toLocaleString()} đ` : "Miễn phí"}
-            </p>
-            <p className="flex items-center">
-              <span className="mr-2">📅</span>
-              {formatDateTime(showTime)}
-            </p>
+          <div className="space-y-3 text-sm text-gray-300">
+            <div className="flex items-center">
+              <Calendar className="w-4 h-4 mr-2 text-orange-400" />
+              <span>{formatDateTime(showTime)}</span>
+            </div>
             {seatNumbers && seatNumbers.length > 0 && (
-              <p className="flex items-center">
-                <span className="mr-2">🪑</span>
-                {seatNumbers.join(", ")}
-              </p>
+              <div className="flex items-center">
+                <User className="w-4 h-4 mr-2 text-blue-400" />
+                <span className="font-medium">
+                  Ghế: {seatNumbers.join(", ")}
+                </span>
+              </div>
             )}
           </div>
         </div>
-        <div className="mt-4 flex space-x-3">
+
+        <div className="mt-4 flex gap-2">
           <button
             onClick={() => onViewDetails(booking)}
-            className="flex-1 bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 font-medium py-2 px-4 rounded-lg border border-orange-500/30 transition-colors"
+            className="flex-1 bg-gradient-to-r from-orange-500/20 to-orange-600/20 hover:from-orange-500/30 hover:to-orange-600/30 text-orange-400 text-sm font-medium py-2 px-3 rounded-lg border border-orange-500/30 transition-all duration-300 hover:shadow-md hover:shadow-orange-500/20"
           >
             Chi tiết
           </button>
-          {paymentStatus === "CONFIRMED" && isEventEnded(endTime) && (
+          {canReview && (
             <button
               onClick={() => onOpenReview(booking)}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg border border-blue-500/70 transition-colors"
+              className="flex-1 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition-all duration-300 hover:shadow-md hover:shadow-yellow-500/30 transform hover:scale-105"
             >
-              Đánh giá
+              ⭐ Đánh giá
             </button>
           )}
         </div>

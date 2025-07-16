@@ -14,7 +14,7 @@ public class BookingRequest {
 
     private List<SeatBookingDTO> seats;
     private List<ZoneBookingDTO> zones;
-
+    private Integer voucherId;
     @Data
     public static class SeatBookingDTO {
         @NotNull

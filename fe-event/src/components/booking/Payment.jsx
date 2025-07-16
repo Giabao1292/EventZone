@@ -45,9 +45,11 @@ export default function Payment() {
 
     const holdBooking = async () => {
       try {
+        const voucher = selection.find((s) => s.type === "voucher");
+        console.log("Voucher in selection:", voucher); // Debug voucher
         const bookingRequest = {
           showingTimeId: showing.id,
-          paymentMethod, // Gửi phương thức lên BE
+          paymentMethod,
           seats: selection
             .filter((s) => s.type === "seat")
             .map((s) => ({
@@ -61,11 +63,15 @@ export default function Payment() {
               quantity: s.qty,
               price: s.price,
             })),
+          voucherId: voucher ? voucher.voucherId : null,
         };
+        console.log("Booking request sent to /bookings/hold:", bookingRequest); // Debug payload
         const response = await bookingService.holdBooking(bookingRequest);
+        console.log("Booking response:", response); // Debug response
         setBooking(response);
         startTimer();
       } catch (err) {
+        console.error("Hold booking error:", err);
         if (err.message.includes("401")) {
           toast.error("Vui lòng đăng nhập lại.");
           navigate("/login");
@@ -166,10 +172,6 @@ export default function Payment() {
       </div>
     );
   }
-
-  const total = selection.reduce((sum, s) => {
-    return s.type === "seat" ? sum + s.price : sum + s.price * s.qty;
-  }, 0);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 flex items-center justify-center p-4">
@@ -277,6 +279,7 @@ export default function Payment() {
                 Chi tiết đặt chỗ
               </h3>
               <div className="space-y-2">
+                {/* Hiển thị từng mục đã chọn */}
                 {selection.map((s, idx) => (
                   <div
                     key={idx}
@@ -284,30 +287,43 @@ export default function Payment() {
                   >
                     <div className="flex items-center gap-2">
                       <span className="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded-full font-medium">
-                        {s.type === "seat" ? "Ghế" : "Khu vực"}
+                        {s.type === "seat"
+                          ? "Ghế"
+                          : s.type === "zone"
+                          ? "Khu vực"
+                          : "Voucher"}
                       </span>
                       <span className="text-white text-sm font-medium">
                         {s.type === "seat"
                           ? `Ghế ${s.seatLabel}`
-                          : `${s.zoneName} (x${s.qty})`}
+                          : s.type === "zone"
+                          ? `${s.zoneName} (x${s.qty})`
+                          : `Voucher ${s.voucherCode || s.voucherId}`}
                       </span>
                     </div>
-                    <span className="text-white font-semibold text-sm">
-                      {(s.type === "seat"
-                        ? s.price
-                        : s.price * s.qty
-                      ).toLocaleString("vi-VN")}
-                      ₫
-                    </span>
                   </div>
                 ))}
+
+                {/* Nếu có giảm giá từ voucher thì hiển thị dòng giảm giá */}
+                {booking.discountAmount > 0 && (
+                  <div className="flex justify-between items-center pt-2 border-t border-white/20">
+                    <span className="text-white text-sm font-medium">
+                      Giảm giá
+                    </span>
+                    <span className="text-red-400 text-sm font-semibold">
+                      -{booking.discountAmount.toLocaleString("vi-VN")}₫
+                    </span>
+                  </div>
+                )}
+
+                {/* Tổng thanh toán cuối cùng */}
                 <div className="pt-2 border-t border-white/20">
                   <div className="flex justify-between items-center">
                     <span className="text-base font-bold text-white">
                       Tổng cộng:
                     </span>
                     <span className="text-xl font-bold text-green-400">
-                      {total.toLocaleString("vi-VN")}₫
+                      {booking.finalPrice.toLocaleString("vi-VN")}₫
                     </span>
                   </div>
                 </div>
@@ -450,7 +466,7 @@ export default function Payment() {
                 <div>
                   <p className="text-sm text-gray-300">Tổng thanh toán</p>
                   <p className="text-4xl font-bold text-white">
-                    {total.toLocaleString("vi-VN")}₫
+                    {booking.finalPrice.toLocaleString("vi-VN")}₫
                   </p>
                 </div>
 

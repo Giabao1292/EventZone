@@ -24,6 +24,11 @@ export default function PaymentResult() {
         });
         toast.success("Thanh toán thành công!");
         setStatus("success");
+
+        // ⏳ Tự động chuyển hướng sau 3 giây nếu thành công
+        setTimeout(() => {
+          window.location.href = "http://localhost:5173/booking-history";
+        }, 3000);
       } catch (err) {
         console.error(err);
         toast.error("Thanh toán thất bại hoặc đã bị huỷ.");
@@ -45,6 +50,9 @@ export default function PaymentResult() {
             ✅ Thanh toán thành công!
           </p>
           <p>Vé của bạn đã được xác nhận. Hẹn gặp bạn tại sự kiện 🎉</p>
+          <p className="mt-2 text-sm text-gray-300">
+            Đang chuyển hướng đến lịch sử đặt vé...
+          </p>
         </>
       )}
       {status === "error" && (

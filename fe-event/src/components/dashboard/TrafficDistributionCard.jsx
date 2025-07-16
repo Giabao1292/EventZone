@@ -1,21 +1,27 @@
 import Chart from "react-apexcharts";
-import { ArrowUpLeft } from "lucide-react"; // Icon mũi tên
+import { ArrowUpLeft } from "lucide-react";
 
-const TrafficDistributionCard = () => {
-  // Cấu hình biểu đồ từ dashboard.js
+const TrafficDistributionCard = ({ revenueData }) => {
+  // Tách dữ liệu từ props
+  const ads = revenueData?.eventAdsRevenue ?? 0;
+  const booking = revenueData?.ticketSellingRevenue ?? 0;
+
+  const series = [ads, booking];
+  const labels = ["Event Ads", "Ticket Booking"];
+
   const chartOptions = {
-    series: [5368, 3500, 4106],
-    labels: ["Other", "Refferal", "Oragnic"],
+    series,
+    labels,
     chart: {
       type: "donut",
-      fontFamily: "Plus Jakarta Sans', sans-serif",
+      fontFamily: "'Plus Jakarta Sans', sans-serif",
       foreColor: "#c6d1e9",
     },
     tooltip: {
       theme: "dark",
       fillSeriesColor: false,
     },
-    colors: ["#e7ecf0", "#fb977d", "#0085db"],
+    colors: ["#fb977d", "#0085db"], // Màu của "Ads" và "Booking"
     dataLabels: {
       enabled: false,
     },
@@ -45,7 +51,6 @@ const TrafficDistributionCard = () => {
             name: {
               show: true,
               fontSize: "12px",
-              color: undefined,
               offsetY: 5,
             },
             value: {
@@ -58,6 +63,8 @@ const TrafficDistributionCard = () => {
     },
   };
 
+  const total = ads + booking;
+
   return (
     <div className="card">
       <div className="card-body">
@@ -67,7 +74,7 @@ const TrafficDistributionCard = () => {
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-8">
           <div>
             <h3 className="text-[22px] font-semibold text-gray-500 mb-4">
-              $36,358
+              ${total.toLocaleString()}
             </h3>
             <div className="flex items-center gap-1 mb-3">
               <span className="flex items-center justify-center w-5 h-5 rounded-full bg-teal-400">
@@ -75,25 +82,29 @@ const TrafficDistributionCard = () => {
               </span>
               <p className="text-gray-500 text-sm font-normal">+9%</p>
               <p className="text-gray-400 text-sm font-normal text-nowrap">
-                last year
+                compared to last period
               </p>
             </div>
             <div className="flex gap-4">
               <div className="flex gap-2 items-center">
-                <span className="w-2 h-2 rounded-full bg-blue-600"></span>
-                <p className="text-gray-400 font-normal text-xs">Oragnic</p>
+                <span className="w-2 h-2 rounded-full bg-red-400"></span>
+                <p className="text-gray-400 font-normal text-xs">Event Ads</p>
               </div>
               <div className="flex gap-2 items-center">
-                <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                <p className="text-gray-400 font-normal text-xs">Refferal</p>
+                <span className="w-2 h-2 rounded-full bg-blue-600"></span>
+                <p className="text-gray-400 font-normal text-xs">
+                  Ticket Booking
+                </p>
               </div>
             </div>
           </div>
+
+          {/* Donut Chart */}
           <div className="chart-container w-full md:w-auto flex justify-center">
             <div style={{ width: "140px", height: "140px" }}>
               <Chart
                 options={chartOptions}
-                series={chartOptions.series}
+                series={series}
                 type="donut"
                 width="100%"
                 height="100%"
