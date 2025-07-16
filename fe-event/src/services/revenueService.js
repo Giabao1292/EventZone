@@ -100,3 +100,18 @@ export const fetchEventAds = async (
   );
   return response.data.data;
 };
+
+export const getTopEvents = async () => {
+  try {
+    const response = await apiClient.get("/events/top", {
+      params: {
+        page: 0,
+        size: 4,
+      },
+    });
+    return response;
+  } catch (error) {
+    console.error("Failed to fetch top events", error);
+    throw error;
+  }
+};

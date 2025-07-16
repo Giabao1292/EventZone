@@ -45,7 +45,7 @@ export default function SidebarNavigation() {
                 }`}
                 href="/admin/dashboard"
               >
-                <i className="ti ti-layout-dashboard ps-2 text-2xl"></i>
+                <i className="ti ti-layout-dashboard ps-2 text-2xl text-blue-500"></i>
                 <span>Dashboard</span>
               </a>
             </li>
@@ -139,18 +139,17 @@ export default function SidebarNavigation() {
 
             <li className="sidebar-item">
               <a
-                  className={`sidebar-link gap-3 py-2.5 my-1 text-base flex items-center relative rounded-md w-full ${
-                      pathname === "/admin/reviews"
-                          ? "text-blue-600 bg-blue-50"
-                          : "text-gray-500"
-                  }`}
-                  href="/admin/reviews"
+                className={`sidebar-link gap-3 py-2.5 my-1 text-base flex items-center relative rounded-md w-full ${
+                  pathname === "/admin/reviews"
+                    ? "text-blue-600 bg-blue-50"
+                    : "text-gray-500"
+                }`}
+                href="/admin/reviews"
               >
                 <i className="ti ti-message-circle ps-2 text-yellow-500 text-2xl"></i>{" "}
                 <span>Review Management</span>
               </a>
             </li>
-
 
             <li className="sidebar-item">
               <a
@@ -165,8 +164,6 @@ export default function SidebarNavigation() {
                 <span>Category Management</span>
               </a>
             </li>
-
-
 
             <li className="sidebar-item">
               <a
@@ -202,8 +199,6 @@ export default function SidebarNavigation() {
                 TRACK & STATISTICS
               </span>
             </li>
-
-
 
             {/* Ecommerce Accordion */}
             <li className="sidebar-item">

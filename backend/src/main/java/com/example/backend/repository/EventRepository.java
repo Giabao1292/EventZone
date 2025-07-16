@@ -44,7 +44,8 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
             " LEFT JOIN FETCH e.tblShowingTimes tst" +
             " LEFT JOIN FETCH tst.address a" +
             " LEFT JOIN FETCH o.orgType ot" +
-            " WHERE e.id in :ids")
+            " WHERE e.id in :ids" +
+            " ORDER by e.createdAt DESC")
     List<Event> findAllEventByIds(List<Integer> ids);
 
     @Query(value = """
@@ -87,5 +88,13 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
             "GROUP BY e")
     Page<Event> findEndedEvents(@Param("search") String search, @Param("categoryId") Integer categoryId, Pageable pageable);
 
-
+    @Query("SELECT DISTINCT e FROM Event e" +
+            " LEFT JOIN e.status s" +
+            " LEFT JOIN e.tblShowingTimes tst" +
+            " LEFT JOIN tst.bookings b" +
+            " LEFT JOIN b.tblBookingSeats bs" +
+            " WHERE s.statusName = 'APPROVED'" +
+            " GROUP BY e " +
+            " ORDER BY count(bs.id) DESC")
+    List<Event> getTopEventsIds(Pageable pageable);
 }

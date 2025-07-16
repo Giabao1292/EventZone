@@ -117,7 +117,7 @@ public class SearchCriteriaRepository {
 
         Join<Event, EventStatus> joinStatus = eventRoot.join("status");
         Predicate predicate = getSearchPredicate(List.of(eventRoot, joinStatus), criteriaBuilder, search);
-        criteriaQuery.select(eventRoot).where(predicate);
+        criteriaQuery.select(eventRoot).where(predicate).orderBy(criteriaBuilder.asc(eventRoot.get("createdAt")));
         List<Event> events = entityManager.createQuery(criteriaQuery).setMaxResults(pageable.getPageSize()).setFirstResult((int)pageable.getOffset()).getResultList();
         Long count = countEventsSearch(criteriaBuilder ,search);
         return new PageImpl<>(events, pageable, count);

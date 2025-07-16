@@ -24,7 +24,6 @@ public interface EventService {
 
     EventDetailDTO getEventDetailById(int eventId, String userEmail);
 
-
     PageResponse<EventSummaryAdmin> searchEvent(Pageable pageable, String... search);
 
     EventDetailAdmin getEventDetailAdmin(int eventId);
@@ -37,7 +36,6 @@ public interface EventService {
 
     void updateStatus(UpdateStatusEvent status, int eventId);
 
-
     Event findById(Integer id);
 
     List<EventHomeDTO> userSearchEvent(String[] search);
@@ -45,8 +43,10 @@ public interface EventService {
     FeaturedEventResponse getFeaturedEventsForHome();
 
     List<EventHomeDTO> recommendEvents(String email);
+
     List<EventResponse> getEventsForReviewByCategory(int categoryId);
 
     PageResponse<EventResponse> getEventsForReviewAllCategoriesPaged(int page, int size, String search, Integer categoryId);
 
+    List<EventHomeDTO> getTopEvents(Pageable pageable);
 }

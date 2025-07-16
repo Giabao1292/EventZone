@@ -125,8 +125,8 @@ WHERE b.id = :bookingId
                        CASE WHEN :type = 'ads' THEN 0
                             ELSE SUM(b.final_price) END AS booking
                 FROM tbl_booking b
-                WHERE b.payment_status = 'paid'
-                  AND b.created_datetime BETWEEN :from AND :to
+                WHERE b.payment_status = 'CONFIRMED'
+                  AND b.paid_at BETWEEN :from AND :to
                 GROUP BY bucket
             
                 UNION ALL

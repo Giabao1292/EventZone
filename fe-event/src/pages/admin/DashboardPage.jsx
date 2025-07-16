@@ -10,8 +10,7 @@ import TrafficDistributionCard from "../../components/dashboard/TrafficDistribut
 import ProductSalesSparkline from "../../components/dashboard/ProductSalesSparkLine";
 import UpcomingSchedules from "../../components/dashboard/UpcomingSchedules";
 import TopPayingClientsTable from "../../components/dashboard/TopPayingClientsTable";
-import ProductCard from "../../components/dashboard/ProductCard";
-
+import TopEventsCardGrid from "../../ui/TopEventsCardGrid";
 const DashboardPage = () => {
   const [revenueData, setRevenueData] = useState(null);
 
@@ -44,35 +43,9 @@ const DashboardPage = () => {
         <TopPayingClientsTable />
       </div>
       {/* Hàng 3: Product Cards */}
-      <div className="grid grid-cols-1 xl:grid-cols-4 lg:grid-cols-2 gap-6">
-        <ProductCard
-          imageSrc="/assets/images/products/product-1.jpg"
-          title="Boat Headphone"
-          price="$50"
-          oldPrice="$65"
-          rating={3}
-        />
-        <ProductCard
-          imageSrc="/assets/images/products/product-2.jpg"
-          title="MacBook Air Pro"
-          price="$650"
-          oldPrice="$900"
-          rating={3}
-        />
-        <ProductCard
-          imageSrc="/assets/images/products/product-3.jpg"
-          title="Red Valvet Dress"
-          price="$150"
-          oldPrice="$200"
-          rating={3}
-        />
-        <ProductCard
-          imageSrc="/assets/images/products/product-4.jpg" // Dựa trên hình ảnh dashboard
-          title="Cute Soft Teddybear"
-          price="$285"
-          oldPrice="$345"
-          rating={4}
-        />
+      <div className="mt-6">
+        <h2 className="text-xl font-semibold mb-4">Top Events</h2>
+        <TopEventsCardGrid />
       </div>
     </>
   );

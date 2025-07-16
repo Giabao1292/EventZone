@@ -118,7 +118,6 @@ public class UserController {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         userService.addToWishlist(username, eventId);
         return new ResponseData<>(HttpStatus.OK.value(), "Added to wishlist");
-
     }
 
     @DeleteMapping("/wishlist/{eventId}")

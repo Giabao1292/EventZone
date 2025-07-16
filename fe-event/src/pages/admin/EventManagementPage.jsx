@@ -39,7 +39,6 @@ import { Label } from "../../components/ui/label";
 import EventApprovalModal from "../../components/admin/EventApprovalModal";
 import EventReport from "./EventReport";
 import { useAuth } from "../../context/AuthContext";
-
 const Select = ({ value, onValueChange, children, className = "" }) => (
   <select
     value={value}
@@ -181,7 +180,6 @@ const EventManagementPage = () => {
         icon: FileText,
         color: "bg-blue-100 text-blue-800",
       },
-      co,
     };
     // Đảm bảo key luôn dạng lowercase
     const key = (status || "").toLowerCase();
