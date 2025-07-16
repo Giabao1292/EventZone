@@ -24,4 +24,13 @@ const bookingService = {
   },
 };
 
+export async function verifyPayment(orderId, paymentMethod, vnp_ResponseCode) {
+  if (!orderId || !paymentMethod) {
+    throw new Error("Thiếu thông tin thanh toán.");
+  }
+
+  return apiClient.get("/bookings/verify", {
+    params: { orderId, paymentMethod, vnp_ResponseCode },
+  });
+}
 export default bookingService;

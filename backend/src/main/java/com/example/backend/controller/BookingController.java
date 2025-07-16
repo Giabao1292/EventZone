@@ -1,6 +1,4 @@
-
 package com.example.backend.controller;
-
 
 import com.example.backend.dto.request.BookingRequest;
 import com.example.backend.dto.response.BookingHistoryDTO;
@@ -32,6 +30,7 @@ import java.util.Map;
 @RequestMapping("/api/bookings")
 @RequiredArgsConstructor
 public class BookingController {
+
     private final JwtService jwtService;
     private final BookingService bookingService;
     private final UserRepository userRepository;
@@ -83,7 +82,6 @@ public class BookingController {
         }
     }
 
-
     @GetMapping("/verify")
     public ResponseData<?> verify(@RequestParam Integer orderId,
                                   @RequestParam String paymentMethod,
@@ -98,7 +96,6 @@ public class BookingController {
                 } else {
                     return new ResponseData<>(400, "Thanh toán chưa hoàn tất (PayOS)", null);
                 }
-
             } else if ("VNPAY".equalsIgnoreCase(paymentMethod)) {
                 if ("00".equals(vnp_ResponseCode)) {
                     bookingService.confirmBooking(orderId, paymentMethod);
@@ -106,11 +103,9 @@ public class BookingController {
                 } else {
                     return new ResponseData<>(400, "Thanh toán thất bại (VNPAY)", null);
                 }
-
             } else {
                 return new ResponseData<>(400, "Phương thức thanh toán không hợp lệ", null);
             }
-
         } catch (Exception e) {
             e.printStackTrace();
             return new ResponseData<>(500, "Lỗi xác minh thanh toán: " + e.getMessage(), null);
@@ -123,7 +118,6 @@ public class BookingController {
         bookingService.checkIn(bookingId);
         return new ResponseData<>(HttpStatus.OK.value(), "Check in successful");
     }
-
 
     @GetMapping("/history")
     public ResponseData<List<BookingHistoryDTO>> getBookingHistory(HttpServletRequest request) {
@@ -140,16 +134,11 @@ public class BookingController {
         }
     }
 
-
-    // Sửa lại endpoint này để mapping đúng với FE (nên dùng luôn confirmed-showing-time-ids cho đúng logic đã xác nhận)
     @GetMapping("/confirmed-showing-time-ids")
     public ResponseEntity<ResponseData<List<Integer>>> getConfirmedShowingTimeIdsByUser() {
-        // Lấy user từ SecurityContext, không nhận userId từ FE để tránh lộ thông tin
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email).orElseThrow();
         List<Integer> showingTimeIds = bookingService.getConfirmedShowingTimeIdsByUserId(user.getId());
         return ResponseEntity.ok(new ResponseData<>(200, "Lấy danh sách suất chiếu đã xác nhận thành công", showingTimeIds));
     }
-
-
 }

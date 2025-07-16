@@ -6,6 +6,7 @@ import com.example.backend.dto.response.*;
 import com.example.backend.model.Booking;
 import com.example.backend.model.PaymentStatus;
 import com.example.backend.model.User;
+import jakarta.mail.MessagingException;
 import org.springframework.data.domain.Pageable;
 
 import java.io.IOException;
@@ -15,7 +16,7 @@ import java.util.List;
 public interface BookingService {
     Booking holdBooking(BookingRequest request, User user);
 
-    Booking confirmBooking(Integer bookingId, String paymentMethod) throws IOException;
+    Booking confirmBooking(Integer bookingId, String paymentMethod) throws IOException, MessagingException;
 
     PageResponse<AttendeeResponse> searchAttendees(Pageable pageable, int eventId, LocalDateTime startTime, String[] search);
 

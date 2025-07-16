@@ -5,11 +5,11 @@ import com.example.backend.dto.response.*;
 import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.model.*;
 import com.example.backend.repository.*;
-import com.example.backend.service.BookingService;
-import com.example.backend.service.ImageService;
-import com.example.backend.service.QrCodeService;
+import com.example.backend.service.*;
 import com.example.backend.util.CheckIn;
+import jakarta.mail.MessagingException;
 import jakarta.persistence.criteria.CriteriaBuilder;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.config.AnsiOutputApplicationListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -33,6 +33,7 @@ import static com.example.backend.util.CheckIn.CHECKED_IN;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
@@ -46,6 +47,8 @@ public class BookingServiceImpl implements BookingService {
     private final UserVoucherRepository userVoucherRepository;
     private final VoucherRepository voucherRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
+    private final MailService mailService;
     @Override
     @Transactional
     public Booking holdBooking(BookingRequest request, User user) {
@@ -145,14 +148,13 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional
-    public Booking confirmBooking(Integer bookingId, String paymentMethod) throws IOException {
+    public Booking confirmBooking(Integer bookingId, String paymentMethod) throws IOException, MessagingException {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy booking"));
-        
-
         User user = booking.getUser();
-
-        // Handle voucher if any
+        if (!"PENDING".equals(booking.getPaymentStatus())) {
+            throw new RuntimeException("Booking không hợp lệ để xác nhận");
+        }
         if (booking.getVoucher() != null) {
             Voucher voucher = booking.getVoucher();
 
@@ -160,11 +162,9 @@ public class BookingServiceImpl implements BookingService {
                 throw new IllegalArgumentException("Không đủ điểm để sử dụng voucher này");
             }
 
-            // Trừ điểm
             user.setScore(user.getScore() - voucher.getRequiredPoints());
             userRepository.save(user);
 
-            // Đánh dấu voucher đã dùng
             UserVoucher userVoucher = userVoucherRepository
                     .findByUserIdAndVoucherIdAndIsUsedFalse(user.getId(), voucher.getId())
                     .orElseThrow(() -> new RuntimeException("Voucher chưa được redeem hoặc đã được sử dụng"));
@@ -192,8 +192,19 @@ public class BookingServiceImpl implements BookingService {
         // Cộng điểm thưởng
         user.setScore(user.getScore() + 20);
         userRepository.save(user);
+        Booking savedBooking = bookingRepository.save(booking);
+        log.info("Booking saved successfully: ID {}", savedBooking.getId());
 
-        return bookingRepository.save(booking);
+        try {
+            log.info("Sending notification for booking: {}", savedBooking.getId());
+            notificationService.notifyBookingConfirmation(user, savedBooking);
+            log.info("Triggering email send for user: {}, booking: {}", user.getEmail(), savedBooking.getId());
+            mailService.sendBookingConfirmationEmail(user, savedBooking);
+        } catch (Exception e) {
+            log.error("Failed to send notification or email for booking: {}, user: {}. Error: {}",
+                    savedBooking.getId(), user.getEmail(), e.getMessage(), e);
+        }
+        return savedBooking;
     }
 
     @Transactional
@@ -213,7 +224,6 @@ public class BookingServiceImpl implements BookingService {
                     zoneRepository.save(zone);
                 }
             }
-
             bookingRepository.delete(booking);
         }
     }

@@ -49,5 +49,12 @@ public class ImageService {
 
         return (String) uploadResult.get("public_id");
     }
+    public String getQRCodeImageUrl(String publicId) {
+        // Tạo URL từ public_id
+        return cloudinary.url()
+                .resourceType("image") // chỉ định loại resource là image
+                .secure(true)          // dùng HTTPS
+                .generate(publicId);
+    }
 
 }

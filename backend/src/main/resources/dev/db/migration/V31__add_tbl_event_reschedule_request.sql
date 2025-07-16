@@ -15,7 +15,7 @@ CREATE TABLE tbl_event_reschedule_request (
                                               responded_at DATETIME,
                                               CONSTRAINT fk_event FOREIGN KEY (event_id) REFERENCES tbl_event(event_id),
                                               CONSTRAINT fk_showing_time_reschedule FOREIGN KEY (showing_time_id) REFERENCES tbl_showing_time(showing_time_id),
-                                                  CONSTRAINT fk_requested_by FOREIGN KEY (requested_by_user_id) REFERENCES tbl_user(user_id),
+                                            CONSTRAINT fk_requested_by FOREIGN KEY (requested_by_user_id) REFERENCES tbl_user(user_id),
                                               CONSTRAINT fk_approved_by FOREIGN KEY (approved_by_user_id) REFERENCES tbl_user(user_id),
                                               CONSTRAINT fk_status FOREIGN KEY (status_id) REFERENCES tbl_event_status(status_id)
 );

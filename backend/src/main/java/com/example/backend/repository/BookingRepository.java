@@ -13,6 +13,7 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface BookingRepository extends JpaRepository<Booking, Integer> {
     @EntityGraph(attributePaths = {
@@ -24,6 +25,18 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
             "showingTime.address"
     })
     List<Booking> findByUserId(Integer userId);
+    @Query("""
+SELECT b FROM Booking b
+LEFT JOIN FETCH b.tblBookingSeats bs
+LEFT JOIN FETCH bs.seat
+LEFT JOIN FETCH bs.zone
+LEFT JOIN FETCH b.user
+LEFT JOIN FETCH b.showingTime st
+LEFT JOIN FETCH st.event
+LEFT JOIN FETCH st.address
+WHERE b.id = :bookingId
+""")
+    Optional<Booking> findBookingWithAllDetails(@Param("bookingId") Integer bookingId);
 
     @EntityGraph(attributePaths = {
             "showingTime",

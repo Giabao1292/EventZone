@@ -1,31 +1,28 @@
-import { useEffect, useState } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { verifyPayment } from "../../services/bookingService";
 import { toast } from "react-toastify";
-import apiClient from "../../api/axios";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 export default function PaymentResult() {
+  const called = useRef(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [status, setStatus] = useState("loading");
 
   useEffect(() => {
-    const verifyPayment = async () => {
-      const orderId = searchParams.get("orderId");
-      const paymentMethod = searchParams.get("paymentMethod") || "PAYOS";
-      const vnp_ResponseCode = searchParams.get("vnp_ResponseCode");
-      if (!orderId || !paymentMethod) {
-        setStatus("error");
-        return;
-      }
+    if (called.current) return;
+    called.current = true;
 
+    const orderId = searchParams.get("orderId");
+    const paymentMethod = searchParams.get("paymentMethod") || "PAYOS";
+    const vnp_ResponseCode = searchParams.get("vnp_ResponseCode");
+
+    const verify = async () => {
       try {
-        await apiClient.get(`/bookings/verify`, {
-          params: { orderId, paymentMethod, vnp_ResponseCode },
-        });
+        await verifyPayment(orderId, paymentMethod, vnp_ResponseCode);
         toast.success("Thanh toán thành công!");
         setStatus("success");
 
-        // ⏳ Tự động chuyển hướng sau 3 giây nếu thành công
         setTimeout(() => {
           window.location.href = "http://localhost:5173/booking-history";
         }, 3000);
@@ -36,9 +33,8 @@ export default function PaymentResult() {
       }
     };
 
-    verifyPayment();
-  }, [searchParams]);
-
+    verify();
+  }, []);
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white px-4">
       {status === "loading" && (
