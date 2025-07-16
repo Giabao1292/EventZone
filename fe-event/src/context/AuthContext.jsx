@@ -14,6 +14,7 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
+
   // Hàm tải thông tin người dùng
   const loadUser = async () => {
     if (!token) {
