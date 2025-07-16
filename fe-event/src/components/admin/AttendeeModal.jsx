@@ -122,10 +122,26 @@ const AttendeeModal = ({
                       <Users className="w-5 h-5 text-cyan-600" />
                       <div>
                         <p className="text-sm text-gray-600">Khu vực</p>
-                        <p className="font-medium">{attendee.zoneNames}</p>
+                        <p className="font-medium">
+                          {attendee.zoneNames
+                              ? attendee.zoneNames.split(",").map((zone, i) => {
+                                // Lấy số lượng ghế ở mỗi zone theo zoneSeatCounts, fallback "1"
+                                const count = attendee.zoneSeatCounts
+                                    ? (attendee.zoneSeatCounts.split(",")[i] || "1").trim()
+                                    : "1";
+                                return (
+                                    <span key={zone.trim()}>
+                                          {zone.trim()} x{count}
+                                      {i !== attendee.zoneNames.split(",").length - 1 ? ", " : ""}
+                                    </span>
+                                );
+                              })
+                              : "Chưa chọn khu vực"}
+                        </p>
                       </div>
                     </div>
                 )}
+
               </div>
             </div>
 

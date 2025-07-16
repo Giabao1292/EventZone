@@ -24,4 +24,5 @@ public class AttendeeResponse {
 
     private String seatLabels;
     private String zoneNames;
+    private String zoneSeatCounts;
 }

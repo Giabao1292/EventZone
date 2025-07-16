@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Yêu cầu dời lịch đã được phê duyệt</title>
+    <style>
+        body { background: #f6f8fa; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; }
+        .container {
+            background: #fff;
+            border-radius: 10px;
+            max-width: 480px;
+            margin: 36px auto;
+            box-shadow: 0 2px 14px rgba(32,41,57,0.09);
+            padding: 32px 32px 20px 32px;
+        }
+        .title {
+            color: #43a047;
+            font-size: 21px;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+        .event-title {
+            font-size: 17px;
+            color: #1565c0;
+            font-weight: 600;
+        }
+        .info {
+            font-size: 15px;
+            margin: 12px 0 20px 0;
+            color: #444;
+        }
+        .timebox {
+            background: #f1f8e9;
+            border-left: 4px solid #43a047;
+            padding: 10px 18px;
+            border-radius: 7px;
+            margin-bottom: 18px;
+        }
+        .footer {
+            color: #9e9e9e;
+            font-size: 14px;
+            text-align: right;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="title">Yêu cầu dời lịch đã được phê duyệt</div>
+    <div class="info">
+        Xin chào <b th:text="${fullName}">Bạn</b>,<br><br>
+        Yêu cầu dời lịch cho sự kiện <span class="event-title" th:text="${eventTitle}">[Tên sự kiện]</span> của bạn đã được <span style="color:#43a047;"><b>admin phê duyệt</b></span>.
+    </div>
+    <div class="timebox">
+        <b>Lịch cũ:</b> <span th:text="${oldStartTime}">00:00 00/00/0000</span> - <span th:text="${oldEndTime}">00:00 00/00/0000</span><br>
+        <b>Lịch mới:</b> <span th:text="${newStartTime}">00:00 00/00/0000</span> - <span th:text="${newEndTime}">00:00 00/00/0000</span>
+    </div>
+    <div class="info" style="margin-bottom:10px;">
+        Nếu bạn cần thay đổi thêm, vui lòng gửi lại yêu cầu mới.<br>
+        Cảm ơn bạn đã đồng hành cùng hệ thống.
+    </div>
+    <div class="footer">
+        Trân trọng,<br>
+        <b>Hệ thống quản lý sự kiện</b>
+    </div>
+</div>
+</body>
+</html>

@@ -129,17 +129,32 @@ public class EventRescheduleRequestServiceImpl implements EventRescheduleRequest
         requestRepository.save(request);
         log.info("Request updated and saved.");
 
+        //gửi thông báo cho nhà tổ chức
+        notificationService.notifyRescheduleApproved(
+                request.getRequestedBy(),
+                request.getEvent().getEventTitle(),
+                oldStartTimeStr,
+                oldEndTimeStr,
+                request.getRequestedStartTime().format(formatter),
+                request.getRequestedEndTime().format(formatter),
+                "/organizer/events"
+        );
+
         try {
             // Gửi mail duyệt yêu cầu cho người tạo yêu cầu
             log.info("Gửi mail duyệt yêu cầu cho user: {}", request.getRequestedBy().getEmail());
-            mailService.sendRescheduleEmailAsync(
+            // Gửi mail duyệt yêu cầu cho người tạo yêu cầu (organizer)
+            mailService.sendApproveRescheduleToOrganizer(
                     request.getRequestedBy().getEmail(),
+                    request.getRequestedBy().getFullName(),
                     request.getEvent().getEventTitle(),
                     oldStartTimeStr,
                     oldEndTimeStr,
                     request.getRequestedStartTime().format(formatter),
                     request.getRequestedEndTime().format(formatter)
             );
+
+
             log.info("Gửi mail duyệt yêu cầu thành công");
 
             // Lấy danh sách Booking CONFIRMED
@@ -161,7 +176,7 @@ public class EventRescheduleRequestServiceImpl implements EventRescheduleRequest
                     oldEndTimeStr,
                     request.getRequestedStartTime().format(formatter),
                     request.getRequestedEndTime().format(formatter),
-                    "/my-tickets" // hoặc đường dẫn chi tiết sự kiện
+                    "/events/28" // hoặc đường dẫn chi tiết sự kiện
             );
 
             // Gửi mail cho từng người mua vé
@@ -231,8 +246,8 @@ public class EventRescheduleRequestServiceImpl implements EventRescheduleRequest
         // Gửi email từ chối (tuỳ chọn, nên để trong try-catch)
         try {
             mailService.sendRejectRescheduleEmail(
-                    organizer.getEmail(),
-                    organizer.getFullName(),
+                    request.getRequestedBy().getEmail(),
+                    request.getRequestedBy().getFullName(),
                     eventTitle,
                     rejectReason
             );

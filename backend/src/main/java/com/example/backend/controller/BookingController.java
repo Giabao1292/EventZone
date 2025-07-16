@@ -4,23 +4,19 @@
     import com.example.backend.dto.request.BookingRequest;
     import com.example.backend.dto.response.BookingHistoryDTO;
     import com.example.backend.dto.response.ResponseData;
-    import com.example.backend.exception.ResourceNotFoundException;
     import com.example.backend.model.Booking;
     import com.example.backend.model.User;
     import com.example.backend.repository.BookingRepository;
     import com.example.backend.repository.UserRepository;
     import com.example.backend.service.BookingService;
     import com.example.backend.service.JwtService;
-    import com.example.backend.service.UserService;
     import com.example.backend.service.VNPayService;
     import com.example.backend.util.TokenType;
     import jakarta.servlet.http.HttpServletRequest;
-    import jakarta.validation.Valid;
     import lombok.RequiredArgsConstructor;
     import org.springframework.http.HttpStatus;
     import org.springframework.http.ResponseEntity;
     import org.springframework.security.access.prepost.PreAuthorize;
-    import org.springframework.security.core.Authentication;
     import org.springframework.security.core.context.SecurityContextHolder;
     import org.springframework.web.bind.annotation.*;
     import vn.payos.PayOS;
@@ -28,7 +24,6 @@
     import vn.payos.type.PaymentData;
     import vn.payos.type.PaymentLinkData;
 
-    import java.time.LocalDateTime;
     import java.util.List;
     import java.util.Map;
 
@@ -42,6 +37,7 @@
         private final BookingRepository bookingRepository;
         private final VNPayService vnpayService;
         private final PayOS payOS;
+
         @PostMapping("/hold")
         public ResponseData<Booking> hold(@RequestBody BookingRequest request) {
             String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -72,7 +68,7 @@
                     CheckoutResponseData payosData = payOS.createPaymentLink(paymentData);
                     checkoutUrl = payosData.getCheckoutUrl();
                 } else if ("VNPAY".equalsIgnoreCase(paymentMethod)) {
-                    checkoutUrl = vnpayService.createPaymentUrl(booking,request );
+                    checkoutUrl = vnpayService.createPaymentUrl(booking,request);
                 } else {
                     throw new IllegalArgumentException("Phương thức thanh toán không hợp lệ");
                 }
