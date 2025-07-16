@@ -22,6 +22,6 @@ public interface EventAdsRepository extends JpaRepository<EventAds, Integer> {
     @Query("SELECT e.id FROM EventAds e")
     Page<Long> findAllIdsEventAds(Pageable pageable);
 
-    @Query("SELECT ea FROM EventAds ea LEFT JOIN FETCH ea.event e LEFT JOIN FETCH ea.organizer WHERE ea.id IN :ids")
+    @Query("SELECT ea FROM EventAds ea LEFT JOIN FETCH ea.event e LEFT JOIN FETCH ea.organizer WHERE ea.id IN :ids ORDER BY ea.createdAt DESC ")
     List<EventAds> findAllEventAdsByIds(List<Long> ids);
 }

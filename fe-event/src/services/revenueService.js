@@ -115,3 +115,12 @@ export const getTopEvents = async () => {
     throw error;
   }
 };
+export const fetchEventAdsRevenues = async ({ page = 0, size = 6 }) => {
+  const response = await apiClient.get("/revenue/event-ads", {
+    params: {
+      page,
+      size,
+    },
+  });
+  return response.data.data; // dữ liệu nằm trong field "data" của ResponseData
+};

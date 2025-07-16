@@ -42,5 +42,4 @@ public class RevenueController {
         PageResponse<BookingResponseDTO> bookingResponseDTOS = bookingService.searchBooking(pageable, search);
         return new ResponseData<>(HttpStatus.OK.value(), "Search Booking succesfully", bookingResponseDTOS);
     }
-
 }

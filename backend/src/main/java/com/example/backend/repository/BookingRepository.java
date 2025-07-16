@@ -149,7 +149,7 @@ WHERE b.id = :bookingId
                                                     @Param("to") LocalDate to);
 
     @Query("""
-             SELECT DISTINCT b FROM Booking b LEFT JOIN FETCH b.showingTime st LEFT JOIN FETCH st.event e LEFT JOIN FETCH b.user u LEFT JOIN FETCH b.tblBookingSeats bs WHERE b.id IN :ids
+             SELECT DISTINCT b FROM Booking b LEFT JOIN FETCH b.showingTime st LEFT JOIN FETCH st.event e LEFT JOIN FETCH b.user u LEFT JOIN FETCH b.tblBookingSeats bs WHERE b.id IN :ids ORDER BY b.paidAt DESC 
             """)
     List<Booking> findAllBookingById(List<Long> ids);
 }
