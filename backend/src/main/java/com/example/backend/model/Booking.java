@@ -58,7 +58,7 @@ public class Booking {
     private String paymentMethod;
 
     @NotNull
-    @ColumnDefault("'pending'")
+    @ColumnDefault("'PENDING'")
     @Column(name = "payment_status", nullable = false)
     private String  paymentStatus;
 

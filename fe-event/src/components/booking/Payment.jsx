@@ -49,7 +49,6 @@ export default function Payment() {
         console.log("Voucher in selection:", voucher); // Debug voucher
         const bookingRequest = {
           showingTimeId: showing.id,
-          paymentMethod,
           seats: selection
             .filter((s) => s.type === "seat")
             .map((s) => ({
