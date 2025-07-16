@@ -18,7 +18,6 @@ const DashboardPage = () => {
   useEffect(() => {
     const from = dayjs().subtract(6, "day").format("YYYY-MM-DD");
     const to = dayjs().format("YYYY-MM-DD");
-
     fetchRevenueChartData(from, to).then(setRevenueData).catch(console.error);
   }, []);
 
