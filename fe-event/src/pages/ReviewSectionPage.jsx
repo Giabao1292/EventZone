@@ -22,7 +22,6 @@ export default function ReviewSectionPage() {
     useEffect(() => {
         getCategories().then((cats) => {
             setCategories(cats);
-            if (cats.length > 0) setSelectedCategoryId(cats[0].categoryId?.toString() || cats[0].id?.toString());
         });
     }, []);
 
@@ -39,6 +38,7 @@ export default function ReviewSectionPage() {
         e.preventDefault();
         setPage(0); // reset về page đầu khi search mới
     };
+
 
     // Render phân trang đẹp hơn
     const renderPagination = () => {
