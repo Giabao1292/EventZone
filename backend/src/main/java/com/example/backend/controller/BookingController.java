@@ -101,7 +101,8 @@
                         return new ResponseData<>(400, "Thanh toán chưa hoàn tất (PayOS)", null);
                     }
 
-                } else if ("VNPAY".equalsIgnoreCase(paymentMethod)) {
+                }
+                else if ("VNPAY".equalsIgnoreCase(paymentMethod)) {
                     if ("00".equals(vnp_ResponseCode)) {
                         bookingService.confirmBooking(orderId,paymentMethod);
                         return new ResponseData<>(200, "Thanh toán thành công (VNPAY)", null);

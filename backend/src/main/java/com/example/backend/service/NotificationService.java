@@ -2,6 +2,7 @@ package com.example.backend.service;
 
 import com.example.backend.dto.response.NotificationResponse;
 import com.example.backend.exception.ResourceNotFoundException;
+import com.example.backend.model.Booking;
 import com.example.backend.model.Notification;
 import com.example.backend.model.User;
 import com.example.backend.repository.NotificationRepository;
@@ -155,6 +156,18 @@ public class NotificationService {
         Notification entity = createNotification(organizer, dto);
         notificationRepository.save(entity);
     }
+    public void notifyBookingConfirmation(User user, Booking booking) {
+        String eventTitle = booking.getShowingTime().getEvent().getEventTitle();
+        NotificationResponse dto = NotificationResponse.builder()
+                .title("Đặt vé thành công")
+                .content(String.format("Bạn đã đặt vé thành công cho sự kiện %s. Vui lòng kiểm tra email để xem chi tiết vé.", eventTitle))
+                .redirectPath("/booking-history")
+                .build();
+        sendNotificationToUser(user.getUsername(), dto);
+        Notification entity = createNotification(user, dto);
+        notificationRepository.save(entity);
+    }
+
 
     // Thông báo cho organizer khi yêu cầu dời lịch BỊ TỪ CHỐI
     public void notifyRescheduleRejected(User organizer, String eventTitle, String rejectReason, String redirectPath) {
