@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import Slider from "react-slick";
@@ -18,9 +17,9 @@ import AdEventCard from "../ui/AdEventCard";
 import BackgroundEffect from "../ui/BackGround";
 import SearchBar from "../components/home/SearchBar";
 import backGround from "../assets/images/background/background.png";
-
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+import useAuth from "../hooks/useAuth"; // Import useAuth hook
 
 const getQueryParam = (name, search) => {
   const params = new URLSearchParams(search);
@@ -30,6 +29,8 @@ const getQueryParam = (name, search) => {
 export default function Home() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { isAuthenticated, user, logout } = useAuth(); // Declare useAuth hook
+
   const [notification, setNotification] = useState(null);
   const [trendingAds, setTrendingAds] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -41,6 +42,7 @@ export default function Home() {
   });
   const [recommendedEvents, setRecommendedEvents] = useState([]);
   const [wishlistEventIds, setWishlistEventIds] = useState(new Set());
+  const [isLoadingWishlist, setIsLoadingWishlist] = useState(false);
 
   useEffect(() => {
     const verifyStatus = getQueryParam("verifyStatus", location.search);
@@ -61,8 +63,10 @@ export default function Home() {
   }, [location.search]);
 
   useEffect(() => {
-    const timer = setTimeout(() => setNotification(null), 5000);
-    return () => clearTimeout(timer);
+    if (notification) {
+      const timer = setTimeout(() => setNotification(null), 5000);
+      return () => clearTimeout(timer);
+    }
   }, [notification]);
 
   useEffect(() => {
@@ -70,12 +74,10 @@ export default function Home() {
       try {
         const ads = await getActiveAdsToday();
         setTrendingAds(ads || []);
-
         const homeEvents = await getHomeEvents();
         setFeaturedEvents(homeEvents || { ongoing: [], upcoming: [] });
-
         const recommended = await getRecommendedEvents();
-        console.log("Dữ liệu sự kiện đề xuất:", recommended); // Debug
+        console.log("Dữ liệu sự kiện đề xuất:", recommended);
         setRecommendedEvents(recommended || []);
       } catch (error) {
         console.error("Lỗi tải dữ liệu trang chủ:", error);
@@ -105,24 +107,45 @@ export default function Home() {
     fetchCategories();
   }, []);
 
+  // Chỉ load wishlist khi có user và đã authenticated
   useEffect(() => {
     const fetchWishlist = async () => {
+      if (!isAuthenticated || !user) {
+        setWishlistEventIds(new Set());
+        return;
+      }
+
+      setIsLoadingWishlist(true);
       try {
         const wishlist = await wishlistService.getWishlist();
         const ids = new Set(wishlist.map((event) => event.id));
         setWishlistEventIds(ids);
       } catch (err) {
         console.error("Error loading wishlist:", err.message);
-        toast.error("Không thể tải danh sách yêu thích.");
+        // Chỉ hiển thị toast error nếu user đã đăng nhập
+        if (isAuthenticated) {
+          toast.error("Không thể tải danh sách yêu thích.");
+        }
+        setWishlistEventIds(new Set());
+      } finally {
+        setIsLoadingWishlist(false);
       }
     };
 
     fetchWishlist();
-  }, []);
+  }, [isAuthenticated, user]);
 
   const toggleFavorite = async (eventId) => {
+    // Kiểm tra user đã đăng nhập chưa
+    if (!isAuthenticated || !user) {
+      toast.warning("Vui lòng đăng nhập để sử dụng tính năng yêu thích");
+      navigate("/login");
+      return;
+    }
+
     try {
       const updatedSet = new Set(wishlistEventIds);
+
       if (wishlistEventIds.has(eventId)) {
         await wishlistService.removeFromWishlist(eventId);
         updatedSet.delete(eventId);
@@ -132,10 +155,12 @@ export default function Home() {
         updatedSet.add(eventId);
         toast.success("Đã thêm vào danh sách yêu thích");
       }
+
+      // Force rerender bằng cách tạo Set mới
       setWishlistEventIds(updatedSet);
     } catch (error) {
       console.error("Failed to update wishlist:", error.message);
-      // toast.error("Lỗi khi cập nhật yêu thích");
+      toast.error("Lỗi khi cập nhật yêu thích. Vui lòng thử lại.");
     }
   };
 
@@ -229,6 +254,7 @@ export default function Home() {
                 event={ev}
                 isFavorite={wishlistEventIds.has(ev.id)}
                 onToggleFavorite={toggleFavorite}
+                isAuthenticated={isAuthenticated}
               />
             ))}
           </div>
@@ -247,6 +273,7 @@ export default function Home() {
                 isUpcoming={true}
                 isFavorite={wishlistEventIds.has(ev.id)}
                 onToggleFavorite={toggleFavorite}
+                isAuthenticated={isAuthenticated}
               />
             ))}
           </div>
@@ -264,6 +291,7 @@ export default function Home() {
                 event={ev}
                 isFavorite={wishlistEventIds.has(ev.id)}
                 onToggleFavorite={toggleFavorite}
+                isAuthenticated={isAuthenticated}
               />
             ))}
           </div>
@@ -293,14 +321,19 @@ export default function Home() {
                 event={event}
                 isFavorite={wishlistEventIds.has(event.id)}
                 onToggleFavorite={toggleFavorite}
+                isAuthenticated={isAuthenticated}
               />
             ))}
           </div>
         </div>
       )}
 
-
-
+      {/* Loading indicator cho wishlist */}
+      {isLoadingWishlist && isAuthenticated && (
+        <div className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg z-50">
+          Đang tải danh sách yêu thích...
+        </div>
+      )}
     </div>
   );
 }
