@@ -2,7 +2,7 @@ import Header from "./Header";
 import Footer from "./Footer";
 import { Outlet, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import StarfieldAnimation from "react-starfield";
+// import StarfieldAnimation from "react-starfield";
 
 const AppLayout = () => {
   const location = useLocation();
@@ -14,11 +14,11 @@ const AppLayout = () => {
         className="absolute inset-0 z-0 pointer-events-none"
         style={{ opacity: 0.4 }}
       >
-        <StarfieldAnimation
+        {/* <StarfieldAnimation
           numParticles={50}
           depth={400}
           style={{ width: "100%", height: "100%" }}
-        />
+        /> */}
       </div>
 
       {/* Nội dung chính, nằm trên sao */}
