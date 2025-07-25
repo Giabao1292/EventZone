@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { Loader2 } from "lucide-react";
+import apiClient from "../../api/axios";
 
 const DepositResult = () => {
   const location = useLocation();
@@ -14,13 +15,20 @@ const DepositResult = () => {
     const verifyDeposit = async () => {
       const params = new URLSearchParams(location.search);
       const eventId = params.get("eventId");
+      const orderCode = params.get("orderCode");
       const paymentId = params.get("paymentId") || null;
       const vnp_ResponseCode = params.get("vnp_ResponseCode");
       const paymentMethod = vnp_ResponseCode ? "VNPAY" : "PAYOS";
 
       try {
-        const response = await axios.get("/api/events/deposit/verify", {
-          params: { eventId, paymentMethod, paymentId, vnp_ResponseCode },
+        const response = await apiClient.get("/events/deposit/verify", {
+          params: {
+            eventId,
+            paymentMethod,
+            paymentId,
+            vnp_ResponseCode,
+            orderCode,
+          },
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
 

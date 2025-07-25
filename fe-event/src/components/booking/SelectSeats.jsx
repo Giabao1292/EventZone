@@ -112,7 +112,7 @@ export default function SelectSeats() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-900 flex items-center justify-center">
+      <div className="min-h-screen  bg-transparent flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-slate-200 text-lg">Đang tải sơ đồ...</p>
@@ -123,7 +123,7 @@ export default function SelectSeats() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-zinc-900 flex items-center justify-center">
+      <div className="min-h-screen bg-transparent  flex items-center justify-center">
         <div className="bg-slate-800/90 backdrop-blur-sm border border-red-500/30 rounded-xl shadow-lg shadow-slate-900/50 p-6 max-w-md">
           <div className="text-center">
             <div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -432,7 +432,7 @@ export default function SelectSeats() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-900">
+    <div className="min-h-screen bg-transparent">
       <div className="grid lg:grid-cols-3 gap-6 p-6 max-w-7xl mx-auto">
         {/* Left Column - Seat Map */}
         <div className="lg:col-span-2 space-y-6">

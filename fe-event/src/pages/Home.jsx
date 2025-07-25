@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import Slider from "react-slick";
 import { toast } from "react-toastify";
@@ -19,17 +19,129 @@ import SearchBar from "../components/home/SearchBar";
 import backGround from "../assets/images/background/background.png";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import useAuth from "../hooks/useAuth"; // Import useAuth hook
+import useAuth from "../hooks/useAuth";
+import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 
 const getQueryParam = (name, search) => {
   const params = new URLSearchParams(search);
   return params.get(name);
 };
 
+const EventSection = ({
+  title,
+  icon,
+  events,
+  isUpcoming = false,
+  ...props
+}) => {
+  const sliderRef = useRef(null);
+  const [showArrows, setShowArrows] = useState(false);
+
+  useEffect(() => {
+    setShowArrows(events.length > 4);
+  }, [events]);
+
+  if (events.length === 0) return null;
+
+  const settings = {
+    dots: false,
+    infinite: false,
+    speed: 300,
+    slidesToShow: 4,
+    slidesToScroll: 4,
+    arrows: false,
+    responsive: [
+      {
+        breakpoint: 1024,
+        settings: {
+          slidesToShow: 3,
+          slidesToScroll: 3,
+        },
+      },
+      {
+        breakpoint: 768,
+        settings: {
+          slidesToShow: 2,
+          slidesToScroll: 2,
+        },
+      },
+      {
+        breakpoint: 480,
+        settings: {
+          slidesToShow: 1,
+          slidesToScroll: 1,
+        },
+      },
+    ],
+  };
+
+  return (
+    <div className="relative z-10 px-6 pb-10">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-semibold">
+          {icon} {title}
+        </h2>
+        {showArrows && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => sliderRef.current?.slickPrev()}
+              className="p-2 rounded-full bg-gray-700 hover:bg-gray-600 transition-colors"
+              aria-label="Previous events"
+            >
+              <FiChevronLeft size={20} />
+            </button>
+            <button
+              onClick={() => sliderRef.current?.slickNext()}
+              className="p-2 rounded-full bg-gray-700 hover:bg-gray-600 transition-colors"
+              aria-label="Next events"
+            >
+              <FiChevronRight size={20} />
+            </button>
+          </div>
+        )}
+      </div>
+
+      {events.length <= 4 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {events.map((ev) => (
+            <EventCard
+              key={ev.id}
+              event={ev}
+              isUpcoming={isUpcoming}
+              isFavorite={props.isFavorite ? props.isFavorite(ev.id) : false}
+              onToggleFavorite={props.onToggleFavorite}
+              isAuthenticated={props.isAuthenticated}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="relative">
+          <Slider ref={sliderRef} {...settings}>
+            {events.map((ev) => (
+              <div key={ev.id} className="px-2">
+                <EventCard
+                  key={ev.id}
+                  event={ev}
+                  isUpcoming={isUpcoming}
+                  isFavorite={
+                    props.isFavorite ? props.isFavorite(ev.id) : false
+                  }
+                  onToggleFavorite={props.onToggleFavorite}
+                  isAuthenticated={props.isAuthenticated}
+                />
+              </div>
+            ))}
+          </Slider>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function Home() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAuthenticated, user, logout } = useAuth(); // Declare useAuth hook
+  const { isAuthenticated, user, logout } = useAuth();
 
   const [notification, setNotification] = useState(null);
   const [trendingAds, setTrendingAds] = useState([]);
@@ -77,7 +189,6 @@ export default function Home() {
         const homeEvents = await getHomeEvents();
         setFeaturedEvents(homeEvents || { ongoing: [], upcoming: [] });
         const recommended = await getRecommendedEvents();
-        console.log("Dữ liệu sự kiện đề xuất:", recommended);
         setRecommendedEvents(recommended || []);
       } catch (error) {
         console.error("Lỗi tải dữ liệu trang chủ:", error);
@@ -107,7 +218,6 @@ export default function Home() {
     fetchCategories();
   }, []);
 
-  // Chỉ load wishlist khi có user và đã authenticated
   useEffect(() => {
     const fetchWishlist = async () => {
       if (!isAuthenticated || !user) {
@@ -122,7 +232,6 @@ export default function Home() {
         setWishlistEventIds(ids);
       } catch (err) {
         console.error("Error loading wishlist:", err.message);
-        // Chỉ hiển thị toast error nếu user đã đăng nhập
         if (isAuthenticated) {
           toast.error("Không thể tải danh sách yêu thích.");
         }
@@ -136,7 +245,6 @@ export default function Home() {
   }, [isAuthenticated, user]);
 
   const toggleFavorite = async (eventId) => {
-    // Kiểm tra user đã đăng nhập chưa
     if (!isAuthenticated || !user) {
       toast.warning("Vui lòng đăng nhập để sử dụng tính năng yêu thích");
       navigate("/login");
@@ -156,7 +264,6 @@ export default function Home() {
         toast.success("Đã thêm vào danh sách yêu thích");
       }
 
-      // Force rerender bằng cách tạo Set mới
       setWishlistEventIds(updatedSet);
     } catch (error) {
       console.error("Failed to update wishlist:", error.message);
@@ -241,65 +348,42 @@ export default function Home() {
         </div>
       )}
 
-      {/* 🎉 Sự kiện đang diễn ra */}
-      {featuredEvents.ongoing.length > 0 && (
-        <div className="relative z-10 px-6 pb-10">
-          <h2 className="text-xl font-semibold mb-4">
-            🎉 Sự kiện đang diễn ra
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {featuredEvents.ongoing.map((ev) => (
-              <EventCard
-                key={ev.id}
-                event={ev}
-                isFavorite={wishlistEventIds.has(ev.id)}
-                onToggleFavorite={toggleFavorite}
-                isAuthenticated={isAuthenticated}
-              />
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Event sections */}
+      <EventSection
+        title="Sự kiện đang diễn ra"
+        icon="🎉"
+        events={featuredEvents.ongoing}
+        isFavorite={wishlistEventIds.has.bind(wishlistEventIds)}
+        onToggleFavorite={toggleFavorite}
+        isAuthenticated={isAuthenticated}
+      />
 
-      {/* ⏳ Sắp mở bán */}
-      {featuredEvents.upcoming.length > 0 && (
-        <div className="relative z-10 px-6 pb-10">
-          <h2 className="text-xl font-semibold mb-4">⏳ Sắp mở bán</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {featuredEvents.upcoming.map((ev) => (
-              <EventCard
-                key={ev.id}
-                event={ev}
-                isUpcoming={true}
-                isFavorite={wishlistEventIds.has(ev.id)}
-                onToggleFavorite={toggleFavorite}
-                isAuthenticated={isAuthenticated}
-              />
-            ))}
-          </div>
-        </div>
-      )}
+      <EventSection
+        title="Sắp mở bán"
+        icon="⏳"
+        events={featuredEvents.upcoming}
+        isUpcoming={true}
+        isFavorite={wishlistEventIds.has.bind(wishlistEventIds)}
+        onToggleFavorite={toggleFavorite}
+        isAuthenticated={isAuthenticated}
+      />
 
-      {/* 🎯 Gợi ý cho bạn */}
+      {/* Recommended events */}
       {recommendedEvents.length > 0 ? (
-        <div className="relative z-10 px-6 pb-10">
-          <h2 className="text-xl font-semibold mb-4">🎯 Dành riêng cho bạn</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {recommendedEvents.map((ev) => (
-              <EventCard
-                key={ev.id}
-                event={ev}
-                isFavorite={wishlistEventIds.has(ev.id)}
-                onToggleFavorite={toggleFavorite}
-                isAuthenticated={isAuthenticated}
-              />
-            ))}
-          </div>
-        </div>
+        <EventSection
+          title="Dành riêng cho bạn"
+          icon="🎯"
+          events={recommendedEvents}
+          isFavorite={wishlistEventIds.has.bind(wishlistEventIds)}
+          onToggleFavorite={toggleFavorite}
+          isAuthenticated={isAuthenticated}
+        />
       ) : (
         <div className="relative z-10 px-6 pb-10">
           <h2 className="text-xl font-semibold mb-4">🎯 Dành riêng cho bạn</h2>
-          <p>Không có sự kiện đề xuất nào hiện tại.</p>
+          <p className="text-gray-400">
+            Không có sự kiện đề xuất nào hiện tại.
+          </p>
         </div>
       )}
 
@@ -314,17 +398,17 @@ export default function Home() {
 
       {selectedCategoryId && (
         <div className="relative z-10 w-full max-w-7xl mx-auto px-4 py-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {eventsByCategory[selectedCategoryId]?.map((event) => (
-              <EventCard
-                key={event.id}
-                event={event}
-                isFavorite={wishlistEventIds.has(event.id)}
-                onToggleFavorite={toggleFavorite}
-                isAuthenticated={isAuthenticated}
-              />
-            ))}
-          </div>
+          <EventSection
+            title={`Danh mục: ${
+              categories.find((c) => c.categoryId === selectedCategoryId)
+                ?.name || ""
+            }`}
+            icon="🏷️"
+            events={eventsByCategory[selectedCategoryId] || []}
+            isFavorite={wishlistEventIds.has.bind(wishlistEventIds)}
+            onToggleFavorite={toggleFavorite}
+            isAuthenticated={isAuthenticated}
+          />
         </div>
       )}
 

@@ -298,7 +298,7 @@ export default function ViewBookingHistory() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white relative">
+    <div className="min-h-screen bg-black text-white relative">
       <BackgroundEffect image={backgroundImage} />
 
       {/* Header Section */}
@@ -675,7 +675,7 @@ const BookingCard = ({
                 : "bg-blue-500/90 text-blue-100 border border-blue-400/50"
             }`}
           >
-            {checkinStatus === "Đã check-in"
+            {checkinStatus === "CHECKED_IN"
               ? "✓ Đã check-in"
               : "⏳ Chưa check-in"}
           </span>

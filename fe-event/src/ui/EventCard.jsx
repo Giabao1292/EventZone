@@ -47,7 +47,7 @@ const EventCard = ({
   const [tracking, setTracking] = useState(false);
   const [isLoadingTrack, setIsLoadingTrack] = useState(false);
   const [isLoadingFavorite, setIsLoadingFavorite] = useState(false);
-
+  console.log(isFavorite, "isFavorite prop in EventCard");
   // Kiểm tra trạng thái theo dõi nếu là sự kiện sắp mở bán
   useEffect(() => {
     if (isUpcoming && isAuthenticated) {
