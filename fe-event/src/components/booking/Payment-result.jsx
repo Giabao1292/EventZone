@@ -43,7 +43,7 @@ export default function PaymentResult() {
       {status === "success" && (
         <>
           <p className="text-2xl font-bold text-green-400 mb-4">
-            ✅ Thanh toán thành công!
+            ✅ Thanh toán thành công! Và Chúc mừng bạn đã nhận được 20 điểm
           </p>
           <p>Vé của bạn đã được xác nhận. Hẹn gặp bạn tại sự kiện 🎉</p>
           <p className="mt-2 text-sm text-gray-300">

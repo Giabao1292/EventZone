@@ -42,7 +42,7 @@ export const generateAILayout = async (prompt) => {
       headers: {
         "Content-Type": "application/json",
       },
-      timeout: 50000,
+      timeout: 60000,
     });
     return response.data.data;
   } catch (err) {

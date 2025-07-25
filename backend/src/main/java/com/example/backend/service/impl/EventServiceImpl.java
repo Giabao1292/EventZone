@@ -156,8 +156,7 @@ public class EventServiceImpl implements EventService {
 
             boolean hasValidShowing = false;
             for (ShowingTime st : showings) {
-                if (st.getSaleOpenTime() != null && st.getSaleCloseTime() != null &&
-                        (now.isBefore(st.getSaleCloseTime()))) {
+                if (st.getStartTime() != null && now.isBefore(st.getStartTime())) {
                     hasValidShowing = true;
                     break;
                 }

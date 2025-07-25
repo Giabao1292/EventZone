@@ -45,7 +45,7 @@ const DepositStep = ({ eventData, eventId, loading, setLoading }) => {
         </select>
         <div className="mt-4">
           <label className="block text-sm font-medium text-gray-400">
-            Số Tiền Đặt Cọc
+            Phí Tạo Sự Kiện
           </label>
           <input
             type="number"

@@ -50,7 +50,7 @@ public class AppConfig implements WebMvcConfigurer , WebSecurityCustomizer {
     private String[] WHITE_LIST = {"/api/image","/api/auth/**", "/api/users/**",
             "/api/categories","/api/categories/**",
             "/api/showing-times/*/layout", "/api/events/showing-times/*/layout", "/api/events/detail/**",
-            "/api/event-ads/active-today","/api/events/detail/{eventId}","/api/events/home", "/api/events/public","/api/reviews/**", "/api/revenue/**"};
+            "/api/event-ads/active-today","/api/events/detail/{eventId}","/api/events/home", "/api/events/public","/api/reviews/**", "/api/revenue/**","/api/events/deposit/verify   "};
     private String[] ORGANIZER_LIST = {"/api/organizer/**","/api/event-ads/*"};
 
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;

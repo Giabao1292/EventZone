@@ -49,10 +49,10 @@ public class EventAdsController {
 
             if ("PAYOS".equalsIgnoreCase(paymentMethod)) {
                 PaymentData paymentData = PaymentData.builder()
-                        .orderCode(System.currentTimeMillis())
+                        .orderCode(adsId.longValue())
                         .amount(amount)
                         .description(description)
-                        .returnUrl("http://localhost:5173/ads-payment-result?adsId=" + adsId)
+                        .returnUrl("http://localhost:5173/organizer/payment-ads-result?adsId=" + adsId)
                         .cancelUrl("http://localhost:5173/ads-payment-cancel")
                         .build();
                 CheckoutResponseData payosData = payOS.createPaymentLink(paymentData);

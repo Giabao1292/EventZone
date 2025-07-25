@@ -29,7 +29,6 @@ public class CategoryController {
     private final CategoryService categoryService;
     private final EventService eventService;
     private final CategoryRepository categoryRepository;
-
     @GetMapping("")
     public ResponseData<List<CategoryResponse>> getAllCategories() {
             List<CategoryResponse> categories = categoryService.getAllCategories();

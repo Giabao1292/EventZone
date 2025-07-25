@@ -109,16 +109,16 @@ public class EventController {
         }
     }
 
-    @PreAuthorize("hasRole('ORGANIZER')")
     @GetMapping("/deposit/verify")
     public ResponseData<?> verifyDeposit(
             @RequestParam Integer eventId,
+            @RequestParam(value = "orderCode", required = false) String orderCode,
             @RequestParam String paymentMethod,
             @RequestParam(required = false) String vnp_ResponseCode) {
         try {
             boolean isPaid;
             if ("PAYOS".equalsIgnoreCase(paymentMethod)) {
-                PaymentLinkData payment = payOS.getPaymentLinkInformation(Long.valueOf(eventId));
+                PaymentLinkData payment = payOS.getPaymentLinkInformation(Long.valueOf(orderCode));
                 isPaid = "PAID".equalsIgnoreCase(payment.getStatus());
             } else if ("VNPAY".equalsIgnoreCase(paymentMethod)) {
                 isPaid = "00".equals(vnp_ResponseCode);

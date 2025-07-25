@@ -40,7 +40,7 @@ public interface BookingSeatRepository extends JpaRepository<BookingSeat, Intege
     JOIN bs.booking b
     JOIN b.showingTime st
     JOIN st.event e
-    WHERE bs.status = 'HOLD'
+    WHERE bs.status = 'BOOKED'
       AND e.organizer.id = :organizerId
       AND (:eventId IS NULL OR e.id = :eventId)
       AND (:fromDate IS NULL OR st.startTime >= :fromDate)
@@ -53,6 +53,7 @@ public interface BookingSeatRepository extends JpaRepository<BookingSeat, Intege
             @Param("toDate") LocalDateTime toDate,
             @Param("organizerId") Integer organizerId
     );
+
     boolean existsBySeatIdAndStatusIn(Integer seatId, List<String> statuses);
 }
 
