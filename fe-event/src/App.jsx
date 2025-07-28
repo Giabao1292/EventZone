@@ -45,9 +45,12 @@ import WithdrawRequestPage from "./components/organizer/WithdrawRequestPage";
 import ReviewSectionPage from "./pages/ReviewSectionPage";
 import MyVouchers from "./pages/MyVouchers";
 import RevenueDashboard from "./pages/admin/RevenueManagementPage";
+
 import ChatWidget from "./components/chat/ChatWidget";
 import ChatPage from "./pages/ChatPage";
 import ChatErrorBoundary from "./components/chat/ChatErrorBoundary";
+
+import BankAccountManagement from "./components/organizer/BankAccountManagement";
 
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() => import("./components/authentication/LoginPage"));
@@ -150,6 +153,9 @@ function App() {
                 path="layout-designer/:showingTimeId"
                 element={<LayoutDesigner />}
               />
+
+              <Route path="payment" element={<BankAccountManagement />} />
+
               <Route path="create-event" element={<EventCreationForm />} />
               <Route path="edit/:id" element={<EditEventForm />} />
               <Route

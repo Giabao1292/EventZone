@@ -165,7 +165,7 @@ public class EventController {
         }
     }
 
-    @PreAuthorize("hasAnyRole('ORGANIZER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping
     public ResponseData<PageResponse<EventSummaryAdmin>> searchEvent(Pageable pageable, @RequestParam(name = "search", required = false) String... search) {
         PageResponse<EventSummaryAdmin> listEvents = eventService.searchEvent(pageable, search);
@@ -242,7 +242,6 @@ public class EventController {
                     .body(new ResponseData<>(500, "Lỗi hệ thống khi chỉnh sửa sự kiện", null));
         }
     }
-
 
     @PreAuthorize("hasRole('ORGANIZER')")
     @GetMapping("/myevents")

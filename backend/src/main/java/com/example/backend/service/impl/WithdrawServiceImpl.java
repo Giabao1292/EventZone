@@ -26,7 +26,7 @@ public class WithdrawServiceImpl implements WithdrawService {
     private  final ShowingTimeRepository showingTimeRepository;
 
     private final  BookingRepository bookingRepository;
-
+    private final UserBankAccountRepository userBankAccountRepository;
     private final WithdrawRequestRepository withdrawRequestRepository;
     private final OrganizerRepository organizerRepository;
     @Override
@@ -168,13 +168,12 @@ public class WithdrawServiceImpl implements WithdrawService {
 
         // Tạo yêu cầu rút tiền
         WithdrawRequest withdrawRequest = new WithdrawRequest();
+        UserBankAccount userBankAccount =  userBankAccountRepository.findByAccountNumberAndBankName(requestDTO.getBankAccountNumber(), requestDTO.getBankName());
         withdrawRequest.setOrganizer(organizer);
         withdrawRequest.setEvent(event);
         withdrawRequest.setShowingTime(showingTime);
         withdrawRequest.setAmount(requestDTO.getAmount());
-        withdrawRequest.setBankAccountName(requestDTO.getBankAccountName());
-        withdrawRequest.setBankAccountNumber(requestDTO.getBankAccountNumber());
-        withdrawRequest.setBankName(requestDTO.getBankName());
+        withdrawRequest.setUserBankAccount(userBankAccount);
         withdrawRequest.setNote(requestDTO.getNote());
         withdrawRequest.setStatus(PaymentStatus.PENDING);
         withdrawRequest.setRequestedAt(LocalDateTime.now());
@@ -243,11 +242,12 @@ public class WithdrawServiceImpl implements WithdrawService {
 
     private WithdrawRequestDTO toDTO(WithdrawRequest r) {
         WithdrawRequestDTO dto = new WithdrawRequestDTO();
+        UserBankAccount userBankAccount = r.getUserBankAccount();
         dto.setId(r.getId());
         dto.setAmount(r.getAmount());
-        dto.setBankAccountName(r.getBankAccountName());
-        dto.setBankAccountNumber(r.getBankAccountNumber());
-        dto.setBankName(r.getBankName());
+        dto.setBankAccountName(userBankAccount.getBankName());
+        dto.setBankAccountNumber(userBankAccount.getAccountNumber());
+        dto.setBankName(userBankAccount.getBankName());
         dto.setNote(r.getNote());
         dto.setRequestedAt(r.getRequestedAt());
         dto.setProcessedAt(r.getProcessedAt());
