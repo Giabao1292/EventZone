@@ -97,4 +97,19 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
             " GROUP BY e " +
             " ORDER BY count(bs.id) DESC")
     List<Event> getTopEventsIds(Pageable pageable);
+
+    @Query("SELECT DISTINCT e FROM Event e " +
+            "JOIN e.tblShowingTimes st " +
+            "JOIN st.reviews r " +
+            "WHERE r.status = 'ACTIVE' " +
+            "ORDER BY e.createdAt DESC")
+    List<Event> findEventsWithReviews();
+
+    @Query("SELECT DISTINCT e FROM Event e " +
+            "JOIN e.tblShowingTimes st " +
+            "JOIN st.reviews r " +
+            "WHERE e.organizer.id = :organizerId " +
+            "AND r.status = 'ACTIVE' " +
+            "ORDER BY e.createdAt DESC")
+    List<Event> findMyEventsWithReviews(@Param("organizerId") int organizerId);
 }

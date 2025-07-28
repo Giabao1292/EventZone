@@ -5,6 +5,7 @@ import com.example.backend.dto.request.EventHomeDTO;
 import com.example.backend.dto.request.EventRequest;
 import com.example.backend.dto.request.UpdateStatusEvent;
 import com.example.backend.dto.response.*;
+import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.model.Event;
 import com.example.backend.model.Organizer;
 import com.example.backend.repository.EventRepository;
@@ -96,16 +97,16 @@ public class EventController {
                 checkoutUrl = vnpayService.createPaymentUrlEvent(eventId, amount, description, request);
                 paymentId = String.valueOf(eventId);
             } else {
-                throw new IllegalArgumentException("Invalid payment method");
+                throw new IllegalArgumentException("Phương thức thanh toán không hợp lệ");
             }
 
-            return new ResponseData<>(200, "Deposit link created successfully", Map.of(
+            return new ResponseData<>(200, "Tạo liên kết đặt cọc thành công", Map.of(
                     "checkoutUrl", checkoutUrl,
                     "paymentId", paymentId
             ));
         } catch (Exception e) {
             e.printStackTrace();
-            return new ResponseData<>(500, "Error creating deposit link: " + e.getMessage(), null);
+            return new ResponseData<>(500, "Lỗi tạo liên kết đặt cọc: " + e.getMessage(), null);
         }
     }
 
@@ -123,18 +124,18 @@ public class EventController {
             } else if ("VNPAY".equalsIgnoreCase(paymentMethod)) {
                 isPaid = "00".equals(vnp_ResponseCode);
             } else {
-                throw new IllegalArgumentException("Invalid payment method");
+                throw new IllegalArgumentException("Phương thức thanh toán không hợp lệ");
             }
 
             if (isPaid) {
                 Event submittedEvent = eventService.submitEvent(eventId);
-                return new ResponseData<>(200, "Deposit payment successful, event submitted", submittedEvent.getId());
+                return new ResponseData<>(200, "Thanh toán đặt cọc thành công, sự kiện đã được gửi", submittedEvent.getId());
             } else {
-                return new ResponseData<>(400, "Deposit payment not completed", null);
+                return new ResponseData<>(400, "Thanh toán đặt cọc chưa hoàn thành", null);
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return new ResponseData<>(500, "Error verifying deposit: " + e.getMessage(), null);
+            return new ResponseData<>(500, "Lỗi xác minh đặt cọc: " + e.getMessage(), null);
         }
     }
 
@@ -187,20 +188,59 @@ public class EventController {
 
     @PreAuthorize("hasRole('ORGANIZER')")
     @PutMapping("/edit/{eventId}")
-    public ResponseEntity<ResponseData<Integer>> editEvent(
+    public ResponseEntity<ResponseData<Map<String, Object>>> editEvent(
             @PathVariable int eventId,
             @RequestBody @Valid EventRequest request) {
 
-        Event updatedEvent = eventService.editEvent(eventId, request);
-
-        if (updatedEvent == null) {
+        try {
+            Event updatedEvent = eventService.editEvent(eventId, request);
+            
+            // Tạo response data với event và showing times
+            Map<String, Object> responseData = new HashMap<>();
+            responseData.put("eventId", updatedEvent.getId());
+            
+            // Thêm showing times với ID đã được tạo
+            if (updatedEvent.getTblShowingTimes() != null && !updatedEvent.getTblShowingTimes().isEmpty()) {
+                List<Map<String, Object>> showingTimesData = updatedEvent.getTblShowingTimes().stream()
+                    .map(st -> {
+                        Map<String, Object> stData = new HashMap<>();
+                        stData.put("id", st.getId());
+                        stData.put("startTime", st.getStartTime());
+                        stData.put("endTime", st.getEndTime());
+                        stData.put("saleOpenTime", st.getSaleOpenTime());
+                        stData.put("saleCloseTime", st.getSaleCloseTime());
+                        stData.put("layoutMode", st.getLayoutMode());
+                        
+                        if (st.getAddress() != null) {
+                            Map<String, Object> addressData = new HashMap<>();
+                            addressData.put("id", st.getAddress().getId());
+                            addressData.put("venueName", st.getAddress().getVenueName());
+                            addressData.put("location", st.getAddress().getLocation());
+                            addressData.put("city", st.getAddress().getCity());
+                            stData.put("address", addressData);
+                        }
+                        
+                        return stData;
+                    })
+                    .collect(java.util.stream.Collectors.toList());
+                responseData.put("showingTimes", showingTimesData);
+            }
+            
+            return ResponseEntity
+                    .ok(new ResponseData<>(200, "Chỉnh sửa thông tin sự kiện thành công", responseData));
+        } catch (ResourceNotFoundException e) {
             return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
-                    .body(new ResponseData<>(404, "Không tìm thấy sự kiện để chỉnh sửa", null));
+                    .body(new ResponseData<>(404, e.getMessage(), null));
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseData<>(400, e.getMessage(), null));
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ResponseData<>(500, "Lỗi hệ thống khi chỉnh sửa sự kiện", null));
         }
-
-        return ResponseEntity
-                .ok(new ResponseData<>(200, "Chỉnh sửa thông tin sự kiện thành công", updatedEvent.getId()));
     }
 
 
@@ -292,6 +332,32 @@ public class EventController {
     public ResponseData<List<EventHomeDTO>> getTopEvents(Pageable pageable) {
         List<EventHomeDTO> listEvents = eventService.getTopEvents(pageable);
         return new ResponseData<>(HttpStatus.OK.value(), "Get list of events", listEvents);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/with-reviews")
+    public ResponseData<List<EventSummaryAdmin>> getEventsWithReviews() {
+        List<EventSummaryAdmin> eventsWithReviews = eventService.getEventsWithReviews();
+        return new ResponseData<>(HttpStatus.OK.value(), "Get events with reviews", eventsWithReviews);
+    }
+
+    @PreAuthorize("hasRole('ORGANIZER')")
+    @GetMapping("/my-events-with-reviews")
+    public ResponseData<List<EventSummaryDTO>> getMyEventsWithReviews(Authentication authentication) {
+        String email = authentication.getName();
+        System.out.println("EMAIL từ token: " + email);
+
+        Organizer organizer = organizerService.getOrganizerByEmail(email);
+        if (organizer == null) {
+            return new ResponseData<>(404, "Không tìm thấy Organizer với email: " + email, null);
+        }
+        List<Event> events = eventService.findMyEventsWithReviews(organizer.getId());
+
+        // Map List<Event> -> List<EventSummaryDTO>
+        List<EventSummaryDTO> eventDTOs = events.stream()
+                .map(EventSummaryDTO::new) // sử dụng constructor EventSummaryDTO(Event event)
+                .toList();
+        return new ResponseData<>(200, "Lấy danh sách sự kiện có đánh giá thành công", eventDTOs);
     }
 
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Rnd } from "react-rnd";
 import {
   Save,
@@ -20,6 +20,8 @@ import {
   getLayoutByShowingTime,
   generateAILayout,
 } from "../../services/layoutService";
+import { toast } from "react-toastify";
+import PropTypes from "prop-types";
 
 const GRID_SIZE = 30; // Khôi phục lại kích thước cũ
 const SEAT_SIZE = 30; // Kích thước ghế như cũ
@@ -43,9 +45,14 @@ const COLOR_OPTIONS = [
 ];
 
 export default function LayoutDesigner({ onSave }) {
+  console.log("LayoutDesigner component rendered");
+
   const navigate = useNavigate();
   const location = useLocation();
-  const eventId = location.state?.eventId || location.state?.eventData?.id;
+  const params = useParams();
+  const { eventId: urlEventId } = params; // Lấy eventId từ URL params
+  const eventId =
+    location.state?.eventId || location.state?.eventData?.id || urlEventId;
   const [showingTimeId, setShowingTimeId] = useState(null);
   const [layoutMode, setLayoutMode] = useState(
     location.state?.layoutMode || "both"
@@ -81,15 +88,25 @@ export default function LayoutDesigner({ onSave }) {
 
   useEffect(() => {
     console.log("Location State:", location.state);
-    if (!eventId) {
+    console.log("URL EventId:", urlEventId);
+    console.log("Final EventId:", eventId);
+    console.log("Is Edit Mode:", location.state?.isEdit);
+    console.log("Current Pathname:", location.pathname);
+    console.log("URL Params:", params);
+
+    // Chỉ kiểm tra eventId nếu không phải edit mode
+    if (!eventId && !location.state?.isEdit) {
       alert("Không xác định được sự kiện! Bạn cần tạo sự kiện trước.");
       navigate("/organizer/create-event");
     }
-  }, [eventId, navigate]);
+  }, [eventId, navigate, urlEventId, location.state?.isEdit]);
 
   useEffect(() => {
     const id =
       location.state?.showingTimeId || location.pathname.split("/").pop();
+    console.log("Pathname:", location.pathname);
+    console.log("ShowingTimeId from state:", location.state?.showingTimeId);
+    console.log("ShowingTimeId from URL:", id);
     if (!id || id === "undefined" || isNaN(Number(id))) {
       alert("Không xác định được suất chiếu (showingTimeId)!");
       navigate("/organizer");
@@ -198,17 +215,13 @@ export default function LayoutDesigner({ onSave }) {
     }).format(price);
 
   const showToast = useCallback((message, type) => {
-    const toast = document.createElement("div");
-    toast.className = `fixed top-4 right-4 px-4 py-2 rounded text-white font-medium z-50 ${
-      type === "success"
-        ? "bg-green-500"
-        : type === "warning"
-        ? "bg-yellow-500"
-        : "bg-red-500"
-    }`;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
+    if (type === "success") {
+      toast.success(message);
+    } else if (type === "warning") {
+      toast.warning(message);
+    } else {
+      toast.error(message);
+    }
   }, []);
 
   const quickAddSeats = useCallback(() => {
@@ -694,15 +707,19 @@ export default function LayoutDesigner({ onSave }) {
       id: typeof id === "string" && id.startsWith("z-") ? null : id,
     }));
 
+    // Lấy eventId từ nhiều nguồn khác nhau
+    const effectiveEventId =
+      eventId || location.state?.eventId || location.state?.eventData?.id;
+
     const dataToSend = {
-      event_id: Number(eventId),
+      event_id: Number(effectiveEventId),
       showing_time_id: Number(showingTimeId),
       layout_mode: layoutMode,
       seats: seatsToSend,
       zones: zonesToSend,
     };
 
-    if (!eventId) {
+    if (!effectiveEventId) {
       showToast(
         "Không xác định được sự kiện! Vui lòng tạo sự kiện trước.",
         "error"
@@ -714,9 +731,10 @@ export default function LayoutDesigner({ onSave }) {
       await saveShowingLayout(dataToSend);
       showToast("Đã lưu thành công!", "success");
 
-      const isEdit = location.pathname.includes("/edit-event");
+      const isEdit =
+        location.pathname.includes("/edit") || location.state?.isEdit;
       const targetRoute = isEdit
-        ? `/organizer/edit-event/${eventId}`
+        ? `/organizer/edit/${effectiveEventId}`
         : "/organizer/create-event";
 
       navigate(targetRoute, {
@@ -724,7 +742,7 @@ export default function LayoutDesigner({ onSave }) {
           returnStep: 3,
           eventData: {
             ...location.state?.eventData,
-            id: eventId,
+            id: effectiveEventId,
             showingTimes:
               location.state?.eventData?.showingTimes?.map((st) =>
                 st.id === showingTimeId
@@ -732,7 +750,7 @@ export default function LayoutDesigner({ onSave }) {
                   : st
               ) || [],
           },
-          eventId,
+          eventId: effectiveEventId,
         },
       });
       onSave?.(dataToSend);
@@ -1256,3 +1274,7 @@ export default function LayoutDesigner({ onSave }) {
     </div>
   );
 }
+
+LayoutDesigner.propTypes = {
+  onSave: PropTypes.func,
+};

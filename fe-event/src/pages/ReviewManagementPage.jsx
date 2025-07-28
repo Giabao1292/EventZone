@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import reviewService from "../services/reviewService";
 import reviewReplyService from "../services/reviewReplyService";
 import * as eventService from "../services/eventService";
@@ -7,8 +7,6 @@ import { motion } from "framer-motion";
 import {
   Star,
   MessageSquareText,
-  CornerDownLeft,
-  Smile,
   EyeOff,
   Eye,
   X as CloseIcon,
@@ -16,37 +14,24 @@ import {
   Trash2,
   Save,
   X,
-  List,
   Filter,
   Search,
-  TrendingUp,
-  Users,
   MessageCircle,
 } from "lucide-react";
-import Picker from "@emoji-mart/react";
-import data from "@emoji-mart/data";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-} from "recharts";
 
-// Hook: detect click outside for modal/picker
-function useClickOutside(ref, handler) {
-  useEffect(() => {
-    const listener = (event) => {
-      if (!ref.current || ref.current.contains(event.target)) return;
-      handler(event);
-    };
-    document.addEventListener("mousedown", listener);
-    return () => {
-      document.removeEventListener("mousedown", listener);
-    };
-  }, [ref, handler]);
+// Hàm chuẩn hóa tên sự kiện để luôn có .title cho FE sử dụng
+function normalizeEventList(rawEvents) {
+  if (!Array.isArray(rawEvents)) return [];
+  return rawEvents.map((ev) => ({
+    ...ev,
+    // Ưu tiên lấy title hoặc eventTitle, name, eventName, hoặc fallback
+    title:
+      ev.title ||
+      ev.eventTitle ||
+      ev.name ||
+      ev.eventName ||
+      `Sự kiện #${ev.id}`,
+  }));
 }
 
 function classNames(...classes) {
@@ -70,8 +55,6 @@ const ReviewManagementPage = () => {
   // Reply state
   const [replyContent, setReplyContent] = useState({});
   const [replying, setReplying] = useState({});
-  const [showEmoji, setShowEmoji] = useState({});
-  const [hiding, setHiding] = useState({});
 
   // Modal state
   const [showModal, setShowModal] = useState(false);
@@ -85,13 +68,6 @@ const ReviewManagementPage = () => {
   const [modalReplyContent, setModalReplyContent] = useState("");
   const [modalReplying, setModalReplying] = useState(false);
 
-  // Emoji picker ref
-  const [emojiPickerReviewId, setEmojiPickerReviewId] = useState(null);
-  const emojiPickerRef = useRef(null);
-
-  // Modal emoji ref
-  const modalEmojiRef = useRef();
-
   // Stats state
   const [stats, setStats] = useState({
     totalReviews: 0,
@@ -100,15 +76,18 @@ const ReviewManagementPage = () => {
     hiddenCount: 0,
   });
 
-  // Lấy sự kiện của organizer
+  // Lấy sự kiện có đánh giá của organizer hiện tại
   useEffect(() => {
     if (!user) return;
     const fetchEvents = async () => {
       setLoading(true);
       try {
-        const data = await eventService.getMyEvents(user.token);
-        setEvents(data || []);
-        if (data && data.length > 0) setSelectedEvent(data[0].id);
+        const data = await eventService.getMyEventsWithReviews(user.token);
+        // CHUẨN HÓA LIST SỰ KIỆN
+        const normalizedEvents = normalizeEventList(data || []);
+        setEvents(normalizedEvents);
+        if (normalizedEvents.length > 0)
+          setSelectedEvent(normalizedEvents[0].id);
         else setSelectedEvent("");
       } catch {
         setEvents([]);
@@ -129,8 +108,9 @@ const ReviewManagementPage = () => {
     }
     const fetchShowingTimes = async () => {
       try {
-        const data = await eventService.getShowingTimesByEventId(selectedEvent);
-        setShowingTimes(data || []);
+        const response = await eventService.getEventShowingTimes(selectedEvent);
+        const data = response.data || [];
+        setShowingTimes(data);
         if (data && data.length > 0) setSelectedShowingTime(data[0].id);
         else setSelectedShowingTime("");
       } catch {
@@ -150,9 +130,7 @@ const ReviewManagementPage = () => {
     const fetchReviews = async () => {
       setLoading(true);
       try {
-        const data = await reviewService.getReviewsByShowingTimeId(
-          selectedShowingTime
-        );
+        const data = await reviewService.getReviews(selectedShowingTime, "all");
         setReviews(data || []);
 
         // Tính toán stats
@@ -165,7 +143,7 @@ const ReviewManagementPage = () => {
         const repliedCount =
           data?.filter((review) => review.replies?.length > 0).length || 0;
         const hiddenCount =
-          data?.filter((review) => review.status === "HIDDEN").length || 0;
+          data?.filter((review) => review.status === "deleted").length || 0;
 
         setStats({
           totalReviews,
@@ -194,10 +172,12 @@ const ReviewManagementPage = () => {
       const repliesData = {};
       for (const review of reviews) {
         try {
-          const data = await reviewReplyService.getRepliesByReviewId(review.id);
-          repliesData[review.id] = data || [];
+          const data = await reviewReplyService.getRepliesByReviewId(
+            review.reviewId
+          );
+          repliesData[review.reviewId] = data || [];
         } catch {
-          repliesData[review.id] = [];
+          repliesData[review.reviewId] = [];
         }
       }
       setReplies(repliesData);
@@ -210,8 +190,8 @@ const ReviewManagementPage = () => {
   // Filter reviews
   const filteredReviews = reviews.filter((review) => {
     const matchesSearch =
-      review.content.toLowerCase().includes(search.toLowerCase()) ||
-      review.userName.toLowerCase().includes(search.toLowerCase());
+      review.comment?.toLowerCase().includes(search.toLowerCase()) ||
+      review.userEmail?.toLowerCase().includes(search.toLowerCase());
     const matchesStar = filterStar === 0 || review.rating === filterStar;
     return matchesSearch && matchesStar;
   });
@@ -237,10 +217,10 @@ const ReviewManagementPage = () => {
 
   const handleToggleStatus = async (reviewId, status) => {
     try {
-      await reviewService.updateReviewStatus(reviewId, status);
+      await reviewService.updateReview(reviewId, { status }, user.id);
       setReviews((prev) =>
         prev.map((review) =>
-          review.id === reviewId ? { ...review, status: status } : review
+          review.reviewId === reviewId ? { ...review, status: status } : review
         )
       );
     } catch (error) {
@@ -547,7 +527,7 @@ const ReviewManagementPage = () => {
             <div className="divide-y divide-slate-200">
               {filteredReviews.map((review, index) => (
                 <motion.div
-                  key={review.id}
+                  key={review.reviewId}
                   className="p-6 hover:bg-slate-50/50 transition-colors duration-200"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -575,7 +555,7 @@ const ReviewManagementPage = () => {
                             "vi-VN"
                           )}
                         </span>
-                        {review.status === "HIDDEN" && (
+                        {review.status === "deleted" && (
                           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
                             <EyeOff className="w-3 h-3 mr-1" />
                             Đã ẩn
@@ -585,17 +565,17 @@ const ReviewManagementPage = () => {
 
                       <div className="flex items-start space-x-4">
                         <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold">
-                          {review.userName?.charAt(0) || "U"}
+                          {review.userEmail?.charAt(0) || "U"}
                         </div>
 
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-2">
                             <h4 className="font-semibold text-slate-700">
-                              {review.userName}
+                              {review.userEmail}
                             </h4>
                             <div className="flex items-center space-x-2">
                               <button
-                                onClick={() => openReplyModal(review.id)}
+                                onClick={() => openReplyModal(review.reviewId)}
                                 className="inline-flex items-center px-3 py-1 rounded-lg text-sm font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors duration-200"
                               >
                                 <MessageSquareText className="w-4 h-4 mr-1" />
@@ -604,20 +584,20 @@ const ReviewManagementPage = () => {
                               <button
                                 onClick={() =>
                                   handleToggleStatus(
-                                    review.id,
-                                    review.status === "HIDDEN"
-                                      ? "VISIBLE"
-                                      : "HIDDEN"
+                                    review.reviewId,
+                                    review.status === "deleted"
+                                      ? "active"
+                                      : "deleted"
                                   )
                                 }
                                 className={classNames(
                                   "inline-flex items-center px-3 py-1 rounded-lg text-sm font-medium transition-colors duration-200",
-                                  review.status === "HIDDEN"
+                                  review.status === "deleted"
                                     ? "bg-green-100 text-green-700 hover:bg-green-200"
                                     : "bg-red-100 text-red-700 hover:bg-red-200"
                                 )}
                               >
-                                {review.status === "HIDDEN" ? (
+                                {review.status === "deleted" ? (
                                   <>
                                     <Eye className="w-4 h-4 mr-1" />
                                     Hiện
@@ -633,10 +613,10 @@ const ReviewManagementPage = () => {
                           </div>
 
                           <p className="text-slate-700 mb-3">
-                            {review.content}
+                            {review.comment}
                           </p>
 
-                          {renderLastReply(review.id)}
+                          {renderLastReply(review.reviewId)}
 
                           {/* Quick Reply */}
                           <div className="mt-4">
@@ -645,26 +625,29 @@ const ReviewManagementPage = () => {
                                 type="text"
                                 placeholder="Viết phản hồi nhanh..."
                                 className="flex-1 h-10 px-3 rounded-lg bg-white/80 border border-slate-200 text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-300"
-                                value={replyContent[review.id] || ""}
+                                value={replyContent[review.reviewId] || ""}
                                 onChange={(e) =>
                                   setReplyContent((prev) => ({
                                     ...prev,
-                                    [review.id]: e.target.value,
+                                    [review.reviewId]: e.target.value,
                                   }))
                                 }
                                 onKeyPress={(e) =>
-                                  e.key === "Enter" && handleReply(review.id)
+                                  e.key === "Enter" &&
+                                  handleReply(review.reviewId)
                                 }
                               />
                               <button
-                                onClick={() => handleReply(review.id)}
+                                onClick={() => handleReply(review.reviewId)}
                                 disabled={
-                                  replying[review.id] ||
-                                  !replyContent[review.id]?.trim()
+                                  replying[review.reviewId] ||
+                                  !replyContent[review.reviewId]?.trim()
                                 }
                                 className="px-4 py-2 bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600 text-white font-medium rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
-                                {replying[review.id] ? "Đang gửi..." : "Gửi"}
+                                {replying[review.reviewId]
+                                  ? "Đang gửi..."
+                                  : "Gửi"}
                               </button>
                             </div>
                           </div>

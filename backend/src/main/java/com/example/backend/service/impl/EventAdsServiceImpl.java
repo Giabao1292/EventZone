@@ -44,6 +44,16 @@ public class EventAdsServiceImpl implements EventAdsService {
             throw new RuntimeException("This event has already been advertised.");
         }
 
+        // Validate bannerImageUrl nếu có
+        String bannerImageUrl = request.getBannerImageUrl();
+        if (bannerImageUrl != null && !bannerImageUrl.trim().isEmpty()) {
+            try {
+                new java.net.URL(bannerImageUrl);
+            } catch (Exception e) {
+                throw new RuntimeException("Banner URL không hợp lệ: " + bannerImageUrl);
+            }
+        }
+
         EventAds ads = EventAds.builder()
                 .event(event)
                 .organizer(organizer)
@@ -52,7 +62,7 @@ public class EventAdsServiceImpl implements EventAdsService {
                 .totalPrice(request.getTotalPrice())
                 .status(EventAds.AdsStatus.PENDING)
                 .refundStatus(EventAds.RefundStatus.NONE)
-                .bannerImageUrl(request.getBannerImageUrl())
+                .bannerImageUrl(bannerImageUrl != null && !bannerImageUrl.trim().isEmpty() ? bannerImageUrl : null)
                 .build();
 
         return eventAdsRepository.save(ads);
@@ -95,6 +105,17 @@ public class EventAdsServiceImpl implements EventAdsService {
                 .collect(Collectors.toList());
     }
     public EventAdsResponse toResponse(EventAds ads) {
+        // Validate bannerImageUrl trước khi trả về
+        String bannerImageUrl = ads.getBannerImageUrl();
+        if (bannerImageUrl != null && !bannerImageUrl.trim().isEmpty()) {
+            try {
+                new java.net.URL(bannerImageUrl);
+            } catch (Exception e) {
+                // Nếu URL không hợp lệ, set về null
+                bannerImageUrl = null;
+            }
+        }
+
         return EventAdsResponse.builder()
                 .id(ads.getId())
                 .eventId(ads.getEvent().getId())
@@ -103,7 +124,7 @@ public class EventAdsServiceImpl implements EventAdsService {
                 .organizerName(ads.getOrganizer().getUser().getFullName())
                 .startDate(LocalDate.from(ads.getEvent().getStartTime()))
                 .endDate(ads.getEvent().getEndTime().toLocalDate())
-                .bannerImageUrl(ads.getBannerImageUrl())
+                .bannerImageUrl(bannerImageUrl)
                 .posterImage(ads.getEvent().getPosterImage())
                 .status(ads.getStatus().name())
                 .build();

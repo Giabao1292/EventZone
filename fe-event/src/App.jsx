@@ -45,6 +45,9 @@ import WithdrawRequestPage from "./components/organizer/WithdrawRequestPage";
 import ReviewSectionPage from "./pages/ReviewSectionPage";
 import MyVouchers from "./pages/MyVouchers";
 import RevenueDashboard from "./pages/admin/RevenueManagementPage";
+import ChatWidget from "./components/chat/ChatWidget";
+import ChatPage from "./pages/ChatPage";
+import ChatErrorBoundary from "./components/chat/ChatErrorBoundary";
 
 const Home = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() => import("./components/authentication/LoginPage"));
@@ -77,6 +80,11 @@ function App() {
         theme="dark"
       />
       <Suspense fallback={<PageLoader />}>
+        {/* Chat Components */}
+        <ChatErrorBoundary>
+          <ChatWidget />
+        </ChatErrorBoundary>
+
         <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<LoginPage />} />
@@ -98,6 +106,7 @@ function App() {
             <Route element={<AppLayout />}>
               <Route path="/wishlist" element={<WishlistPage />} />
               <Route path="/booking-history" element={<ViewBookingHistory />} />
+              <Route path="/chat" element={<ChatPage />} />
               <Route path="payment" element={<PaymentPage />} />
               <Route path="/vouchers" element={<MyVouchers />} />
 
@@ -141,7 +150,6 @@ function App() {
                 path="layout-designer/:showingTimeId"
                 element={<LayoutDesigner />}
               />
-
               <Route path="create-event" element={<EventCreationForm />} />
               <Route path="edit/:id" element={<EditEventForm />} />
               <Route

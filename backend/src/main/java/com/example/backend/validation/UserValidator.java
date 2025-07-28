@@ -11,7 +11,7 @@ public class UserValidator {
     private final UserRepository userRepository;
     public void validateEmail(String email) {
         if (userRepository.findByEmail(email).isPresent()) {
-            throw new ResourceNotFoundException("Email already exists");
+            throw new ResourceNotFoundException("Email đã tồn tại");
         }
     }
 }

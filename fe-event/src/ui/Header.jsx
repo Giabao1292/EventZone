@@ -5,7 +5,7 @@ import { FaBars, FaTimes } from "react-icons/fa";
 import { Link, useLocation } from "react-router-dom";
 import avatarDefault from "../assets/images/profile/avtDefault.jpg";
 import useAuth from "../hooks/useAuth";
-import { useNavigate } from "react-router-dom";
+
 import NotificationDropdown from "../components/home/NotificationDropdown";
 import { FaRegStar } from "react-icons/fa";
 
@@ -18,11 +18,6 @@ const Header = () => {
   const mobileMenuRef = useRef(null);
   const timeoutRef = useRef(null);
   const location = useLocation();
-  const navigate = useNavigate();
-
-  const handleGoToHistory = () => {
-    navigate("/booking-history", { replace: false });
-  };
 
   const handleMouseEnter = () => {
     if (timeoutRef.current) {
@@ -208,6 +203,13 @@ const Header = () => {
                     onClick={() => setDropdownOpen(false)}
                   >
                     Voucher của tôi
+                  </Link>
+                  <Link
+                    to="/chat"
+                    className="block px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-orange-500 text-sm font-medium transition"
+                    onClick={() => setDropdownOpen(false)}
+                  >
+                    Tin nhắn
                   </Link>
                   <Link
                     to="/change-password"

@@ -17,7 +17,7 @@ const steps = [
   { id: 1, title: "Thông tin sự kiện", icon: "🎉" },
   { id: 2, title: "Địa chỉ & Thời gian", icon: "📍" },
   { id: 3, title: "Thiết kế vé & Chỗ ngồi", icon: "🎫" },
-  { id: 4, title: "Thông tin thanh toán", icon: "💰" },
+  { id: 4, title: "Hoàn Tất Sự Kiện", icon: "💰" },
 ];
 
 const ProgressSteps = ({ steps, currentStep }) => (

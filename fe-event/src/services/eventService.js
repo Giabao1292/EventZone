@@ -347,8 +347,18 @@ export const mapApiEventDetailToComponent = (apiEventDetail) => {
     organizerName: apiEventDetail.organizerName || "",
     organizerEmail: apiEventDetail.organizerEmail || "",
     status: mapApiStatusToDisplay(apiEventDetail.status),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: apiEventDetail.createdAt
+      ? new Date(apiEventDetail.createdAt).toISOString()
+      : apiEventDetail.startTime
+      ? new Date(apiEventDetail.startTime).toISOString()
+      : new Date().toISOString(),
+    updatedAt: apiEventDetail.updatedAt
+      ? new Date(apiEventDetail.updatedAt).toISOString()
+      : apiEventDetail.createdAt
+      ? new Date(apiEventDetail.createdAt).toISOString()
+      : apiEventDetail.startTime
+      ? new Date(apiEventDetail.startTime).toISOString()
+      : new Date().toISOString(),
     tags: [],
     featured: false,
     ageRating: apiEventDetail.ageRating || "",
@@ -379,8 +389,18 @@ export const mapApiEventToComponent = (apiEvent) => {
     organizerName: apiEvent.organizerName || "",
     organizerEmail: "",
     status: mapApiStatusToDisplay(apiEvent.status),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: apiEvent.createdAt
+      ? new Date(apiEvent.createdAt).toISOString()
+      : apiEvent.startTime
+      ? new Date(apiEvent.startTime).toISOString()
+      : new Date().toISOString(),
+    updatedAt: apiEvent.updatedAt
+      ? new Date(apiEvent.updatedAt).toISOString()
+      : apiEvent.createdAt
+      ? new Date(apiEvent.createdAt).toISOString()
+      : apiEvent.startTime
+      ? new Date(apiEvent.startTime).toISOString()
+      : new Date().toISOString(),
     tags: [],
     featured: false,
     ageRating: apiEvent.ageRating || "",
@@ -492,6 +512,31 @@ export const getAllEvents = async () => {
   }
 };
 
+export const getEventsWithReviews = async () => {
+  try {
+    const response = await apiClient.get("/events/with-reviews");
+    // Trả về mảng cho FE dùng dropdown select
+    return response.data.data || [];
+  } catch (error) {
+    console.error("Error fetching events with reviews:", error);
+    return [];
+  }
+};
+
+export const getMyEventsWithReviews = async (token) => {
+  try {
+    const response = await apiClient.get("/events/my-events-with-reviews", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data.data || [];
+  } catch (error) {
+    console.error("❌ Lỗi khi lấy danh sách sự kiện có đánh giá:", error);
+    return [];
+  }
+};
+
 export const getMyEvents = async (token) => {
   try {
     const response = await apiClient.get("/events/myevents", {
@@ -525,8 +570,12 @@ export const getEndedEventsByCategory = async (categoryId) => {
   }
 };
 
-
-export const getReviewableEvents = async (page = 0, size = 20, search = "", categoryId = null) => {
+export const getReviewableEvents = async (
+  page = 0,
+  size = 20,
+  search = "",
+  categoryId = null
+) => {
   try {
     const params = new URLSearchParams();
     params.append("page", page.toString());
@@ -538,7 +587,9 @@ export const getReviewableEvents = async (page = 0, size = 20, search = "", cate
       params.append("categoryId", categoryId);
     }
     // Giả sử BE định nghĩa endpoint này:
-    const response = await apiClient.get(`/events/reviewable/all?${params.toString()}`);
+    const response = await apiClient.get(
+      `/events/reviewable/all?${params.toString()}`
+    );
     const data = response.data.data;
     // Trả về PageResponse dạng { content: [...], totalElements, totalPages, number, size }
     return data;
@@ -553,4 +604,3 @@ export const getReviewableEvents = async (page = 0, size = 20, search = "", cate
     };
   }
 };
-

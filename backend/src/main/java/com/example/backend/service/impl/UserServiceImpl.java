@@ -76,13 +76,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void changePassword(String username, ChangePasswordRequest request) {
-        User user = userRepository.findByEmail(username).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findByEmail(username).orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 
         if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
-            throw new IllegalArgumentException("Old password is incorrect");
+            throw new IllegalArgumentException("Mật khẩu cũ không đúng");
         }
         if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
-            throw new IllegalArgumentException("New password confirmation does not match");
+            throw new IllegalArgumentException("Xác nhận mật khẩu mới không khớp");
         }
 
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
@@ -110,14 +110,14 @@ public class UserServiceImpl implements UserService {
     @Override
     public void addToWishlist(String username, Integer eventId) {
         User user = userRepository.findByEmail(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
 
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sự kiện"));
 
         // Kiểm tra đã tồn tại trong wishlist chưa
         if (wishlistRepository.existsByUserAndEvent(user, event)) {
-            throw new IllegalStateException("Event already in wishlist");
+            throw new IllegalStateException("Sự kiện đã có trong danh sách yêu thích");
         }
 
         // Tạo Wishlist mới
@@ -132,13 +132,13 @@ public class UserServiceImpl implements UserService {
     @Override
     public void removeFromWishlist(String username, Integer eventId) {
         User user = userRepository.findByEmail(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
 
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sự kiện"));
 
         Wishlist wishlist = wishlistRepository.findByUserAndEvent(user, event)
-                .orElseThrow(() -> new ResourceNotFoundException("Wishlist item not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy mục trong danh sách yêu thích"));
 
         wishlistRepository.delete(wishlist);  // <-- Xoá trực tiếp từ repository
     }
@@ -147,7 +147,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public Set<EventSummaryDTO> getWishlist(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 
         List<Wishlist> wishlistItems = wishlistRepository.findAllByUser(user);
 
@@ -187,7 +187,7 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
         Set<UserRole> userRoles = new HashSet<>();
         for (String role : userRequestDTO.getRoles()) {
-            Role roleEntity = roleRepository.findByRoleName(role).orElseThrow(() -> new RuntimeException("Role not found"));
+            Role roleEntity = roleRepository.findByRoleName(role).orElseThrow(() -> new RuntimeException("Không tìm thấy vai trò"));
             UserRole userRole = new UserRole();
             userRole.setUser(user);
             userRole.setRole(roleEntity);
@@ -200,7 +200,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void updateUser(Integer id, UserRequestDTO userRequestDTO) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
         if(!user.getEmail().equals(userRequestDTO.getEmail())){
             userValidator.validateEmail(userRequestDTO.getEmail());
         }

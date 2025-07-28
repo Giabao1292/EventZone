@@ -46,12 +46,12 @@ public class UserController {
     private String extractToken(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new IllegalArgumentException("Missing or invalid token format");
+            throw new IllegalArgumentException("Thiếu hoặc định dạng token không hợp lệ");
         }
         String token = authHeader.substring(7);
         String username = jwtService.extractUsername(token, TokenType.ACCESS_TOKEN);
         if (username == null) {
-            throw new IllegalArgumentException("Invalid token");
+            throw new IllegalArgumentException("Token không hợp lệ");
         }
         return username;
     }
@@ -69,7 +69,8 @@ public class UserController {
         dto.setProfileUrl(user.getProfileUrl());
         dto.setDateOfBirth(user.getDateOfBirth());
         dto.setId(user.getId());
-        return new ResponseData<>(HttpStatus.OK.value(), "Profile retrieved successfully", dto);
+        dto.setPoints(user.getScore());
+        return new ResponseData<>(HttpStatus.OK.value(), "Lấy thông tin hồ sơ thành công", dto);
     }
 
 
@@ -88,8 +89,9 @@ public class UserController {
         dto.setProfileUrl(updatedUser.getProfileUrl());
         dto.setPhone(updatedUser.getPhone());
         dto.setDateOfBirth(updatedUser.getDateOfBirth());
+        dto.setPoints(updatedUser.getScore());
 
-        return new ResponseData<>(HttpStatus.OK.value(), "Profile updated successfully", dto);
+        return new ResponseData<>(HttpStatus.OK.value(), "Cập nhật hồ sơ thành công", dto);
     }
 
     @PostMapping("/avatar")
@@ -99,7 +101,7 @@ public class UserController {
     ) throws IOException {
         String username = extractToken(request);
         String imageUrl = userService.updateAvatar(username, file, cloudinary);
-        return new ResponseData<>(HttpStatus.OK.value(), "Avatar updated successfully", imageUrl);
+        return new ResponseData<>(HttpStatus.OK.value(), "Cập nhật avatar thành công", imageUrl);
     }
 
     @PutMapping("/change-password")
@@ -109,7 +111,7 @@ public class UserController {
     ) {
         String username = extractToken(httpRequest);
         userService.changePassword(username, request);
-        return new ResponseData<>(HttpStatus.OK.value(), "Password changed successfully");
+        return new ResponseData<>(HttpStatus.OK.value(), "Đổi mật khẩu thành công");
     }
 
     @PostMapping("/wishlist/{eventId}")
@@ -117,7 +119,7 @@ public class UserController {
             @PathVariable Integer eventId) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         userService.addToWishlist(username, eventId);
-        return new ResponseData<>(HttpStatus.OK.value(), "Added to wishlist");
+        return new ResponseData<>(HttpStatus.OK.value(), "Đã thêm vào danh sách yêu thích");
     }
 
     @DeleteMapping("/wishlist/{eventId}")
@@ -126,7 +128,7 @@ public class UserController {
         // giống add nhưng gọi removeToWishlist
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         userService.removeFromWishlist(username, eventId);
-        return new ResponseData<>(HttpStatus.OK.value(), "Removed from wishlist");
+        return new ResponseData<>(HttpStatus.OK.value(), "Đã xóa khỏi danh sách yêu thích");
     }
 
     @GetMapping("/wishlist")

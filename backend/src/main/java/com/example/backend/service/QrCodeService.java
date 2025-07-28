@@ -35,7 +35,7 @@ public class QrCodeService {
             return outputStream.toByteArray();
         }
         catch (Exception e) {
-            throw new RuntimeException("QR code generation failed");
+            throw new RuntimeException("Tạo mã QR thất bại");
         }
     }
 

@@ -47,21 +47,81 @@ export default function PaymentAdsResultPage() {
   }, []);
 
   return (
-    <div className="p-6 text-center text-white min-h-screen flex flex-col justify-center items-center bg-gray-900">
-      {status === "pending" && (
-        <p className="text-yellow-400">🔄 Đang xác minh thanh toán...</p>
-      )}
-      {status === "success" && (
-        <p className="text-green-400 text-xl">
-          ✅ Thanh toán thành công! Quảng cáo sự kiện đã được gửi đi để phê
-          duyệt.
-        </p>
-      )}
-      {status === "fail" && (
-        <p className="text-red-500 text-xl">
-          ❌ Thanh toán thất bại hoặc không hợp lệ.
-        </p>
-      )}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-orange-50 flex items-center justify-center p-6">
+      <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-200 text-center max-w-md">
+        {status === "pending" && (
+          <div className="space-y-4">
+            <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto">
+              <svg
+                className="w-8 h-8 text-yellow-500 animate-spin"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
+              </svg>
+            </div>
+            <p className="text-yellow-600 font-medium">
+              Đang xác minh thanh toán...
+            </p>
+          </div>
+        )}
+        {status === "success" && (
+          <div className="space-y-4">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+              <svg
+                className="w-8 h-8 text-green-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Thanh toán thành công!
+            </h3>
+            <p className="text-gray-600">
+              Quảng cáo sự kiện đã được gửi đi để phê duyệt.
+            </p>
+          </div>
+        )}
+        {status === "fail" && (
+          <div className="space-y-4">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+              <svg
+                className="w-8 h-8 text-red-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Thanh toán thất bại
+            </h3>
+            <p className="text-gray-600">
+              Thanh toán thất bại hoặc không hợp lệ.
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

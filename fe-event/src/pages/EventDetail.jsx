@@ -1,13 +1,18 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { toast } from "react-toastify";
 import PageLoader from "../ui/PageLoader";
-import { Calendar, MapPin, Clock, Star, Users } from "lucide-react";
+import chatService from "../services/chatService";
 import {
-  isEventTracked,
-  trackEvent,
-  untrackEvent,
-} from "../services/trackingService";
+  Calendar,
+  MapPin,
+  Clock,
+  Star,
+  Users,
+  MessageCircle,
+  Shield,
+} from "lucide-react";
 
 const formatDateTime = (isoDate) => {
   if (!isoDate) return "-";
@@ -47,31 +52,28 @@ const EventDetail = () => {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isTracked, setIsTracked] = useState(false);
-  const [trackingLoading, setTrackingLoading] = useState(false);
-  const [confirmedShowings, setConfirmedShowings] = useState([]);
   const [user, setUser] = useState(null);
+  const [chatLoading, setChatLoading] = useState(false);
+  const [adminUserId, setAdminUserId] = useState(null);
 
   useEffect(() => {
     const u = JSON.parse(localStorage.getItem("user"));
     setUser(u);
-    const fetchConfirmed = async () => {
+  }, []);
+
+  // Lấy admin user ID khi component mount
+  useEffect(() => {
+    const fetchAdminUserId = async () => {
       try {
-        const token = localStorage.getItem("accessToken");
-        if (token) {
-          const res = await axios.get(
-            "/api/bookings/confirmed-showing-time-ids",
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
-          setConfirmedShowings(res.data.data || []);
+        const response = await chatService.getAdminUserId();
+        if (response.code === 200) {
+          setAdminUserId(response.data);
         }
-      } catch {
-        setConfirmedShowings([]);
+      } catch (error) {
+        console.error("Error fetching admin user ID:", error);
       }
     };
-    fetchConfirmed();
+    fetchAdminUserId();
   }, []);
 
   useEffect(() => {
@@ -91,27 +93,88 @@ const EventDetail = () => {
     fetchDetail();
   }, [eventId]);
 
-  useEffect(() => {
-    if (event?.id) {
-      isEventTracked(event.id)
-        .then(setIsTracked)
-        .catch(() => setIsTracked(false));
+  const handleChatWithOrganizer = async () => {
+    if (!user) {
+      toast.error("Vui lòng đăng nhập để chat");
+      return;
     }
-  }, [event?.id]);
 
-  const handleTrackToggle = async () => {
-    if (!event?.id) return;
-    setTrackingLoading(true);
+    if (!event || !event.id) {
+      toast.error("Không tìm thấy thông tin sự kiện");
+      return;
+    }
+
+    setChatLoading(true);
     try {
-      if (isTracked) {
-        await untrackEvent(event.id);
-        setIsTracked(false);
-      } else {
-        await trackEvent(event.id);
-        setIsTracked(true);
+      // Lấy organizer ID cho sự kiện này
+      const organizerResponse = await chatService.getOrganizerUserId(event.id);
+      if (organizerResponse.code !== 200) {
+        throw new Error("Không thể lấy thông tin organizer");
       }
-    } catch {}
-    setTrackingLoading(false);
+
+      const organizerId = organizerResponse.data;
+
+      if (organizerId === user.id) {
+        toast.error("Không thể chat với chính mình");
+        return;
+      }
+
+      // Gửi tin nhắn đơn giản
+      const message = `Mình cần hỗ trợ về sự kiện ${
+        event.eventTitle || event.title
+      }`;
+
+      await chatService.createSupportConversation(organizerId, message);
+
+      toast.success("Đã bắt đầu cuộc trò chuyện với nhà tổ chức!");
+
+      // Trigger chat widget to open
+      localStorage.setItem("openChatWidget", "true");
+      window.dispatchEvent(new Event("openChatWidget"));
+    } catch (error) {
+      console.error("Error starting chat with organizer:", error);
+      toast.error("Không thể bắt đầu cuộc trò chuyện. Vui lòng thử lại.");
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
+  const handleChatWithAdmin = async () => {
+    if (!user) {
+      toast.error("Vui lòng đăng nhập để chat");
+      return;
+    }
+
+    if (!adminUserId) {
+      toast.error("Không tìm thấy admin để chat");
+      return;
+    }
+
+    if (adminUserId === user.id) {
+      toast.error("Không thể chat với chính mình");
+      return;
+    }
+
+    setChatLoading(true);
+    try {
+      // Gửi tin nhắn đơn giản
+      const message = `Mình cần hỗ trợ về sự kiện ${
+        event.eventTitle || event.title
+      }`;
+
+      await chatService.createSupportConversation(adminUserId, message);
+
+      toast.success("Đã bắt đầu cuộc trò chuyện với Admin!");
+
+      // Trigger chat widget to open
+      localStorage.setItem("openChatWidget", "true");
+      window.dispatchEvent(new Event("openChatWidget"));
+    } catch (error) {
+      console.error("Error starting chat with admin:", error);
+      toast.error("Không thể bắt đầu cuộc trò chuyện. Vui lòng thử lại.");
+    } finally {
+      setChatLoading(false);
+    }
   };
 
   if (loading) {
@@ -268,7 +331,7 @@ const EventDetail = () => {
               const isBeforeSale = now < saleOpen;
               const isAfterSale = now > saleClose;
               const isAfterEnd = now > endTime;
-              const canReview = user && confirmedShowings.includes(st.id);
+
               const isReschedulePending = (() => {
                 if (!st.status) return false;
                 if (typeof st.status === "string") {
@@ -376,15 +439,13 @@ const EventDetail = () => {
                               Sự kiện đã diễn ra
                             </p>
                           </div>
-                          {canReview && (
-                            <button
-                              className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
-                              onClick={() => navigate(`/reviews/${st.id}`)}
-                            >
-                              <Star className="w-4 h-4 inline mr-2" />
-                              Xem đánh giá
-                            </button>
-                          )}
+                          <button
+                            className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+                            onClick={() => navigate(`/reviews/${st.id}`)}
+                          >
+                            <Star className="w-4 h-4 inline mr-2" />
+                            Xem đánh giá
+                          </button>
                         </div>
                       ) : (
                         <button
@@ -403,6 +464,90 @@ const EventDetail = () => {
                 </div>
               );
             })}
+          </div>
+        </div>
+      </div>
+
+      {/* Yêu cầu hỗ trợ Section */}
+      <div className="max-w-7xl mx-auto px-6 py-16">
+        <div className="bg-gray-800/50 border border-gray-700/50 rounded-xl p-6">
+          <div className="text-center mb-8">
+            <h3 className="text-2xl font-bold text-white mb-4">
+              🆘 Cần hỗ trợ về sự kiện này?
+            </h3>
+            <p className="text-gray-300 text-lg">
+              Bạn gặp vấn đề gì với sự kiện &ldquo;{event?.eventTitle}&rdquo;?
+              Chúng tôi luôn sẵn sàng hỗ trợ bạn 24/7!
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6 mb-8">
+            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-6">
+              <h4 className="text-lg font-semibold text-blue-300 mb-3">
+                🤔 Các vấn đề thường gặp:
+              </h4>
+              <ul className="text-gray-300 space-y-2">
+                <li>• Không thể đặt vé hoặc thanh toán</li>
+                <li>• Thông tin sự kiện không chính xác</li>
+                <li>• Muốn thay đổi hoặc hủy vé</li>
+                <li>• Có câu hỏi về địa điểm, thời gian</li>
+                <li>• Gặp lỗi kỹ thuật khi sử dụng</li>
+              </ul>
+            </div>
+
+            <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-6">
+              <h4 className="text-lg font-semibold text-green-300 mb-3">
+                💡 Chúng tôi có thể giúp:
+              </h4>
+              <ul className="text-gray-300 space-y-2">
+                <li>• Hướng dẫn đặt vé từ A-Z</li>
+                <li>• Giải quyết vấn đề thanh toán</li>
+                <li>• Cập nhật thông tin sự kiện</li>
+                <li>• Hỗ trợ kỹ thuật tức thì</li>
+                <li>• Tư vấn chọn suất chiếu phù hợp</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              onClick={handleChatWithOrganizer}
+              disabled={chatLoading}
+              className="flex items-center justify-center space-x-3 px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 transition-all duration-200 shadow-lg hover:shadow-xl font-medium"
+            >
+              <MessageCircle className="w-5 h-5" />
+              <span>💬 Chat với nhà tổ chức</span>
+              {chatLoading && (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              )}
+            </button>
+
+            {adminUserId && adminUserId !== user?.id && (
+              <button
+                onClick={handleChatWithAdmin}
+                disabled={chatLoading}
+                className="flex items-center justify-center space-x-3 px-8 py-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 disabled:opacity-50 transition-all duration-200 shadow-lg hover:shadow-xl font-medium"
+              >
+                <Shield className="w-5 h-5" />
+                <span>🛡️ Hỗ trợ từ Admin</span>
+                {chatLoading && (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                )}
+              </button>
+            )}
+          </div>
+
+          {chatLoading && (
+            <div className="mt-4 text-center text-sm text-gray-400">
+              Đang tạo cuộc trò chuyện...
+            </div>
+          )}
+
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-400">
+              ⚡ Phản hồi nhanh chóng trong vòng 5 phút | 🔒 Thông tin được bảo
+              mật tuyệt đối
+            </p>
           </div>
         </div>
       </div>
