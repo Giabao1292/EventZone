@@ -21,7 +21,7 @@ public interface BookingSeatRepository extends JpaRepository<BookingSeat, Intege
       AND bs.status IN ('BOOKED', 'HOLD')
       AND (
           bs.status = 'BOOKED'
-          OR (bs.status = 'HOLD' AND :now < DATE_ADD(b.created_datetime, INTERVAL 3 MINUTE))
+          OR (bs.status = 'HOLD' AND :now < DATE_ADD(b.created_datetime, INTERVAL 10 MINUTE))
       )
 """, nativeQuery = true)
     List<Integer> findReservedSeatIds(

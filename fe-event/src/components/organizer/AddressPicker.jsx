@@ -145,13 +145,13 @@ const AddressPicker = ({ onSelect, initialValue }) => {
   return (
     <div className="grid grid-cols-3 gap-4">
       <div>
-        <label className="text-sm text-white block mb-1">
+        <label className="text-sm text-slate-600 block mb-2 font-medium">
           Tỉnh / Thành phố
         </label>
         <select
           value={provinceCode}
           onChange={(e) => setProvinceCode(e.target.value)}
-          className="w-full p-2 rounded bg-gray-800 text-white"
+          className="w-full px-4 py-3 bg-white/80 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all duration-300"
         >
           <option value="">-- Chọn tỉnh/thành --</option>
           {provinces.map((p) => (
@@ -163,11 +163,13 @@ const AddressPicker = ({ onSelect, initialValue }) => {
       </div>
 
       <div>
-        <label className="text-sm text-white block mb-1">Quận / Huyện</label>
+        <label className="text-sm text-slate-600 block mb-2 font-medium">
+          Quận / Huyện
+        </label>
         <select
           value={districtCode}
           onChange={(e) => setDistrictCode(e.target.value)}
-          className="w-full p-2 rounded bg-gray-800 text-white"
+          className="w-full px-4 py-3 bg-white/80 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all duration-300 disabled:bg-slate-100 disabled:text-slate-400"
           disabled={!provinceCode}
         >
           <option value="">-- Chọn quận/huyện --</option>
@@ -180,11 +182,13 @@ const AddressPicker = ({ onSelect, initialValue }) => {
       </div>
 
       <div>
-        <label className="text-sm text-white block mb-1">Xã / Phường</label>
+        <label className="text-sm text-slate-600 block mb-2 font-medium">
+          Xã / Phường
+        </label>
         <select
           value={wardCode}
           onChange={(e) => setWardCode(e.target.value)}
-          className="w-full p-2 rounded bg-gray-800 text-white"
+          className="w-full px-4 py-3 bg-white/80 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all duration-300 disabled:bg-slate-100 disabled:text-slate-400"
           disabled={!districtCode}
         >
           <option value="">-- Chọn xã/phường --</option>

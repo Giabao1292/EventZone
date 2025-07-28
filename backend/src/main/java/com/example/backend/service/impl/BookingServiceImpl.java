@@ -125,9 +125,6 @@ public class BookingServiceImpl implements BookingService {
                 throw new IllegalArgumentException("Voucher is inactive or expired");
             }
 
-            if (user.getScore() < voucher.getRequiredPoints()) {
-                throw new IllegalArgumentException("Not enough points to redeem this voucher");
-            }
 
             UserVoucher userVoucher = userVoucherRepository
                     .findByUserIdAndVoucherIdAndIsUsedFalse(user.getId(), request.getVoucherId())
@@ -158,9 +155,6 @@ public class BookingServiceImpl implements BookingService {
         if (booking.getVoucher() != null) {
             Voucher voucher = booking.getVoucher();
 
-            if (user.getScore() < voucher.getRequiredPoints()) {
-                throw new IllegalArgumentException("Không đủ điểm để sử dụng voucher này");
-            }
 
             user.setScore(user.getScore() - voucher.getRequiredPoints());
             userRepository.save(user);
@@ -210,7 +204,7 @@ public class BookingServiceImpl implements BookingService {
     @Transactional
     @Scheduled(fixedRate = 60000)
     public void removeExpiredHolds() {
-        LocalDateTime threshold = LocalDateTime.now().minusMinutes(5);
+        LocalDateTime threshold = LocalDateTime.now().minusMinutes(10);
 
         List<Booking> expiredBookings = bookingRepository
                 .findAllByPaymentStatusAndCreatedDatetimeBefore("PENDING", threshold);

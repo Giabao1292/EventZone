@@ -312,12 +312,7 @@ export default function SelectSeats() {
     if (zones.length > 0 || seats.length > 0) {
       return (
         <div className="bg-slate-800/70 backdrop-blur-md border border-slate-600 rounded-xl shadow-lg shadow-slate-900/50 p-6">
-          <div className="mb-6 text-center">
-            <div className="inline-flex items-center gap-2 bg-slate-700 text-white px-6 py-2 rounded-full shadow-md shadow-slate-900/30 border border-slate-600">
-              <div className="w-3 h-3 bg-white rounded"></div>
-              <span className="text-sm font-medium">Sân khấu</span>
-            </div>
-          </div>
+          <div className="mb-6 text-center"></div>
           <div
             style={{
               width: containerWidth,
