@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
@@ -5,6 +7,7 @@ import {
   createWithdrawRequest,
   fetchWithdrawRequests,
 } from "../../services/withdrawService";
+import { getBankList } from "../../services/userServices";
 import useAuth from "../../hooks/useAuth";
 import {
   CreditCard,
@@ -14,17 +17,20 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
+  ChevronDown,
 } from "lucide-react";
 
 const WithdrawEvents = () => {
   const { user, isAuthenticated } = useAuth();
   const [events, setEvents] = useState([]);
   const [withdrawRequests, setWithdrawRequests] = useState([]);
+  const [bankList, setBankList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
+    selectedBankId: "",
     bankAccountName: "",
     bankAccountNumber: "",
     bankName: "",
@@ -44,6 +50,7 @@ const WithdrawEvents = () => {
     if (isAuthenticated && user?.roles.includes("ORGANIZER")) {
       fetchEvents();
       fetchMyWithdrawRequests();
+      fetchBankList();
     } else {
       setLoading(false);
       setError(
@@ -52,12 +59,32 @@ const WithdrawEvents = () => {
     }
   }, [isAuthenticated, user]);
 
+  const fetchBankList = async () => {
+    try {
+      const banks = await getBankList();
+      setBankList(banks);
+
+      // Tự động chọn tài khoản mặc định
+      const defaultBank = banks.find((bank) => bank.isDefault === 1);
+      if (defaultBank) {
+        setFormData((prev) => ({
+          ...prev,
+          selectedBankId: defaultBank.paymentId.toString(),
+          bankAccountName: defaultBank.holderName,
+          bankAccountNumber: defaultBank.endAccountNumber,
+          bankName: defaultBank.bankName,
+        }));
+      }
+    } catch (err) {
+      console.error("Lỗi khi tải danh sách ngân hàng: ", err.message);
+    }
+  };
+
   const fetchEvents = async () => {
     try {
       setLoading(true);
       const response = await fetchWithdrawableEvents();
       setEvents(response.data.data);
-
       // Tính toán stats
       const totalAvailable = response.data.data.reduce(
         (sum, event) => sum + event.availableRevenue,
@@ -75,7 +102,6 @@ const WithdrawEvents = () => {
     try {
       const response = await fetchWithdrawRequests();
       setWithdrawRequests(response.data.data);
-
       // Tính toán stats
       const totalRequested = response.data.data.reduce(
         (sum, req) => sum + req.amount,
@@ -87,7 +113,6 @@ const WithdrawEvents = () => {
       const totalPending = response.data.data.filter(
         (req) => req.status === "PENDING"
       ).length;
-
       setStats((prev) => ({
         ...prev,
         totalRequested,
@@ -101,13 +126,33 @@ const WithdrawEvents = () => {
 
   const handleSelectEvent = (event) => {
     setSelectedEvent(event);
-    setFormData({ ...formData, amount: event.availableRevenue.toString() });
+    setFormData((prev) => ({
+      ...prev,
+      amount: event.availableRevenue.toString(),
+    }));
     setShowForm(true);
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+  };
+
+  const handleBankSelect = (e) => {
+    const selectedBankId = e.target.value;
+    const selectedBank = bankList.find(
+      (bank) => bank.paymentId.toString() === selectedBankId
+    );
+
+    if (selectedBank) {
+      setFormData((prev) => ({
+        ...prev,
+        selectedBankId: selectedBankId,
+        bankAccountName: selectedBank.holderName,
+        bankAccountNumber: selectedBank.endAccountNumber,
+        bankName: selectedBank.bankName,
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -118,7 +163,7 @@ const WithdrawEvents = () => {
       const withdrawRequest = {
         eventId: selectedEvent.eventId,
         showingTimeId: selectedEvent.showingTimeId,
-        amount: parseFloat(formData.amount),
+        amount: Number.parseFloat(formData.amount),
         bankAccountName: formData.bankAccountName,
         bankAccountNumber: formData.bankAccountNumber,
         bankName: formData.bankName,
@@ -129,13 +174,18 @@ const WithdrawEvents = () => {
       alert("Yêu cầu rút tiền đã được gửi thành công!");
       setSelectedEvent(null);
       setShowForm(false);
+
+      // Reset form nhưng giữ lại thông tin ngân hàng mặc định
+      const defaultBank = bankList.find((bank) => bank.isDefault === 1);
       setFormData({
-        bankAccountName: "",
-        bankAccountNumber: "",
-        bankName: "",
+        selectedBankId: defaultBank ? defaultBank.paymentId.toString() : "",
+        bankAccountName: defaultBank ? defaultBank.holderName : "",
+        bankAccountNumber: defaultBank ? defaultBank.endAccountNumber : "",
+        bankName: defaultBank ? defaultBank.bankName : "",
         note: "",
         amount: "",
       });
+
       fetchEvents();
       fetchMyWithdrawRequests();
     } catch (err) {
@@ -234,7 +284,6 @@ const WithdrawEvents = () => {
               </div>
             </div>
           </div>
-
           <div className="bg-white/80 backdrop-blur-xl p-6 rounded-2xl border border-blue-200/50 shadow-xl hover:shadow-2xl transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
@@ -248,7 +297,6 @@ const WithdrawEvents = () => {
               </div>
             </div>
           </div>
-
           <div className="bg-white/80 backdrop-blur-xl p-6 rounded-2xl border border-blue-200/50 shadow-xl hover:shadow-2xl transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
@@ -262,7 +310,6 @@ const WithdrawEvents = () => {
               </div>
             </div>
           </div>
-
           <div className="bg-white/80 backdrop-blur-xl p-6 rounded-2xl border border-blue-200/50 shadow-xl hover:shadow-2xl transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
@@ -292,7 +339,6 @@ const WithdrawEvents = () => {
                 <span>Sự kiện có thể rút tiền ({events.length})</span>
               </h3>
             </div>
-
             <div className="p-6">
               {events.length > 0 ? (
                 <div className="space-y-4">
@@ -359,7 +405,6 @@ const WithdrawEvents = () => {
                 <span>Yêu cầu rút tiền ({withdrawRequests.length})</span>
               </h3>
             </div>
-
             <div className="p-6">
               {withdrawRequests.length > 0 ? (
                 <div className="space-y-4">
@@ -388,7 +433,6 @@ const WithdrawEvents = () => {
                           )}
                         </span>
                       </div>
-
                       <div className="space-y-2">
                         <p className="font-medium text-slate-700">
                           {request.eventTitle}
@@ -456,6 +500,32 @@ const WithdrawEvents = () => {
                   </p>
                 </div>
 
+                {/* Bank Selection */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-slate-600">
+                    Chọn tài khoản ngân hàng
+                  </label>
+                  <div className="relative">
+                    <select
+                      name="selectedBankId"
+                      value={formData.selectedBankId}
+                      onChange={handleBankSelect}
+                      className="w-full h-12 px-4 pr-10 rounded-xl bg-white/80 border border-slate-200 text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-300 appearance-none"
+                      required
+                    >
+                      <option value="">Chọn tài khoản ngân hàng</option>
+                      {bankList.map((bank) => (
+                        <option key={bank.paymentId} value={bank.paymentId}>
+                          {bank.bankName} - {bank.endAccountNumber} -{" "}
+                          {bank.holderName}
+                          {bank.isDefault === 1 && " (Mặc định)"}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 pointer-events-none" />
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="block text-sm font-medium text-slate-600">
@@ -466,11 +536,10 @@ const WithdrawEvents = () => {
                       name="bankAccountName"
                       value={formData.bankAccountName}
                       onChange={handleInputChange}
-                      className="w-full h-12 px-4 rounded-xl bg-white/80 border border-slate-200 text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-300"
-                      required
+                      className="w-full h-12 px-4 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 transition-all duration-300"
+                      readOnly
                     />
                   </div>
-
                   <div className="space-y-2">
                     <label className="block text-sm font-medium text-slate-600">
                       Số tài khoản
@@ -480,8 +549,8 @@ const WithdrawEvents = () => {
                       name="bankAccountNumber"
                       value={formData.bankAccountNumber}
                       onChange={handleInputChange}
-                      className="w-full h-12 px-4 rounded-xl bg-white/80 border border-slate-200 text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-300"
-                      required
+                      className="w-full h-12 px-4 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 transition-all duration-300"
+                      readOnly
                     />
                   </div>
                 </div>
@@ -495,8 +564,8 @@ const WithdrawEvents = () => {
                     name="bankName"
                     value={formData.bankName}
                     onChange={handleInputChange}
-                    className="w-full h-12 px-4 rounded-xl bg-white/80 border border-slate-200 text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-300"
-                    required
+                    className="w-full h-12 px-4 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 transition-all duration-300"
+                    readOnly
                   />
                 </div>
 

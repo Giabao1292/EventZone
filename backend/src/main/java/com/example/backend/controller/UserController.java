@@ -1,15 +1,13 @@
 package com.example.backend.controller;
 
 import com.cloudinary.Cloudinary;
-import com.example.backend.dto.request.ChangePasswordRequest;
-import com.example.backend.dto.request.OnCreate;
-import com.example.backend.dto.request.UserRequestDTO;
-import com.example.backend.dto.request.UserUpdateRequest;
+import com.example.backend.dto.request.*;
 import com.example.backend.dto.response.*;
 import com.example.backend.model.User;
 import com.example.backend.repository.RoleRepository;
 import com.example.backend.repository.UserRoleRepository;
 import com.example.backend.service.JwtService;
+import com.example.backend.service.UserBankAccountService;
 import com.example.backend.service.UserService;
 import com.example.backend.service.WishlistService;
 import com.example.backend.util.TokenType;
@@ -41,6 +39,7 @@ public class UserController {
     private final RoleRepository roleRepository;
     private final UserRoleRepository userRoleRepository;
     private final WishlistService wishlistService;
+    private final UserBankAccountService userBankAccountService;
 
     // Helper method to extract and validate token
     private String extractToken(HttpServletRequest request) {
@@ -181,10 +180,40 @@ public class UserController {
         userService.createRole(role.get("role").toString());
         return new ResponseData<>(HttpStatus.OK.value(), "Role created successfully");
     }
+
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/top")
     public ResponseData<?> getTopBooking(Pageable pageable) {
         List<TopClientResponse> topClients = userService.getTopBooking(pageable);
         return new ResponseData<>(HttpStatus.OK.value(), "Top bookings fetched", topClients);
+    }
+
+    @PreAuthorize("hasRole('ORGANIZER')")
+    @GetMapping("/banks")
+    public ResponseData<?> getListBank(){
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        List<BankResponse> bankLists = userBankAccountService.getAllBank(email);
+        return new ResponseData<>(HttpStatus.OK.value(), "Bank list fetched", bankLists);
+    }
+
+    @PreAuthorize("hasRole('ORGANIZER')")
+    @DeleteMapping("/banks/{bankId}")
+    public ResponseData<?> deleteOrganizerBank(@PathVariable Integer bankId) {
+        userBankAccountService.deleteBank(bankId);
+        return new ResponseData<>(HttpStatus.OK.value(), "Bank deleted successfully");
+    }
+
+    @PreAuthorize("hasRole('ORGANIZER')")
+    @PostMapping("/banks")
+    public ResponseData<?>  addBank(@RequestBody BankRequest bankRequest) {
+        userBankAccountService.addBank(bankRequest);
+        return new ResponseData<>(HttpStatus.OK.value(), "Bank added successfully");
+    }
+
+    @PreAuthorize("hasRole('ORGANIZER')")
+    @PatchMapping("/banks/{bankId}/default")
+    public ResponseData<?> updateDefaultBank(@PathVariable Integer bankId){
+        userBankAccountService.setDefault(bankId);
+        return new ResponseData<>(HttpStatus.OK.value(), "Bank updated successfully");
     }
 }

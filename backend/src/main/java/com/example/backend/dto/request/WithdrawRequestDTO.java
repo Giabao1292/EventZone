@@ -30,5 +30,4 @@ public class WithdrawRequestDTO {
     private String rejectionReason;
     private LocalDateTime requestedAt;
     private LocalDateTime processedAt;
-
 }

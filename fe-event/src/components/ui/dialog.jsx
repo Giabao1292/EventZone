@@ -74,21 +74,36 @@ const DialogContent = ({ children, className = "", ...props }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300"
         onClick={() => setIsOpen(false)}
       />
+
+      {/* Dialog Content */}
       <div
-        className={`relative bg-white rounded-lg shadow-lg border max-w-lg w-full mx-4 ${className}`}
+        className={`
+          relative p-8 bg-white rounded-xl shadow-2xl border border-gray-200
+          max-w-4xl w-full max-h-[90vh] overflow-y-auto
+          transform transition-all duration-300 scale-100
+          ${className}
+        `}
         {...props}
       >
+        {/* Close Button */}
         <button
           onClick={() => setIsOpen(false)}
-          className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-white transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          className="
+            absolute right-4 top-4 z-10 rounded-full p-2
+            bg-gray-100 hover:bg-gray-200 
+            transition-colors duration-200
+            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+          "
         >
-          <X className="h-4 w-4" />
+          <X className="h-4 w-4 text-gray-600" />
         </button>
+
         {children}
       </div>
     </div>
@@ -97,7 +112,7 @@ const DialogContent = ({ children, className = "", ...props }) => {
 
 const DialogHeader = ({ children, className = "", ...props }) => (
   <div
-    className={`flex flex-col space-y-1.5 text-center sm:text-left p-6 pb-0 ${className}`}
+    className={`flex flex-col space-y-2 text-center sm:text-left p-6 pb-4 ${className}`}
     {...props}
   >
     {children}
@@ -106,7 +121,7 @@ const DialogHeader = ({ children, className = "", ...props }) => (
 
 const DialogTitle = ({ children, className = "", ...props }) => (
   <h2
-    className={`text-lg font-semibold leading-none tracking-tight ${className}`}
+    className={`text-xl font-semibold leading-tight tracking-tight text-gray-900 ${className}`}
     {...props}
   >
     {children}
@@ -114,14 +129,21 @@ const DialogTitle = ({ children, className = "", ...props }) => (
 );
 
 const DialogDescription = ({ children, className = "", ...props }) => (
-  <p className={`text-sm text-gray-500 ${className}`} {...props}>
+  <p
+    className={`text-sm text-gray-600 leading-relaxed ${className}`}
+    {...props}
+  >
     {children}
   </p>
 );
 
 const DialogFooter = ({ children, className = "", ...props }) => (
   <div
-    className={`flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 p-6 pt-0 ${className}`}
+    className={`
+      flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-3 
+      p-6 pt-4 border-t border-gray-100 bg-gray-50/50
+      ${className}
+    `}
     {...props}
   >
     {children}

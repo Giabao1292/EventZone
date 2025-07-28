@@ -34,14 +34,9 @@ public class WithdrawRequest {
     private BigDecimal amount;
 
     // Thông tin ngân hàng
-    @Column(name = "bank_account_name", nullable = false)
-    private String bankAccountName;
-
-    @Column(name = "bank_account_number", nullable = false)
-    private String bankAccountNumber;
-
-    @Column(name = "bank_name", nullable = false)
-    private String bankName;
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "payment_id")
+    private UserBankAccount userBankAccount;
 
     @Column(columnDefinition = "TEXT")
     private String note;

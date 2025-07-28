@@ -164,7 +164,7 @@ public class EventController {
         }
     }
 
-    @PreAuthorize("hasAnyRole('ORGANIZER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping
     public ResponseData<PageResponse<EventSummaryAdmin>> searchEvent(Pageable pageable, @RequestParam(name = "search", required = false) String... search) {
         PageResponse<EventSummaryAdmin> listEvents = eventService.searchEvent(pageable, search);
@@ -190,7 +190,6 @@ public class EventController {
     public ResponseEntity<ResponseData<Integer>> editEvent(
             @PathVariable int eventId,
             @RequestBody @Valid EventRequest request) {
-
         Event updatedEvent = eventService.editEvent(eventId, request);
 
         if (updatedEvent == null) {
@@ -202,7 +201,6 @@ public class EventController {
         return ResponseEntity
                 .ok(new ResponseData<>(200, "Chỉnh sửa thông tin sự kiện thành công", updatedEvent.getId()));
     }
-
 
     @PreAuthorize("hasRole('ORGANIZER')")
     @GetMapping("/myevents")
