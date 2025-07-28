@@ -91,6 +91,7 @@ const ShowingTimeManagement = ({ eventId, eventTitle, onBack }) => {
   const [selectedAttendee, setSelectedAttendee] = useState(null);
   const [isAttendeeModalOpen, setIsAttendeeModalOpen] = useState(false);
   const [isCheckingIn, setIsCheckingIn] = useState(false);
+  const [checkInError, setCheckInError] = useState("");
 
   // Fetch showing times when component mounts
   useEffect(() => {
@@ -183,6 +184,7 @@ const ShowingTimeManagement = ({ eventId, eventTitle, onBack }) => {
 
   const handleCheckIn = async (bookingId) => {
     setIsCheckingIn(true);
+    setCheckInError(""); // Clear previous error
     try {
       await checkInAttendee(bookingId);
       // Refresh attendees list and analytics
@@ -192,7 +194,12 @@ const ShowingTimeManagement = ({ eventId, eventTitle, onBack }) => {
       setIsAttendeeModalOpen(false);
     } catch (error) {
       console.error("Error checking in attendee:", error);
-      alert("Có lỗi xảy ra khi check-in!");
+      // Extract error message from response
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Có lỗi xảy ra khi check-in!";
+      setCheckInError(errorMessage);
     } finally {
       setIsCheckingIn(false);
     }
@@ -827,6 +834,7 @@ const ShowingTimeManagement = ({ eventId, eventTitle, onBack }) => {
         attendee={selectedAttendee}
         onCheckIn={handleCheckIn}
         isCheckingIn={isCheckingIn}
+        checkInError={checkInError}
       />
     </div>
   );

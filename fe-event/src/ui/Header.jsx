@@ -204,13 +204,7 @@ const Header = () => {
                   >
                     Voucher của tôi
                   </Link>
-                  <Link
-                    to="/chat"
-                    className="block px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-orange-500 text-sm font-medium transition"
-                    onClick={() => setDropdownOpen(false)}
-                  >
-                    Tin nhắn
-                  </Link>
+
                   <Link
                     to="/change-password"
                     className="block px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-orange-500 text-sm font-medium transition"
