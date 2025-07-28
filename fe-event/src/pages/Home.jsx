@@ -278,16 +278,16 @@ export default function Home() {
   };
 
   const adSliderSettings = {
-    dots: true,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    autoplay: true,
-    autoplaySpeed: 1300,
-    pauseOnHover: true,
-    arrows: false,
-    cssEase: "ease-in-out",
+    dots: true, // Hiện chấm tròn chỉ số
+    infinite: true, // Cho phép quay vòng vô hạn
+    speed: 800, // Thời gian chuyển slide (ms)
+    slidesToShow: 1, // Số slide hiển thị
+    slidesToScroll: 1, // Số slide cuộn mỗi lần
+    autoplay: true, // Tự động chạy
+    autoplaySpeed: 4000, // Thời gian dừng giữa mỗi lần chuyển (ms)
+    pauseOnHover: true, // Dừng khi hover
+    arrows: false, // Ẩn mũi tên điều hướng
+    cssEase: "ease-in-out", // Hiệu ứng mượt
   };
 
   return (
@@ -334,12 +334,15 @@ export default function Home() {
           <h2 className="text-2xl font-semibold mb-4">🔥 Sự kiện nổi bật</h2>
           <div className="max-w-5xl mx-auto">
             {trendingAds.length === 1 ? (
-              <AdEventCard ad={trendingAds[0]} />
+              <div className="relative">
+                <AdEventCard ad={trendingAds[0]} />
+              </div>
             ) : (
               <Slider {...adSliderSettings}>
                 {trendingAds.map((ad) => (
-                  <div key={ad.id}>
+                  <div key={ad.id} className="relative">
                     <AdEventCard ad={ad} />
+                    {/* Badge cho quảng cáo */}
                   </div>
                 ))}
               </Slider>

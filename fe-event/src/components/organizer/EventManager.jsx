@@ -10,7 +10,6 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  Eye,
   AlertCircle,
   FileText,
   Users,
@@ -20,8 +19,6 @@ import {
   Filter,
   Search,
   MapPin,
-  DollarSign,
-  BarChart3,
 } from "lucide-react";
 
 const STATUS_TABS = [
@@ -120,11 +117,27 @@ export default function EventManager() {
     getEventsByStatus(organizerId, currentTab)
       .then((data) => {
         // Sắp xếp sự kiện mới lên đầu
-        const sortedEvents = (data || []).sort(
-          (a, b) =>
-            new Date(b.createdAt || b.updatedAt) -
-            new Date(a.createdAt || a.updatedAt)
-        );
+        const sortedEvents = (data || []).sort((a, b) => {
+          // Ưu tiên: updatedAt > createdAt > startTime > current time
+          const getDateA = (event) => {
+            if (event.updatedAt) return new Date(event.updatedAt);
+            if (event.createdAt) return new Date(event.createdAt);
+            if (event.startTime) return new Date(event.startTime);
+            return new Date(); // fallback
+          };
+
+          const getDateB = (event) => {
+            if (event.updatedAt) return new Date(event.updatedAt);
+            if (event.createdAt) return new Date(event.createdAt);
+            if (event.startTime) return new Date(event.startTime);
+            return new Date(); // fallback
+          };
+
+          const dateA = getDateA(b);
+          const dateB = getDateB(a);
+
+          return dateA - dateB;
+        });
         setEvents(sortedEvents);
       })
       .catch(() => setEvents([]))

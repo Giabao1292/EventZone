@@ -69,6 +69,7 @@ public class UserController {
         dto.setProfileUrl(user.getProfileUrl());
         dto.setDateOfBirth(user.getDateOfBirth());
         dto.setId(user.getId());
+        dto.setPoints(user.getScore());
         return new ResponseData<>(HttpStatus.OK.value(), "Profile retrieved successfully", dto);
     }
 
@@ -88,6 +89,7 @@ public class UserController {
         dto.setProfileUrl(updatedUser.getProfileUrl());
         dto.setPhone(updatedUser.getPhone());
         dto.setDateOfBirth(updatedUser.getDateOfBirth());
+        dto.setPoints(updatedUser.getScore());
 
         return new ResponseData<>(HttpStatus.OK.value(), "Profile updated successfully", dto);
     }

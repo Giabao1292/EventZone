@@ -5,10 +5,11 @@ import {
   updateUserDetail,
   updateUserAvatar,
 } from "../services/userServices"; // Import updateUserAvatar
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import PropTypes from "prop-types";
 import avatarDefault from "../assets/images/profile/avtDefault.jpg"; // Ảnh mặc định
+import backgroundImage from "../assets/images/background/background.png";
 import useAuth from "../hooks/useAuth";
 import PageLoader from "../ui/PageLoader";
 
@@ -106,87 +107,106 @@ const ProfilePage = () => {
   if (!user) return <PageLoader />;
 
   return (
-    <div className="max-w-3xl mx-auto py-12 px-6 text-white">
-      <div className="flex flex-col items-center mb-10 relative">
-        <div className="relative">
-          <img
-            src={avatarUrl}
-            alt="Avatar"
-            className="w-24 h-24 rounded-full object-cover border-4 border-indigo-600 shadow-md"
-          />
-          <label
-            htmlFor="avatar-upload"
-            className="absolute bottom-0 right-0 bg-indigo-600 text-white p-1 rounded-full cursor-pointer hover:bg-indigo-700 shadow"
-          >
-            ✏️
-          </label>
-          <input
-            id="avatar-upload"
-            type="file"
-            accept="image/*"
-            onChange={handleAvatarUpload}
-            className="hidden"
-          />
+    <div
+      className="min-h-screen relative"
+      style={{
+        backgroundImage: `url(${backgroundImage})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        backgroundAttachment: "fixed",
+      }}
+    >
+      {/* Overlay để làm tối background và tăng độ tương phản */}
+      <div className="absolute inset-0 bg-black bg-opacity-60"></div>
+
+      {/* Nội dung chính */}
+      <div className="relative z-10 max-w-3xl mx-auto py-12 px-6 text-white">
+        <div className="flex flex-col items-center mb-10 relative">
+          <div className="relative">
+            <img
+              src={avatarUrl}
+              alt="Avatar"
+              className="w-24 h-24 rounded-full object-cover border-4 border-indigo-600 shadow-md"
+            />
+            <label
+              htmlFor="avatar-upload"
+              className="absolute bottom-0 right-0 bg-indigo-600 text-white p-1 rounded-full cursor-pointer hover:bg-indigo-700 shadow"
+            >
+              ✏️
+            </label>
+            <input
+              id="avatar-upload"
+              type="file"
+              accept="image/*"
+              onChange={handleAvatarUpload}
+              className="hidden"
+            />
+          </div>
+          <h1 className="text-3xl font-bold text-indigo-400 mt-4">
+            Hồ sơ cá nhân
+          </h1>
         </div>
-        <h1 className="text-3xl font-bold text-indigo-400 mt-4">
-          Hồ sơ cá nhân
-        </h1>
+
+        {/* Form */}
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="bg-[#1D1F29] bg-opacity-90 backdrop-blur-sm border border-[#2A2B33] shadow-lg rounded-2xl p-8 space-y-6"
+        >
+          <Field
+            label="Họ và tên"
+            register={register}
+            name="fullname"
+            error={errors.fullname?.message}
+            required
+          >
+            {user.fullname}
+          </Field>
+
+          <Field label="Email" readonly>
+            {user.email}
+          </Field>
+
+          <Field label="Tên đăng nhập" readonly>
+            {user.username}
+          </Field>
+
+          <Field
+            label="Số điện thoại"
+            register={register}
+            name="phone"
+            error={errors.phone?.message}
+          >
+            {user.phone || "Chưa cập nhật"}
+          </Field>
+
+          <Field
+            label="Ngày sinh"
+            register={register}
+            name="dateOfBirth"
+            type="date"
+            error={errors.dateOfBirth?.message}
+          >
+            {user.dateOfBirth
+              ? new Date(user.dateOfBirth).toLocaleDateString("vi-VN")
+              : "Chưa cập nhật"}
+          </Field>
+
+          <Field label="Điểm tích lũy" readonly>
+            {user.points || 0} điểm
+          </Field>
+
+          <div className="flex justify-end pt-6">
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="bg-gradient-to-r from-indigo-500 to-emerald-500 hover:from-indigo-600 hover:to-emerald-600 text-white px-5 py-2 rounded-xl transition-all duration-300"
+            >
+              {isLoading ? "Đang lưu..." : "Lưu"}
+            </button>
+          </div>
+        </form>
       </div>
-
-      {/* Form */}
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="bg-[#1D1F29] border border-[#2A2B33] shadow-lg rounded-2xl p-8 space-y-6"
-      >
-        <Field
-          label="Họ và tên"
-          register={register}
-          name="fullname"
-          error={errors.fullname?.message}
-          required
-        >
-          {user.fullname}
-        </Field>
-
-        <Field label="Email" readonly>
-          {user.email}
-        </Field>
-
-        <Field label="Tên đăng nhập" readonly>
-          {user.username}
-        </Field>
-
-        <Field
-          label="Số điện thoại"
-          register={register}
-          name="phone"
-          error={errors.phone?.message}
-        >
-          {user.phone || "Chưa cập nhật"}
-        </Field>
-
-        <Field
-          label="Ngày sinh"
-          register={register}
-          name="dateOfBirth"
-          type="date"
-          error={errors.dateOfBirth?.message}
-        >
-          {user.dateOfBirth
-            ? new Date(user.dateOfBirth).toLocaleDateString("vi-VN")
-            : "Chưa cập nhật"}
-        </Field>
-
-        <div className="flex justify-end pt-6">
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="bg-gradient-to-r from-indigo-500 to-emerald-500 hover:from-indigo-600 hover:to-emerald-600 text-white px-5 py-2 rounded-xl transition-all duration-300"
-          >
-            {isLoading ? "Đang lưu..." : "Lưu"}
-          </button>
-        </div>
-      </form>
     </div>
   );
 };

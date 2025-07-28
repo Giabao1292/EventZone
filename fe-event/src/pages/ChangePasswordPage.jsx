@@ -2,6 +2,7 @@ import { useForm } from "react-hook-form";
 import { changePassword } from "../services/userServices";
 import { toast } from "react-toastify";
 import PropTypes from "prop-types";
+import backgroundImage from "../assets/images/background/background.png";
 
 const ChangePasswordForm = () => {
   const {
@@ -32,51 +33,66 @@ const ChangePasswordForm = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-6 py-12">
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="bg-[#1D1F29] border border-[#2A2B33] shadow-lg rounded-2xl p-8 space-y-6"
-      >
-        <h2 className="text-3xl font-bold text-white text-center mb-4">
-          Đổi mật khẩu
-        </h2>
+    <div
+      className="min-h-screen relative"
+      style={{
+        backgroundImage: `url(${backgroundImage})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        backgroundAttachment: "fixed",
+      }}
+    >
+      {/* Overlay để làm tối background và tăng độ tương phản */}
+      <div className="absolute inset-0 bg-black bg-opacity-60"></div>
 
-        <Field
-          label="Mật khẩu hiện tại"
-          name="oldPassword"
-          type="password"
-          register={register}
-          error={errors.oldPassword?.message}
-          required
-        />
+      {/* Nội dung chính */}
+      <div className="relative z-10 max-w-2xl mx-auto px-6 py-12">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="bg-[#1D1F29] bg-opacity-90 backdrop-blur-sm border border-[#2A2B33] shadow-lg rounded-2xl p-8 space-y-6"
+        >
+          <h2 className="text-3xl font-bold text-white text-center mb-4">
+            Đổi mật khẩu
+          </h2>
 
-        <Field
-          label="Mật khẩu mới"
-          name="newPassword"
-          type="password"
-          register={register}
-          error={errors.newPassword?.message}
-          required
-        />
+          <Field
+            label="Mật khẩu hiện tại"
+            name="oldPassword"
+            type="password"
+            register={register}
+            error={errors.oldPassword?.message}
+            required
+          />
 
-        <Field
-          label="Nhập lại mật khẩu mới"
-          name="confirmNewPassword"
-          type="password"
-          register={register}
-          error={errors.confirmNewPassword?.message}
-          required
-        />
+          <Field
+            label="Mật khẩu mới"
+            name="newPassword"
+            type="password"
+            register={register}
+            error={errors.newPassword?.message}
+            required
+          />
 
-        <div className="flex justify-end pt-4">
-          <button
-            type="submit"
-            className="bg-gradient-to-r from-emerald-500 to-indigo-500 hover:from-emerald-600 hover:to-indigo-600 text-white px-5 py-2 rounded-xl shadow transition-all duration-300"
-          >
-            Xác nhận
-          </button>
-        </div>
-      </form>
+          <Field
+            label="Nhập lại mật khẩu mới"
+            name="confirmNewPassword"
+            type="password"
+            register={register}
+            error={errors.confirmNewPassword?.message}
+            required
+          />
+
+          <div className="flex justify-end pt-4">
+            <button
+              type="submit"
+              className="bg-gradient-to-r from-emerald-500 to-indigo-500 hover:from-emerald-600 hover:to-indigo-600 text-white px-5 py-2 rounded-xl shadow transition-all duration-300"
+            >
+              Xác nhận
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

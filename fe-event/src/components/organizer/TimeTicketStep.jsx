@@ -204,7 +204,7 @@ const TimeTicketStep = ({
       </div>
 
       {/* Showing Times Section */}
-      <div className="bg-white/80 backdrop-blur-xl p-6 rounded-2xl border border-blue-200/50 shadow-2xl">
+      <div className="bg-white/80 backdrop-blur-xl p-6 rounded-2xl border border-blue-200/50 shadow-2xl mt-16">
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center space-x-3">
             <Ticket className="text-orange-500" size={20} />

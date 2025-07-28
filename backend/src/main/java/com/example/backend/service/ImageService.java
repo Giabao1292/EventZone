@@ -19,21 +19,36 @@ public class ImageService {
 
     public String uploadImage(MultipartFile file, Cloudinary cloudinary) throws IOException {
         // Tạo file tạm để upload
-        File tempFile = File.createTempFile("image-", file.getOriginalFilename());
+        File tempFile = File.createTempFile("upload-", file.getOriginalFilename());
         file.transferTo(tempFile);
 
-        // Upload lên Cloudinary
-        Map uploadResult = cloudinary.uploader().upload(tempFile, ObjectUtils.asMap(
-                "folder", "uploads",
-                "overwrite", true,
-                "resource_type", "auto"
-        ));
+        try {
+            // Xác định resource type dựa trên content type
+            String resourceType = "auto"; // Cloudinary sẽ tự động detect
+            if (file.getContentType() != null) {
+                if (file.getContentType().startsWith("video/")) {
+                    resourceType = "video";
+                } else if (file.getContentType().startsWith("image/")) {
+                    resourceType = "image";
+                }
+            }
 
-        // Xóa file tạm sau khi upload xong
-        tempFile.delete();
+            // Upload lên Cloudinary với resource type phù hợp
+            Map uploadResult = cloudinary.uploader().upload(tempFile, ObjectUtils.asMap(
+                    "folder", "uploads",
+                    "overwrite", true,
+                    "resource_type", resourceType,
+                    "public_id", "upload_" + UUID.randomUUID().toString().replace("-", "")
+            ));
 
-        // Trả về đường dẫn ảnh
-        return (String) uploadResult.get("secure_url");
+            // Trả về đường dẫn file
+            return (String) uploadResult.get("secure_url");
+        } finally {
+            // Xóa file tạm sau khi upload xong
+            if (tempFile.exists()) {
+                tempFile.delete();
+            }
+        }
     }
 
     public String uploadQRCodeImage(byte[] imageBytes) throws IOException {

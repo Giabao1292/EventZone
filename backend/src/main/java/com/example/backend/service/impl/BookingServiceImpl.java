@@ -155,10 +155,7 @@ public class BookingServiceImpl implements BookingService {
         if (booking.getVoucher() != null) {
             Voucher voucher = booking.getVoucher();
 
-
-            user.setScore(user.getScore() - voucher.getRequiredPoints());
-            userRepository.save(user);
-
+            // Chỉ đánh dấu voucher đã sử dụng, không trừ điểm nữa
             UserVoucher userVoucher = userVoucherRepository
                     .findByUserIdAndVoucherIdAndIsUsedFalse(user.getId(), voucher.getId())
                     .orElseThrow(() -> new RuntimeException("Voucher chưa được redeem hoặc đã được sử dụng"));
