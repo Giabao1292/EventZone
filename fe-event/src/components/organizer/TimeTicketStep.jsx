@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Calendar,
   MapPin,
@@ -9,6 +9,7 @@ import {
   Check,
   AlertCircle,
 } from "lucide-react";
+import apiClient from "../../api/axios";
 
 // Mock AddressPicker component
 const AddressPicker = ({ onSelect, initialValue }) => {
@@ -62,6 +63,37 @@ const TimeTicketStep = ({
   });
   const [showAddForm, setShowAddForm] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
+  const [isLoadingShowingTimes, setIsLoadingShowingTimes] = useState(false);
+  const [hasLoadedShowingTimes, setHasLoadedShowingTimes] = useState(false);
+
+  // Load showing times khi edit event - chỉ load một lần khi mount và chỉ khi thực sự cần
+  useEffect(() => {
+    const loadShowingTimes = async () => {
+      if (
+        eventId &&
+        !hasLoadedShowingTimes &&
+        (!eventData.showingTimes || eventData.showingTimes.length === 0)
+      ) {
+        try {
+          setIsLoadingShowingTimes(true);
+          const response = await apiClient.get(
+            `/events/${eventId}/showing-times`
+          );
+          const showingTimes = response.data.data || [];
+
+          // Update eventData với showing times từ API
+          handleInputChange("showingTimes", showingTimes);
+          setHasLoadedShowingTimes(true); // Đánh dấu đã load
+        } catch (error) {
+          console.error("Error loading showing times:", error);
+        } finally {
+          setIsLoadingShowingTimes(false);
+        }
+      }
+    };
+
+    loadShowingTimes();
+  }, [eventId, hasLoadedShowingTimes, eventData.showingTimes]); // Thêm dependencies để tránh load không cần thiết
 
   const handleInputTimeChange = (field, value) => {
     setNewShowing((prev) => ({ ...prev, [field]: value }));
@@ -234,7 +266,7 @@ const TimeTicketStep = ({
             }}
           >
             <div
-              className="bg-white/95 backdrop-blur-xl rounded-2xl p-6 w-full max-w-2xl border border-slate-200 shadow-2xl max-h-[90vh] overflow-y-auto"
+              className=" bg-white/95 backdrop-blur-xl rounded-2xl p-6 w-full max-w-2xl border border-slate-200 shadow-2xl max-h-[90vh] overflow-y-auto mb-36 "
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-between items-center mb-6">
@@ -353,57 +385,108 @@ const TimeTicketStep = ({
         )}
 
         {/* Danh sách lịch chiếu */}
-        {eventData?.showingTimes?.length > 0 ? (
+        {isLoadingShowingTimes ? (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
+            <p className="text-slate-500">Đang tải lịch chiếu...</p>
+          </div>
+        ) : eventData?.showingTimes?.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {eventData.showingTimes.map((showing, index) => (
-              <div
-                key={showing.id || index}
-                className="relative bg-slate-50/80 p-6 rounded-xl border border-slate-200 shadow-md group hover:border-slate-300 transition-all duration-300"
-              >
-                <button
-                  onClick={() => removeShowing(index)}
-                  className="absolute top-3 right-3 p-1 text-slate-400 hover:text-red-500 hover:bg-red-500/20 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200"
+            {eventData.showingTimes.map((showing, index) => {
+              // Kiểm tra trạng thái thiết kế layout
+              const hasDesignedLayout = showing.hasDesignedLayout || false;
+              const isEditMode = eventId && showing.id;
+
+              return (
+                <div
+                  key={showing.id || index}
+                  className={`relative bg-slate-50/80 p-6 rounded-xl border shadow-md group hover:border-slate-300 transition-all duration-300 ${
+                    hasDesignedLayout
+                      ? "border-green-200 bg-green-50/30"
+                      : "border-slate-200"
+                  }`}
                 >
-                  <X size={16} />
-                </button>
-                <div className="text-center mb-3">
-                  <div className="flex justify-center items-center space-x-2 mb-2">
-                    <Ticket className="text-orange-500" size={18} />
-                    <span className="text-lg font-semibold text-slate-700">
-                      Xuất {index + 1}
+                  {/* Status Badge */}
+                  <div className="absolute top-3 left-3">
+                    <span
+                      className={`px-2 py-1 text-xs rounded-full ${
+                        hasDesignedLayout
+                          ? "bg-green-100 text-green-700 border border-green-200"
+                          : "bg-orange-100 text-orange-700 border border-orange-200"
+                      }`}
+                    >
+                      {hasDesignedLayout ? "✓ Đã thiết kế" : "⚠ Chưa thiết kế"}
                     </span>
                   </div>
+
+                  <button
+                    onClick={() => removeShowing(index)}
+                    className="absolute top-3 right-3 p-1 text-slate-400 hover:text-red-500 hover:bg-red-500/20 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200"
+                  >
+                    <X size={16} />
+                  </button>
+
+                  <div className="text-center mb-3 mt-8">
+                    <div className="flex justify-center items-center space-x-2 mb-2">
+                      <Ticket className="text-orange-500" size={18} />
+                      <span className="text-lg font-semibold text-slate-700">
+                        Xuất {index + 1}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 text-sm text-slate-600">
+                    <div className="flex justify-between">
+                      <span>Chiếu:</span>
+                      <span>{formatDateTime(showing.startTime)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Kết thúc:</span>
+                      <span>{formatDateTime(showing.endTime)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Bán vé:</span>
+                      <span>{formatDateTime(showing.saleOpenTime)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Đóng bán:</span>
+                      <span>{formatDateTime(showing.saleCloseTime)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Sơ đồ:</span>
+                      <span className="capitalize">
+                        {showing.layoutMode === "seat"
+                          ? "Ghế"
+                          : showing.layoutMode === "zone"
+                          ? "Khu vực"
+                          : "Cả hai"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Layout Design Button */}
+                  {isEditMode && (
+                    <div className="mt-4 pt-3 border-t border-slate-200">
+                      <button
+                        onClick={() => {
+                          // Navigate to layout designer
+                          window.location.href = `/organizer/layout-designer/${showing.id}?eventId=${eventId}&isEdit=true`;
+                        }}
+                        className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                          hasDesignedLayout
+                            ? "bg-blue-500 hover:bg-blue-600 text-white"
+                            : "bg-orange-500 hover:bg-orange-600 text-white"
+                        }`}
+                      >
+                        {hasDesignedLayout
+                          ? "Chỉnh sửa layout"
+                          : "Thiết kế layout"}
+                      </button>
+                    </div>
+                  )}
                 </div>
-                <div className="space-y-2 text-sm text-slate-600">
-                  <div className="flex justify-between">
-                    <span>Chiếu:</span>
-                    <span>{formatDateTime(showing.startTime)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Kết thúc:</span>
-                    <span>{formatDateTime(showing.endTime)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Bán vé:</span>
-                    <span>{formatDateTime(showing.saleOpenTime)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Đóng bán:</span>
-                    <span>{formatDateTime(showing.saleCloseTime)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Sơ đồ:</span>
-                    <span className="capitalize">
-                      {showing.layoutMode === "seat"
-                        ? "Ghế"
-                        : showing.layoutMode === "zone"
-                        ? "Khu vực"
-                        : "Cả hai"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="text-center py-12">

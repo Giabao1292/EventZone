@@ -512,6 +512,31 @@ export const getAllEvents = async () => {
   }
 };
 
+export const getEventsWithReviews = async () => {
+  try {
+    const response = await apiClient.get("/events/with-reviews");
+    // Trả về mảng cho FE dùng dropdown select
+    return response.data.data || [];
+  } catch (error) {
+    console.error("Error fetching events with reviews:", error);
+    return [];
+  }
+};
+
+export const getMyEventsWithReviews = async (token) => {
+  try {
+    const response = await apiClient.get("/events/my-events-with-reviews", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data.data || [];
+  } catch (error) {
+    console.error("❌ Lỗi khi lấy danh sách sự kiện có đánh giá:", error);
+    return [];
+  }
+};
+
 export const getMyEvents = async (token) => {
   try {
     const response = await apiClient.get("/events/myevents", {

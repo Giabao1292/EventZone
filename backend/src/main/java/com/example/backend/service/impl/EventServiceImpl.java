@@ -16,7 +16,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
@@ -222,6 +221,9 @@ public class EventServiceImpl implements EventService {
     public EventDetailDTO getEventDetailById(int eventId, String userEmail) {
         Event event = eventRepository.findEventDetail(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sự kiện với ID = " + eventId));
+        
+        System.out.println("Debug - Event ID: " + event.getId()); // Debug log
+        System.out.println("Debug - ShowingTimes count: " + (event.getTblShowingTimes() != null ? event.getTblShowingTimes().size() : 0)); // Debug log
 
         // ✅ Ghi nhận lượt xem nếu có email
         if (userEmail != null && !userEmail.isBlank()) {
@@ -241,6 +243,9 @@ public class EventServiceImpl implements EventService {
 
         // Mapping danh sách ShowingTime
         List<ShowingTimeDTO> showingTimeDTOs = event.getTblShowingTimes().stream().map(st -> {
+            System.out.println("Debug - ShowingTime ID: " + st.getId()); // Debug log
+            System.out.println("Debug - Event ID: " + event.getId()); // Debug log
+            System.out.println("Debug - ShowingTime startTime: " + st.getStartTime()); // Debug log
             ShowingTimeDTO stDto = new ShowingTimeDTO();
             stDto.setId(st.getId());
             stDto.setStartTime(st.getStartTime());
@@ -299,6 +304,11 @@ public class EventServiceImpl implements EventService {
                 stDto.setZones(zoneDTOs);
             }
 
+            // Kiểm tra xem đã có layout chưa
+            boolean hasDesignedLayout = (st.getSeats() != null && !st.getSeats().isEmpty()) || 
+                                       (st.getZones() != null && !st.getZones().isEmpty());
+            stDto.setHasDesignedLayout(hasDesignedLayout);
+
             return stDto;
         }).collect(Collectors.toList());
 
@@ -348,7 +358,16 @@ public class EventServiceImpl implements EventService {
         List<EventSummaryAdmin> eventSummaryAdminList = events.getContent().stream()
                 .filter(event -> !event.getStatus().getStatusName().equalsIgnoreCase("DRAFT"))
                 .map(event -> {
-            Address address = event.getTblShowingTimes().stream().findFirst().get().getAddress();
+            // Kiểm tra xem có showing times không
+            Address address = event.getTblShowingTimes().stream()
+                    .findFirst()
+                    .map(showingTime -> showingTime.getAddress())
+                    .orElse(null);
+            
+            String addressString = address != null ? 
+                address.getVenueName() + ", " + address.getCity() + " " + address.getLocation() : 
+                "Chưa có địa điểm";
+            
             return EventSummaryAdmin
                     .builder()
                     .id(event.getId())
@@ -361,7 +380,7 @@ public class EventServiceImpl implements EventService {
                     .organizerName(event.getOrganizer().getOrgName())
                     .status(event.getStatus().getStatusName())
                     .ageRating(event.getAgeRating())
-                    .address(address.getVenueName() + ", " + address.getCity() + " " + address.getLocation())
+                    .address(addressString)
                     .build();
         }).toList();
         return PageResponse.<EventSummaryAdmin>builder()
@@ -384,8 +403,19 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventDetailAdmin getEventDetailAdmin(int eventId) {
-        Event event = eventRepository.findById(eventId).get();
-        Address address = event.getTblShowingTimes().stream().findFirst().get().getAddress();
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sự kiện với ID: " + eventId));
+        
+        // Kiểm tra xem có showing times không
+        Address address = event.getTblShowingTimes().stream()
+                .findFirst()
+                .map(showingTime -> showingTime.getAddress())
+                .orElse(null);
+        
+        String addressString = address != null ? 
+            address.getVenueName() + ", " + address.getCity() + " " + address.getLocation() : 
+            "Chưa có địa điểm";
+        
         return EventDetailAdmin.builder()
                 .id(event.getId())
                 .eventTitle(event.getEventTitle())
@@ -401,7 +431,7 @@ public class EventServiceImpl implements EventService {
                 .rejectionReason(event.getRejectionReason())
                 .organizerId(event.getOrganizer().getId())
                 .organizerName(event.getOrganizer().getOrgName())
-                .address(address.getVenueName() + ", " + address.getCity() + address.getLocation())
+                .address(addressString)
                 .orgLogoUrl(event.getOrganizer().getOrgLogoUrl())
                 .organizerEmail(event.getOrganizer().getUser().getEmail())
                 .categoryName(event.getCategory().getCategoryName())
@@ -415,19 +445,18 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional
-    @PutMapping("/edit/{eventId}")
     public Event editEvent(int eventId, EventRequest request) {
         // 1. Lấy event hiện tại
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sự kiện"));
 
-        if (event.getStatus() == null || event.getStatus().getId() != 1) {
-            throw new RuntimeException("Chỉ được chỉnh sửa sự kiện khi trạng thái là bản nháp!");
+        // Kiểm tra trạng thái - cho phép edit khi status là DRAFT (id = 1) hoặc PENDING (id = 2)
+        if (event.getStatus() == null || (event.getStatus().getId() != 1 && event.getStatus().getId() != 2)) {
+            throw new RuntimeException("Chỉ được chỉnh sửa sự kiện khi trạng thái là bản nháp hoặc chờ phê duyệt!");
         }
 
         // 2. Update các trường cơ bản
         if (request.getCategoryId() != null) {
-            // Cách chuẩn là lấy Category từ DB, nếu chắc chắn tồn tại, nếu không thì tạm như dưới:
             Category category = new Category();
             category.setCategoryId(request.getCategoryId());
             event.setCategory(category);
@@ -448,31 +477,121 @@ public class EventServiceImpl implements EventService {
             event.setHeaderImage(request.getHeaderImage());
         if (request.getPosterImage() != null)
             event.setPosterImage(request.getPosterImage());
-        event.setModifiedBy("system"); // Nếu có info user thì dùng tên user
+        event.setModifiedBy("system");
 
+        // 3. Update status nếu có
         if (request.getStatusId() != null) {
             EventStatus status = eventStatusRepository.findById(request.getStatusId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy status id = " + request.getStatusId()));
             event.setStatus(status);
         }
+
+        // 4. Update showing times và address nếu có
         if (request.getShowingTimes() != null && !request.getShowingTimes().isEmpty()) {
+            // Lưu danh sách showing times hiện tại để có thể update
+            List<ShowingTime> existingShowingTimes = new ArrayList<>(event.getTblShowingTimes());
+            
+            // Xóa showing times cũ
+            event.getTblShowingTimes().clear();
+            
             for (ShowingTimeRequest stReq : request.getShowingTimes()) {
+                ShowingTime showingTime;
+                
+                // Kiểm tra nếu có ID thì update existing, không thì tạo mới
+                if (stReq.getId() != null) {
+                    // Tìm existing showing time để update
+                    showingTime = existingShowingTimes.stream()
+                        .filter(st -> st.getId().equals(stReq.getId()))
+                        .findFirst()
+                        .orElse(new ShowingTime());
+                    
+                    if (showingTime.getId() == null) {
+                        // Nếu không tìm thấy, tạo mới
+                        showingTime = new ShowingTime();
+                        showingTime.setEvent(event);
+                    }
+                } else {
+                    // Tạo mới nếu không có ID
+                    showingTime = new ShowingTime();
+                    showingTime.setEvent(event);
+                }
+                
+                // Set các trường cơ bản
+                showingTime.setStartTime(stReq.getStartTime());
+                showingTime.setEndTime(stReq.getEndTime());
+                showingTime.setSaleOpenTime(stReq.getSaleOpenTime());
+                showingTime.setSaleCloseTime(stReq.getSaleCloseTime());
+                showingTime.setLayoutMode(stReq.getLayoutMode());
+                
+                // Xử lý address
                 if (stReq.getAddressId() != null) {
                     Address address = addressRepository.findById(stReq.getAddressId())
                             .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy address id = " + stReq.getAddressId()));
-                    if (stReq.getVenueName() != null)
+                    
+                    // Update address nếu có thay đổi
+                    if (stReq.getVenueName() != null && !stReq.getVenueName().trim().isEmpty())
                         address.setVenueName(stReq.getVenueName());
-                    if (stReq.getLocation() != null)
+                    if (stReq.getLocation() != null && !stReq.getLocation().trim().isEmpty())
                         address.setLocation(stReq.getLocation());
-                    if (stReq.getCity() != null)
+                    if (stReq.getCity() != null && !stReq.getCity().trim().isEmpty())
                         address.setCity(stReq.getCity());
+                    
                     addressRepository.save(address);
+                    showingTime.setAddress(address);
+                } else {
+                    // Tạo address mới nếu chưa có
+                    Address newAddress = new Address();
+                    
+                    // Kiểm tra và set giá trị mặc định nếu null
+                    String venueName = stReq.getVenueName() != null ? stReq.getVenueName() : "Địa điểm chưa đặt tên";
+                    String location = stReq.getLocation() != null ? stReq.getLocation() : "Địa chỉ chưa cập nhật";
+                    String city = stReq.getCity() != null ? stReq.getCity() : "Thành phố chưa chọn";
+                    
+                    newAddress.setVenueName(venueName);
+                    newAddress.setLocation(location);
+                    newAddress.setCity(city);
+                    
+                    System.out.println("Debug - Creating new address: " + venueName + ", " + location + ", " + city);
+                    Address savedAddress = addressRepository.save(newAddress);
+                    showingTime.setAddress(savedAddress);
+                }
+                
+                // Thêm vào event
+                event.getTblShowingTimes().add(showingTime);
+                
+                // Debug log
+                System.out.println("Debug - Added showing time: ID=" + showingTime.getId() + 
+                    ", StartTime=" + showingTime.getStartTime() + 
+                    ", HasAddress=" + (showingTime.getAddress() != null));
+                
+                // Lưu showing time riêng biệt để đảm bảo ID được tạo
+                if (showingTime.getId() == null) {
+                    // Chỉ lưu nếu chưa có ID (showing time mới)
+                    System.out.println("Debug - Saving new showing time...");
                 }
             }
         }
 
         // 5. Lưu lại event và trả về
-        return eventRepository.save(event);
+        Event savedEvent = eventRepository.save(event);
+        
+        // Debug log để kiểm tra showing times đã được lưu
+        System.out.println("Debug - Saved event ID: " + savedEvent.getId());
+        System.out.println("Debug - Showing times count: " + savedEvent.getTblShowingTimes().size());
+        for (ShowingTime st : savedEvent.getTblShowingTimes()) {
+            System.out.println("Debug - Showing time ID: " + st.getId() + ", Start time: " + st.getStartTime());
+        }
+        
+        // Đảm bảo showing times được lưu đúng cách
+        if (savedEvent.getTblShowingTimes() != null) {
+            for (ShowingTime st : savedEvent.getTblShowingTimes()) {
+                if (st.getId() == null) {
+                    System.out.println("Warning - Showing time has null ID after save!");
+                }
+            }
+        }
+        
+        return savedEvent;
     }
 
 
@@ -608,5 +727,45 @@ public class EventServiceImpl implements EventService {
         List<EventHomeDTO> eventHomeDTOS = new ArrayList<>(events.stream().map(event -> new EventHomeDTO(event, priceMap.get(event.getId().longValue()))).toList());
         eventHomeDTOS.sort(Comparable.eventHomeDTOComparator);
         return eventHomeDTOS;
+    }
+
+    @Override
+    public List<EventSummaryAdmin> getEventsWithReviews() {
+        // Lấy tất cả events có reviews
+        List<Event> eventsWithReviews = eventRepository.findEventsWithReviews();
+        
+        return eventsWithReviews.stream()
+                .filter(event -> !event.getStatus().getStatusName().equalsIgnoreCase("DRAFT"))
+                .map(event -> {
+                    Address address = event.getTblShowingTimes().stream()
+                            .findFirst()
+                            .map(showingTime -> showingTime.getAddress())
+                            .orElse(null);
+                    
+                    String addressString = address != null ? 
+                        address.getVenueName() + ", " + address.getCity() + " " + address.getLocation() : 
+                        "Chưa có địa điểm";
+                    
+                    return EventSummaryAdmin
+                            .builder()
+                            .id(event.getId())
+                            .eventTitle(event.getEventTitle())
+                            .startTime(event.getStartTime())
+                            .endTime(event.getEndTime())
+                            .categoryName(event.getCategory().getCategoryName())
+                            .description(event.getDescription())
+                            .posterImage(event.getPosterImage())
+                            .organizerName(event.getOrganizer().getOrgName())
+                            .status(event.getStatus().getStatusName())
+                            .ageRating(event.getAgeRating())
+                            .address(addressString)
+                            .build();
+                }).toList();
+    }
+
+    @Override
+    public List<Event> findMyEventsWithReviews(int organizerId) {
+        // Lấy events của organizer có reviews
+        return eventRepository.findMyEventsWithReviews(organizerId);
     }
 }

@@ -49,4 +49,8 @@ public interface EventService {
     PageResponse<EventResponse> getEventsForReviewAllCategoriesPaged(int page, int size, String search, Integer categoryId);
 
     List<EventHomeDTO> getTopEvents(Pageable pageable);
+
+    List<EventSummaryAdmin> getEventsWithReviews();
+
+    List<Event> findMyEventsWithReviews(int organizerId);
 }

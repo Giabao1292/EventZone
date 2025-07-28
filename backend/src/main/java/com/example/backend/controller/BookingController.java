@@ -43,7 +43,7 @@ public class BookingController {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email).orElseThrow();
         Booking booking = bookingService.holdBooking(request, user);
-        return new ResponseData<>(HttpStatus.OK.value(), "Hold successful", booking);
+        return new ResponseData<>(HttpStatus.OK.value(), "Giữ chỗ thành công", booking);
     }
 
     @PostMapping("/pay")
@@ -116,7 +116,7 @@ public class BookingController {
     @PatchMapping("/{bookingId}/check-in")
     public ResponseData<?> checkInAttendee(@PathVariable Integer bookingId) {
         bookingService.checkIn(bookingId);
-        return new ResponseData<>(HttpStatus.OK.value(), "Check in successful");
+        return new ResponseData<>(HttpStatus.OK.value(), "Check-in thành công");
     }
 
     @GetMapping("/history")
@@ -128,9 +128,9 @@ public class BookingController {
             );
 
             List<BookingHistoryDTO> history = bookingService.getBookingHistory(username);
-            return new ResponseData<>(HttpStatus.OK.value(), "Booking history fetched", history);
+            return new ResponseData<>(HttpStatus.OK.value(), "Lấy lịch sử đặt vé thành công", history);
         } catch (Exception e) {
-            return new ResponseData<>(500, "Error: " + e.getMessage(), null);
+            return new ResponseData<>(500, "Lỗi: " + e.getMessage(), null);
         }
     }
 

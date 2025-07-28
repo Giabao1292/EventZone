@@ -81,6 +81,6 @@ public class SearchCriteriaBuilder implements Consumer<SearchCriteria> {
             } catch (IllegalArgumentException ignored) {
             }
         }
-        throw new ResourceNotFoundException("Field '" + key + "' not found");
+        throw new ResourceNotFoundException("Không tìm thấy trường '" + key + "'");
     }
 }

@@ -61,7 +61,7 @@ public class VoucherServiceImpl implements VoucherService {
 
     @Override
     public void updateStatus(int id, int status) {
-        Voucher voucher = voucherRepository.findById(id).orElseThrow(()-> new RuntimeException("Voucher not found"));
+        Voucher voucher = voucherRepository.findById(id).orElseThrow(()-> new RuntimeException("Không tìm thấy voucher"));
         voucher.setStatus(status);
         voucherRepository.save(voucher);
     }
@@ -71,19 +71,19 @@ public class VoucherServiceImpl implements VoucherService {
         User user = userUtil.getCurrentUser(); // Giả sử bạn có hàm lấy user từ SecurityContext
 
         Voucher voucher = voucherRepository.findById(voucherId)
-                .orElseThrow(() -> new ResourceNotFoundException("Voucher not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy voucher"));
 
         if (voucher.getStatus() != 1 || voucher.getValidUntil().isBefore(LocalDate.now())) {
-            throw new IllegalArgumentException("Voucher is inactive or expired");
+            throw new IllegalArgumentException("Voucher không hoạt động hoặc đã hết hạn");
         }
 
         if (user.getScore() < voucher.getRequiredPoints()) {
-            throw new IllegalArgumentException("Not enough points to redeem this voucher");
+            throw new IllegalArgumentException("Không đủ điểm để đổi voucher này");
         }
 
         boolean alreadyRedeemed = userVoucherRepository.existsByUserIdAndVoucherId(user.getId(), voucherId);
         if (alreadyRedeemed) {
-            throw new IllegalArgumentException("You have already redeemed this voucher");
+            throw new IllegalArgumentException("Bạn đã đổi voucher này rồi");
         }
 
         user.setScore(user.getScore() - voucher.getRequiredPoints());
@@ -100,7 +100,7 @@ public class VoucherServiceImpl implements VoucherService {
     public void updateVoucher(int id, VoucherRequest voucherRequest) {
         validDate(voucherRequest);
         Voucher existingVoucher = voucherRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Voucher not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy voucher với id: " + id));
         existingVoucher.setVoucherCode(voucherRequest.getVoucherCode());
         existingVoucher.setVoucherName(voucherRequest.getVoucherName());
         existingVoucher.setDescription(voucherRequest.getDescription());
@@ -128,7 +128,7 @@ public class VoucherServiceImpl implements VoucherService {
     }
     private void validDate(VoucherRequest voucherRequest) {
         if(voucherRequest.getValidFrom().isAfter(voucherRequest.getValidUntil())){
-            throw new IllegalArgumentException("ValidUntil date must be after validFrom");
+            throw new IllegalArgumentException("Ngày hết hạn phải sau ngày bắt đầu");
         }
     }
     @Override

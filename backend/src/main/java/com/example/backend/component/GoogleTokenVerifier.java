@@ -25,8 +25,8 @@ public class GoogleTokenVerifier {
                 return idToken.getPayload();
             }
         } catch (Exception e) {
-            throw new RuntimeException("Invalid ID token", e);
+            throw new RuntimeException("Token ID không hợp lệ", e);
         }
-        throw new RuntimeException("Invalid ID token");
+        throw new RuntimeException("Token ID không hợp lệ");
     }
 }

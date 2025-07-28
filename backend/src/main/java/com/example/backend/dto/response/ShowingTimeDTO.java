@@ -26,5 +26,6 @@ public class ShowingTimeDTO {
     private LocalDateTime saleCloseTime;
 
     private String status;
+    private Boolean hasDesignedLayout;
 
 }

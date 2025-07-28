@@ -53,7 +53,7 @@ public class BookingServiceImpl implements BookingService {
     @Transactional
     public Booking holdBooking(BookingRequest request, User user) {
         ShowingTime showingTime = showingTimeRepository.findById(request.getShowingTimeId())
-                .orElseThrow(() -> new RuntimeException("Showing time not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy thời gian chiếu"));
 
         Booking booking = new Booking();
         booking.setUser(user);
@@ -68,12 +68,12 @@ public class BookingServiceImpl implements BookingService {
         if (request.getSeats() != null) {
             for (BookingRequest.SeatBookingDTO dto : request.getSeats()) {
                 Seat seat = seatRepository.findByIdForUpdate(dto.getSeatId())
-                        .orElseThrow(() -> new RuntimeException("Seat not found"));
+                        .orElseThrow(() -> new RuntimeException("Không tìm thấy ghế"));
 
                 boolean seatTaken = bookingSeatRepository.existsBySeatIdAndStatusIn(
                         seat.getId(), List.of("HOLD", "BOOKED"));
                 if (seatTaken) {
-                    throw new RuntimeException("Seat " + seat.getSeatLabel() + " is already held or booked.");
+                    throw new RuntimeException("Ghế " + seat.getSeatLabel() + " đã được giữ hoặc đặt.");
                 }
 
                 BookingSeat bs = new BookingSeat();
@@ -91,10 +91,10 @@ public class BookingServiceImpl implements BookingService {
         if (request.getZones() != null) {
             for (BookingRequest.ZoneBookingDTO dto : request.getZones()) {
                 Zone zone = zoneRepository.findByIdForUpdate(dto.getZoneId())
-                        .orElseThrow(() -> new RuntimeException("Zone not found"));
+                        .orElseThrow(() -> new RuntimeException("Không tìm thấy khu vực"));
 
                 if (zone.getCapacity() < dto.getQuantity()) {
-                    throw new RuntimeException("Not enough tickets in zone: " + zone.getZoneName());
+                    throw new RuntimeException("Không đủ vé trong khu vực: " + zone.getZoneName());
                 }
 
                 zone.setCapacity(zone.getCapacity() - dto.getQuantity());
@@ -119,16 +119,16 @@ public class BookingServiceImpl implements BookingService {
 
         if (request.getVoucherId() != null) {
             Voucher voucher = voucherRepository.findById(request.getVoucherId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Voucher not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy voucher"));
 
             if (voucher.getStatus() != 1 || voucher.getValidUntil().isBefore(LocalDate.now())) {
-                throw new IllegalArgumentException("Voucher is inactive or expired");
+                throw new IllegalArgumentException("Voucher không hoạt động hoặc đã hết hạn");
             }
 
 
             UserVoucher userVoucher = userVoucherRepository
                     .findByUserIdAndVoucherIdAndIsUsedFalse(user.getId(), request.getVoucherId())
-                    .orElseThrow(() -> new IllegalArgumentException("You must redeem this voucher before using it"));
+                    .orElseThrow(() -> new IllegalArgumentException("Bạn phải đổi voucher này trước khi sử dụng"));
 
             discountAmount = voucher.getDiscountAmount();
             finalPrice = total.subtract(discountAmount).max(BigDecimal.ZERO);
