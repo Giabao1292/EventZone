@@ -23,9 +23,9 @@ export default function PaymentResult() {
         toast.success("Thanh toán thành công!");
         setStatus("success");
 
-        setTimeout(() => {
-          window.location.href = "http://localhost:5173/booking-history";
-        }, 3000);
+        // setTimeout(() => {
+        //   window.location.href = "http://localhost:5173/booking-history";
+        // }, 3000);
       } catch (err) {
         console.error(err);
         toast.error("Thanh toán thất bại hoặc đã bị huỷ.");
