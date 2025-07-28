@@ -7,6 +7,7 @@ import com.example.backend.repository.CategoryRepository;
 import com.example.backend.service.CategoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,7 +21,7 @@ public class CategoryServiceIpm implements CategoryService {
 
     @Override
     public List<CategoryResponse> getAllCategories() {
-        return categoryRepository.findAll().stream()
+        return categoryRepository.findAll(Sort.by(Sort.Direction.ASC, "categoryId")).stream()
                 .map(category -> new CategoryResponse(category.getCategoryId(), category.getCategoryName()))
                 .collect(Collectors.toList());
     }

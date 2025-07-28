@@ -97,9 +97,9 @@ export default function CategoryManagementPage() {
           </tr>
         </thead>
         <tbody>
-          {categories.map((cat) => (
-            <tr key={cat.categoryId}>
-              <td className="px-4 py-2 border">{cat.categoryId}</td>
+          {categories.map((cat, index) => (
+              <tr key={cat.categoryId}>
+              <td className="px-4 py-2 border">{index + 1}</td> 
               <td className="px-4 py-2 border">{cat.categoryName}</td>
               <td className="px-4 py-2 border">
                 <button

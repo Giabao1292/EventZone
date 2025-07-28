@@ -5,7 +5,7 @@ spring:
   devtools:
     add-properties: true
   datasource:
-    url: jdbc:mysql://localhost:3306/event
+    url: jdbc:mysql://localhost:3306/datatbasefinal
     username: root
     password: 123456
   jpa:
