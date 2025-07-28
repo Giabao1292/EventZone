@@ -296,6 +296,27 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public void checkIn(Integer id) {
         Booking booking = bookingRepository.findById(id).orElseThrow(()-> new ResourceNotFoundException("Attendee not found"));
+        
+        // Kiểm tra thời gian sự kiện
+        LocalDateTime eventStartTime = booking.getShowingTime().getStartTime();
+        LocalDateTime currentTime = LocalDateTime.now();
+        LocalDateTime checkInDeadline = eventStartTime.minusHours(12); // Chỉ cho phép check-in trước 12 tiếng
+        
+        // Kiểm tra xem thời gian hiện tại có trong khoảng cho phép check-in không
+        // Chỉ cho phép check-in từ thời điểm hiện tại đến 12 tiếng trước sự kiện
+        if (currentTime.isAfter(eventStartTime)) {
+            throw new RuntimeException("Không thể check-in. Sự kiện đã kết thúc.");
+        }
+        
+        if (currentTime.isBefore(checkInDeadline)) {
+            throw new RuntimeException("Không thể check-in. Chỉ có thể check-in trong khoảng 12 tiếng trước sự kiện.");
+        }
+        
+        // Kiểm tra trạng thái check-in
+        if (booking.getCheckinStatus() == CHECKED_IN) {
+            throw new RuntimeException("Người tham dự đã được check-in trước đó.");
+        }
+        
         booking.setCheckinStatus(CHECKED_IN);
         booking.setCheckinTime(Instant.now());
         bookingRepository.save(booking);

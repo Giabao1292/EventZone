@@ -178,12 +178,12 @@ public class ChatService {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         messages = chatMessageRepository.findConversationBetweenUsers(
                 user.getId(), partnerId.intValue(), pageable);
-        
+            
         log.info("🔍 Found {} messages for page {}", messages.getContent().size(), page);
         for (int i = 0; i < messages.getContent().size(); i++) {
             ChatMessage msg = messages.getContent().get(i);
-            log.info("  {}: '{}' at {} (sender: {})", 
-                    i + 1, msg.getContent(), msg.getCreatedAt(), msg.getSender().getId());
+                log.info("  {}: '{}' at {} (sender: {})", 
+                        i + 1, msg.getContent(), msg.getCreatedAt(), msg.getSender().getId());
         }
 
         log.info("🔍 Found {} messages", messages.getTotalElements());

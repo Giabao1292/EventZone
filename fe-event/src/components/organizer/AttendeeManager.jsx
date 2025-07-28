@@ -476,9 +476,11 @@ const AttendeeManager = ({
   };
 
   const [isCheckingIn, setIsCheckingIn] = useState(false);
+  const [checkInError, setCheckInError] = useState("");
 
   const handleCheckIn = async (bookingId) => {
     setIsCheckingIn(true);
+    setCheckInError(""); // Clear previous error
     try {
       await checkInAttendee(bookingId);
       await fetchAttendees();
@@ -487,7 +489,12 @@ const AttendeeManager = ({
       setIsAttendeeModalOpen(false);
     } catch (error) {
       console.error("Error checking in attendee:", error);
-      alert("Có lỗi xảy ra khi check-in!");
+      // Extract error message from response
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Có lỗi xảy ra khi check-in!";
+      setCheckInError(errorMessage);
     } finally {
       setIsCheckingIn(false);
     }
@@ -850,6 +857,7 @@ const AttendeeManager = ({
         attendee={selectedAttendee}
         onCheckIn={(id) => handleCheckIn(id)}
         isCheckingIn={isCheckingIn}
+        checkInError={checkInError}
       />
     </div>
   );
