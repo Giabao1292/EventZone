@@ -7,6 +7,7 @@ import {
   useContext,
   forwardRef,
 } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Search,
   Filter,
@@ -23,6 +24,7 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  Shield,
 } from "lucide-react";
 
 // Import API functions
@@ -458,6 +460,7 @@ const AlertDescription = ({ children, className = "" }) => (
 );
 
 export default function OrganizerManagementPage() {
+  const navigate = useNavigate();
   // State management
   const [organizers, setOrganizers] = useState([]);
   const [organizerTypes, setOrganizerTypes] = useState([]);
@@ -1168,6 +1171,24 @@ export default function OrganizerManagementPage() {
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>View Details</TooltipContent>
+                          </Tooltip>
+
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                onClick={() =>
+                                  navigate(
+                                    `/admin/organizers/${organizer.id}/documents`
+                                  )
+                                }
+                              >
+                                <Shield className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Xem CCCD</TooltipContent>
                           </Tooltip>
 
                           {organizer.status === "PENDING" && (

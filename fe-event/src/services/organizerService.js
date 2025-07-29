@@ -54,11 +54,20 @@ export const getOrganizers = async (
 
 // Get detailed organizer information
 export const getOrganizerDetails = async (orgId) => {
+  console.log("🔍 getOrganizerDetails called with orgId:", orgId);
   try {
+    console.log("🔍 Making API call to:", `/organizers/${orgId}`);
     const response = await apiClient.get(`/organizers/${orgId}`);
+    console.log("🔍 API response:", response);
     return response.data;
   } catch (err) {
     console.error("❌ Error fetching organizer details:", err);
+    console.error("❌ Error details:", {
+      message: err.message,
+      response: err.response,
+      status: err.response?.status,
+      data: err.response?.data,
+    });
     throw new Error(
       err.response?.data?.message || "Failed to fetch organizer details"
     );
@@ -104,6 +113,36 @@ export const getOrganizerStatus = async () => {
     console.error("❌ Error fetching organizer status:", err);
     throw new Error(
       err.response?.data?.message || "Failed to fetch organizer status"
+    );
+  }
+};
+
+// Test admin authentication
+export const testAdminAuth = async () => {
+  try {
+    console.log("🔍 Testing admin authentication...");
+    const response = await apiClient.get("/organizers/test-auth");
+    console.log("🔍 Auth test response:", response);
+    return response.data;
+  } catch (err) {
+    console.error("❌ Auth test error:", err);
+    throw new Error(
+      err.response?.data?.message || "Failed to test admin authentication"
+    );
+  }
+};
+
+// Test database connection
+export const testDatabase = async () => {
+  try {
+    console.log("🔍 Testing database connection...");
+    const response = await apiClient.get("/organizers/test-db");
+    console.log("🔍 Database test response:", response);
+    return response.data;
+  } catch (err) {
+    console.error("❌ Database test error:", err);
+    throw new Error(
+      err.response?.data?.message || "Failed to test database connection"
     );
   }
 };

@@ -51,6 +51,7 @@ public class AppConfig implements WebMvcConfigurer , WebSecurityCustomizer {
             "/api/categories","/api/categories/**",
             "/api/showing-times/*/layout", "/api/events/showing-times/*/layout", "/api/events/detail/**",
             "/api/event-ads/active-today","/api/events/detail/{eventId}","/api/events/home", "/api/events/public","/api/reviews/**", "/api/revenue/**","/api/events/deposit/verify   "};
+    private String[] SECURE_DOCUMENTS_LIST = {"/api/secure-documents/**"};
     private String[] ORGANIZER_LIST = {"/api/organizer/**","/api/event-ads/*"};
 
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
@@ -81,6 +82,7 @@ public class AppConfig implements WebMvcConfigurer , WebSecurityCustomizer {
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers(WHITE_LIST).permitAll()
+                        .requestMatchers(SECURE_DOCUMENTS_LIST).hasAnyRole("ADMIN", "ORGANIZER")
                         .requestMatchers(ORGANIZER_LIST).hasAnyRole("ORGANIZER")
                         .requestMatchers("/api/bookings/history").hasAnyRole("USER", "ADMIN", "ORGANIZER")
                         .anyRequest().authenticated())

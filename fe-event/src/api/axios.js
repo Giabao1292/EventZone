@@ -14,6 +14,13 @@ const apiClient = axios.create({
 // Gắn accessToken cho mỗi request
 apiClient.interceptors.request.use(
   (config) => {
+    console.log("🔍 Axios request:", {
+      url: config.url,
+      method: config.method,
+      baseURL: config.baseURL,
+      fullURL: config.baseURL + config.url,
+    });
+
     const token = getToken();
     const noAuthPaths = [
       "/auth/login",
@@ -24,16 +31,35 @@ apiClient.interceptors.request.use(
     // ❌ Không gắn token cho các request login/register/refresh-token
     if (token && !noAuthPaths.some((path) => config.url.includes(path))) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log("🔍 Added Authorization header");
+    } else {
+      console.log("🔍 No Authorization header added");
     }
 
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    console.error("🔍 Axios request error:", error);
+    return Promise.reject(error);
+  }
 );
 
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log("🔍 Axios response:", {
+      url: response.config.url,
+      status: response.status,
+      data: response.data,
+    });
+    return response;
+  },
   async (error) => {
+    console.error("🔍 Axios response error:", {
+      url: error.config?.url,
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+    });
     const originalRequest = error.config;
 
     const status = error.response ? error.response.status : null;
