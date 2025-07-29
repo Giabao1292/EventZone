@@ -100,3 +100,74 @@ export const getTopClients = async (params = {}) => {
     throw error;
   }
 };
+export const getBankList = async () => {
+  try {
+    const res = await apiClient.get("/users/banks");
+    if (res.data && res.data.code === 200) {
+      return res.data.data;
+    } else {
+      throw new Error(res.data.message || "Failed to fetch bank list");
+    }
+  } catch (error) {
+    console.error("Error fetching bank list:", error);
+    throw error;
+  }
+};
+
+export const addBankAccount = async (bankData) => {
+  try {
+    const res = await apiClient.post("/users/banks", {
+      bankName: bankData.bankName,
+      accountNumber: bankData.accountNumber,
+      holderName: bankData.holderName,
+    });
+    if (res.data && res.data.code === 200) {
+      return res.data.data;
+    } else {
+      throw new Error(res.data.message || "Failed to add bank account");
+    }
+  } catch (error) {
+    console.error("Error adding bank account:", error);
+    if (error.response && error.response.data && error.response.data.message) {
+      throw new Error(error.response.data.message);
+    }
+    throw new Error("Có lỗi xảy ra khi thêm tài khoản ngân hàng!");
+  }
+};
+
+// Alias for backward compatibility
+export const addBank = addBankAccount;
+export const deleteBank = async (bankId) => {
+  try {
+    const res = await apiClient.delete(`/users/banks/${bankId}`);
+    if (res.data && res.data.code === 200) {
+      return res.data;
+    } else {
+      throw new Error(res.data.message || "Failed to delete bank");
+    }
+  } catch (error) {
+    console.error("Error deleting bank:", error);
+    if (error.response && error.response.data && error.response.data.message) {
+      throw new Error(error.response.data.message);
+    }
+    throw new Error("Có lỗi xảy ra khi xóa tài khoản ngân hàng!");
+  }
+};
+
+// Future API for setting default bank (if needed)
+export const setDefaultBank = async (bankId) => {
+  try {
+    const res = await apiClient.patch(`/users/banks/${bankId}/default`);
+    if (res.data && res.data.code === 200) {
+      return res.data;
+    } else {
+      throw new Error(res.data.message || "Failed to set default bank");
+    }
+  } catch (error) {
+    console.error("Error setting default bank:", error);
+    if (error.response && error.response.data && error.response.data.message) {
+      throw new Error(error.response.data.message);
+    }
+    throw new Error("Có lỗi xảy ra khi thiết lập tài khoản mặc định!");
+  }
+};

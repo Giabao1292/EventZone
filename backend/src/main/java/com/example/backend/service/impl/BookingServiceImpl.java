@@ -8,15 +8,11 @@ import com.example.backend.repository.*;
 import com.example.backend.service.*;
 import com.example.backend.util.CheckIn;
 import jakarta.mail.MessagingException;
-import jakarta.persistence.criteria.CriteriaBuilder;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.context.config.AnsiOutputApplicationListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import vn.payos.PayOS;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,6 +45,7 @@ public class BookingServiceImpl implements BookingService {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final MailService mailService;
+
     @Override
     @Transactional
     public Booking holdBooking(BookingRequest request, User user) {
@@ -218,7 +215,8 @@ public class BookingServiceImpl implements BookingService {
             bookingRepository.delete(booking);
         }
     }
-    private Page<Booking> findAll(Pageable pageable,int eventId, LocalDateTime startTime) {
+
+    private Page<Booking> findAll(Pageable pageable, int eventId, LocalDateTime startTime) {
         Page<Long> ids = bookingRepository.findBookingIdByEventId(eventId, startTime, pageable);
         List<Booking> bookings = bookingRepository.findBookingById(ids.getContent());
         return new PageImpl<>(bookings, pageable, ids.getTotalElements());
@@ -289,12 +287,9 @@ public class BookingServiceImpl implements BookingService {
                 .build();
     }
 
-
-
-
-
     @Override
     public void checkIn(Integer id) {
+
         Booking booking = bookingRepository.findById(id).orElseThrow(()-> new ResourceNotFoundException("Attendee not found"));
         
         // Kiểm tra thời gian sự kiện
@@ -316,7 +311,6 @@ public class BookingServiceImpl implements BookingService {
         if (booking.getCheckinStatus() == CHECKED_IN) {
             throw new RuntimeException("Người tham dự đã được check-in trước đó.");
         }
-        
         booking.setCheckinStatus(CHECKED_IN);
         booking.setCheckinTime(Instant.now());
         bookingRepository.save(booking);
@@ -369,7 +363,6 @@ public class BookingServiceImpl implements BookingService {
     }
 
 
-
     @Override
     @Transactional(readOnly = true)
     public List<BookingHistoryDTO> getBookingHistory(String username) {
@@ -395,7 +388,7 @@ public class BookingServiceImpl implements BookingService {
 
     private Page<Booking> findAll(Pageable pageable) {
         Page<Long> ids = bookingRepository.findAllBookingId(pageable);
-        List<Booking> bookings =  bookingRepository.findAllBookingById(ids.getContent());
+        List<Booking> bookings = bookingRepository.findAllBookingById(ids.getContent());
         return new PageImpl<>(bookings, pageable, ids.getTotalElements());
     }
 
@@ -421,7 +414,7 @@ public class BookingServiceImpl implements BookingService {
                 .totalPages(page.getTotalPages())
                 .number(page.getNumber())
                 .size(page.getSize())
-                .totalElements((int)page.getTotalElements())
+                .totalElements((int) page.getTotalElements())
                 .build();
     }
 }
