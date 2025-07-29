@@ -45,6 +45,7 @@ import WithdrawRequestPage from "./components/organizer/WithdrawRequestPage";
 import ReviewSectionPage from "./pages/ReviewSectionPage";
 import MyVouchers from "./pages/MyVouchers";
 import RevenueDashboard from "./pages/admin/RevenueManagementPage";
+import OrganizerDocumentsPage from "./pages/admin/OrganizerDocumentsPage";
 
 import ChatWidget from "./components/chat/ChatWidget";
 import ChatPage from "./pages/ChatPage";
@@ -174,32 +175,43 @@ function App() {
           </Route>
 
           {/* Protected Routes for Admins */}
-          <Route element={<PrivateRoute allowedRoles={["ADMIN"]} />} />
-          <Route element={<AdminLayout />}>
-            <Route
-              path="/admin"
-              element={<Navigate to="/admin/dashboard" replace />}
-            />
-            <Route path="/admin/dashboard" element={<DashboardPage />} />
-            <Route path="/admin/users" element={<UserManagementPage />} />
-            <Route path="/admin/vouchers" element={<VoucherManagementPage />} />
-            <Route
-              path="/admin/category-management"
-              element={<CategoryManagementPage />}
-            />
-            <Route path="/admin/ads" element={<AdsManagement />} />
-            <Route path="/admin/withdraw" element={<AdminWithdrawRequests />} />
-            <Route
-              path="/admin/organizers"
-              element={<OrganizerManagementPage />}
-            />
-            <Route path="/admin/events" element={<EventManagementPage />} />
-            <Route path="/admin/profile" element={<ProfilePage />} />
-            <Route
-              path="/admin/reviews"
-              element={<AdminReviewManagementPage />}
-            />
-            <Route path="/admin/revenue" element={<RevenueDashboard />} />
+          <Route element={<PrivateRoute allowedRoles={["ADMIN"]} />}>
+            <Route element={<AdminLayout />}>
+              <Route
+                path="/admin"
+                element={<Navigate to="/admin/dashboard" replace />}
+              />
+              <Route path="/admin/dashboard" element={<DashboardPage />} />
+              <Route path="/admin/users" element={<UserManagementPage />} />
+              <Route
+                path="/admin/vouchers"
+                element={<VoucherManagementPage />}
+              />
+              <Route
+                path="/admin/category-management"
+                element={<CategoryManagementPage />}
+              />
+              <Route path="/admin/ads" element={<AdsManagement />} />
+              <Route
+                path="/admin/withdraw"
+                element={<AdminWithdrawRequests />}
+              />
+              <Route
+                path="/admin/organizers"
+                element={<OrganizerManagementPage />}
+              />
+              <Route path="/admin/events" element={<EventManagementPage />} />
+              <Route path="/admin/profile" element={<ProfilePage />} />
+              <Route
+                path="/admin/reviews"
+                element={<AdminReviewManagementPage />}
+              />
+              <Route path="/admin/revenue" element={<RevenueDashboard />} />
+              <Route
+                path="/admin/organizers/:organizerId/documents"
+                element={<OrganizerDocumentsPage />}
+              />
+            </Route>
           </Route>
           <Route path="/book/:showingId/*" element={<BookingPage />} />
         </Routes>

@@ -5,6 +5,7 @@ import {
   register,
   getOrganizerTypes,
   getOrganizerStatus,
+  getOrganizerByUserId,
 } from "../../services/organizerService";
 
 // --- Sub Components ---
@@ -368,12 +369,19 @@ const StatusBar = ({ status }) => {
 };
 
 // Component hiển thị trạng thái chi tiết
-const StatusDetails = ({ status }) => {
+const StatusDetails = ({ status, onResubmit }) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
     navigate("/organizer");
   };
+
+  const handleResubmit = () => {
+    if (onResubmit) {
+      onResubmit();
+    }
+  };
+
   console.log("📝 StatusDetails received status:", status);
 
   return (
@@ -456,6 +464,12 @@ const StatusDetails = ({ status }) => {
             </p>
           </div>
           <div className="flex gap-3">
+            <button
+              onClick={handleResubmit}
+              className="bg-green-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-green-700 transition-colors"
+            >
+              Gửi lại đơn đăng ký
+            </button>
             <a
               href="tel:0352038856"
               className="bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
@@ -497,6 +511,27 @@ const RegisterOrganizerForm = () => {
       if (response.code === 200 && response.data) {
         setOrganizerStatus(response.data); // response.data là string trực tiếp
         setHasExistingApplication(true);
+
+        // Nếu bị từ chối, load thông tin cũ để user có thể chỉnh sửa
+        if (response.data === "REJECTED") {
+          try {
+            const organizerResponse = await getOrganizerByUserId();
+            if (organizerResponse) {
+              setFormData((prev) => ({
+                ...prev,
+                name: organizerResponse.orgName || "",
+                orgTypeCode: organizerResponse.orgType?.typeCode || "",
+                taxCode: organizerResponse.taxCode || "",
+                address: organizerResponse.orgAddress || "",
+                website: organizerResponse.website || "",
+                businessSector: organizerResponse.businessField || "",
+                description: organizerResponse.orgInfo || "",
+              }));
+            }
+          } catch (err) {
+            console.log("Không thể load thông tin organizer cũ:", err);
+          }
+        }
         return response.data;
       }
     } catch (err) {
@@ -566,6 +601,79 @@ const RegisterOrganizerForm = () => {
     }
   };
 
+  const validateForm = () => {
+    const errors = [];
+
+    // Kiểm tra các trường bắt buộc
+    if (!formData.name || formData.name.trim() === "") {
+      errors.push("Tên tổ chức/doanh nghiệp là bắt buộc");
+    }
+
+    if (!formData.orgTypeCode || formData.orgTypeCode === "") {
+      errors.push("Loại hình tổ chức là bắt buộc");
+    }
+
+    if (!formData.taxCode || formData.taxCode.trim() === "") {
+      errors.push("Mã số thuế/đăng ký kinh doanh là bắt buộc");
+    }
+
+    if (!formData.address || formData.address.trim() === "") {
+      errors.push("Địa chỉ là bắt buộc");
+    }
+
+    if (!formData.businessSector || formData.businessSector.trim() === "") {
+      errors.push("Lĩnh vực kinh doanh chính là bắt buộc");
+    }
+
+    // Kiểm tra các file bắt buộc
+    if (!formData.idCardFront) {
+      errors.push("CCCD mặt trước là bắt buộc");
+    }
+
+    if (!formData.idCardBack) {
+      errors.push("CCCD mặt sau là bắt buộc");
+    }
+
+    if (!formData.businessLicense) {
+      errors.push("Giấy phép kinh doanh là bắt buộc");
+    }
+
+    if (!formData.logo) {
+      errors.push("Logo tổ chức là bắt buộc");
+    }
+
+    // Kiểm tra website URL nếu có
+    if (formData.website && formData.website.trim() !== "") {
+      const websitePattern = /^(https?:\/\/)?[\w.-]+(?:\.[\w.-]+)+[\/#?]?.*$/;
+      if (!websitePattern.test(formData.website)) {
+        errors.push("URL website không hợp lệ");
+      }
+    }
+
+    // Kiểm tra kích thước file (tối đa 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    const files = [
+      formData.idCardFront,
+      formData.idCardBack,
+      formData.businessLicense,
+      formData.logo,
+    ];
+    const fileNames = [
+      "CCCD mặt trước",
+      "CCCD mặt sau",
+      "Giấy phép kinh doanh",
+      "Logo tổ chức",
+    ];
+
+    files.forEach((file, index) => {
+      if (file && file.size > maxSize) {
+        errors.push(`${fileNames[index]} quá lớn (tối đa 5MB)`);
+      }
+    });
+
+    return errors;
+  };
+
   const createFormData = () => {
     const data = new FormData();
 
@@ -574,16 +682,15 @@ const RegisterOrganizerForm = () => {
     data.append("orgTypeCode", formData.orgTypeCode);
     data.append("taxCode", formData.taxCode);
     data.append("address", formData.address);
-    data.append("website", formData.website);
+    data.append("website", formData.website || "");
     data.append("businessSector", formData.businessSector);
-    data.append("description", formData.description);
+    data.append("description", formData.description || "");
 
-    // Add files
-    if (formData.logo) data.append("logo", formData.logo);
-    if (formData.idCardFront) data.append("idCardFront", formData.idCardFront);
-    if (formData.idCardBack) data.append("idCardBack", formData.idCardBack);
-    if (formData.businessLicense)
-      data.append("businessLicense", formData.businessLicense);
+    // Add files (validation đã đảm bảo files tồn tại)
+    data.append("logo", formData.logo);
+    data.append("idCardFront", formData.idCardFront);
+    data.append("idCardBack", formData.idCardBack);
+    data.append("businessLicense", formData.businessLicense);
 
     return data;
   };
@@ -594,6 +701,14 @@ const RegisterOrganizerForm = () => {
     setError("");
 
     try {
+      // Validation trước khi submit
+      const validationErrors = validateForm();
+      if (validationErrors.length > 0) {
+        setError(validationErrors.join("\n"));
+        setSubmitting(false);
+        return;
+      }
+
       const formDataToSend = createFormData();
 
       // Tăng timeout và xử lý lỗi timeout thông minh hơn
@@ -650,7 +765,13 @@ const RegisterOrganizerForm = () => {
         <div className="max-w-4xl mx-auto px-4">
           <StatusAlert status={organizerStatus} />
           <StatusBar status={organizerStatus} />
-          <StatusDetails status={organizerStatus} />
+          <StatusDetails
+            status={organizerStatus}
+            onResubmit={() => {
+              setHasExistingApplication(false);
+              setError("");
+            }}
+          />
         </div>
       </div>
     );
@@ -663,10 +784,38 @@ const RegisterOrganizerForm = () => {
         <h2 className="text-white text-3xl font-bold mb-6 text-center">
           Đăng Ký Trở Thành Nhà Tổ Chức
         </h2>
-        <p className="text-gray-400 mb-8 text-center">
+        <p className="text-gray-400 mb-4 text-center">
           Vui lòng điền đầy đủ thông tin để trở thành nhà tổ chức trên nền tảng
           của chúng tôi.
         </p>
+
+        {organizerStatus === "REJECTED" && (
+          <div className="mb-6 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-lg">
+            <div className="font-bold mb-2">🔄 Gửi lại đơn đăng ký:</div>
+            <p className="text-sm">
+              Đơn đăng ký trước của bạn đã bị từ chối. Vui lòng kiểm tra và cập
+              nhật thông tin theo phản hồi từ admin, sau đó gửi lại đơn mới.
+            </p>
+          </div>
+        )}
+
+        <div className="mb-6 p-4 bg-blue-100 border border-blue-400 text-blue-700 rounded-lg">
+          <div className="font-bold mb-2">📋 Yêu cầu đăng ký:</div>
+          <ul className="list-disc list-inside space-y-1 text-sm">
+            <li>Tất cả thông tin cơ bản là bắt buộc</li>
+            <li>CCCD mặt trước và mặt sau (ảnh hoặc PDF, tối đa 5MB)</li>
+            <li>Giấy phép kinh doanh (ảnh hoặc PDF, tối đa 5MB)</li>
+            <li>Logo tổ chức (ảnh, tối đa 5MB)</li>
+            <li>Website (nếu có) phải đúng định dạng URL</li>
+          </ul>
+        </div>
+
+        {error && (
+          <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+            <div className="font-bold mb-2">⚠️ Lỗi Validation:</div>
+            <div className="whitespace-pre-line">{error}</div>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit}>
           {/* Thông tin tổ chức/doanh nghiệp */}

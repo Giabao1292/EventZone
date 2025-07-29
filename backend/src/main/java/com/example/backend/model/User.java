@@ -15,6 +15,7 @@ import java.io.Serializable;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -93,7 +94,7 @@ public class User implements UserDetails, Serializable {
     private Set<Booking> tblBookings = new LinkedHashSet<>();
 
     @OneToOne(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JsonManagedReference
+    @JsonIgnore
     private Organizer organizer;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
@@ -116,6 +117,9 @@ public class User implements UserDetails, Serializable {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
+        if (tblUserRoles == null) {
+            return new HashSet<>();
+        }
         return tblUserRoles.stream()
                 .map(userRole -> new SimpleGrantedAuthority("ROLE_" + userRole.getRole().getRoleName()))
                 .collect(Collectors.toSet());
