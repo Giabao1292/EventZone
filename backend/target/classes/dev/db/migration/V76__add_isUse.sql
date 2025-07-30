@@ -1,0 +1,2 @@
+ALTER TABLE tbl_user_voucher
+    ADD COLUMN is_used BOOLEAN DEFAULT FALSE;

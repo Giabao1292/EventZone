@@ -1,0 +1,79 @@
+spring:
+  logging:
+    level:
+      org.springframework.security: DEBUG
+      com.example.backend: DEBUG
+
+  profiles:
+    active: dev
+  application:
+    name: backend
+  flyway:
+    locations: classpath:db/migration,classpath:dev/db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
+    out-of-order: true
+  mail:
+    from: ${MAIL_USERNAME}
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+  jpa:
+    hibernate:
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+  messages:
+    basename: message
+    encoding: UTF-8
+    default-locale: vi
+    fallback-to-system-locale: false
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: 4148311475-r0lvc33sk1i36ok7kgimvfqlhejub0p5.apps.googleusercontent.com
+            scope:
+              - openid
+              - profile
+              - email
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://openidconnect.googleapis.com/v1/userinfo
+            user-name-attribute: sub
+server:
+  port: 8080
+
+jwt:
+  limit:
+    day: 15
+    hour: 1
+  secretKey: iEKeAbUUiOb/waueS/nKrEV4aAEtrO5LZoVq+8fk8XHgXFmMUT70euKykS3JI0yzOAelB167lBKavBiQIRf9UQ==
+  refreshKey: 6m08koVwpxvdnLpSRDdLOcLjL+xAgbCgMQ9dX09E1sZMIvW0oDqpTlqgICvxDAcg1y8N1Q4M2QT0Pxux7Lu4Pw==
+payos:
+  client_id: e51803fd-d80d-4b51-939b-ac3f6dd689c7
+  api_key: 36a92a47-2f6d-4bd2-91f4-15dcd72c03e9
+  checksum_key: d91addc5349ad19f39390c925664ab320a34bba4b7e5a97f78a3b6694fa13858
+vnpay:
+  tmn_code: 338IG70Y
+  hash_secret: OZDZ1SCCTXRH0639M6CL8MLBTHVM6S9Y
+  pay_url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+  return_url: http://localhost:5173/payment-result
+openrouter:
+  secret_key: ${OPEN_ROUTER_KEY}
+  api_url: https://openrouter.ai/api/v1/chat/completions
