@@ -4,6 +4,10 @@ import { Upload } from "lucide-react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { uploadImage } from "../../services/imagesService";
+import {
+  validateEventDuration,
+  formatDuration,
+} from "../../utils/dateValidation";
 
 const EventInfoStep = ({
   eventData,
@@ -42,6 +46,68 @@ const EventInfoStep = ({
       if (field === "header_image") setHeaderLoading(false);
       if (field === "poster_image") setPosterLoading(false);
     }
+  };
+
+  // Validation function for date fields
+  const validateDateField = (field, value) => {
+    const newErrors = { ...errors };
+
+    if (field === "startTime" || field === "endTime") {
+      if (!value) {
+        newErrors[field] = `${
+          field === "startTime" ? "Thời gian bắt đầu" : "Thời gian kết thúc"
+        } là bắt buộc`;
+      } else {
+        const dateValue = new Date(value);
+        const now = new Date();
+
+        // Kiểm tra không cho phép thời gian trong quá khứ
+        if (dateValue < now) {
+          newErrors[field] = "Không thể chọn thời gian trong quá khứ";
+        } else {
+          delete newErrors[field];
+        }
+      }
+    }
+
+    // Kiểm tra logic giữa startTime và endTime
+    if (eventData.startTime && eventData.endTime) {
+      const startTime = new Date(eventData.startTime);
+      const endTime = new Date(eventData.endTime);
+
+      if (startTime >= endTime) {
+        newErrors.endTime = "Thời gian kết thúc phải sau thời gian bắt đầu";
+      } else {
+        // Kiểm tra thời lượng với validation chi tiết
+        const durationValidation = validateEventDuration(
+          eventData.startTime,
+          eventData.endTime
+        );
+        if (!durationValidation.isValid) {
+          newErrors.endTime = durationValidation.message;
+        } else {
+          delete newErrors.endTime;
+        }
+      }
+    }
+
+    setErrors(newErrors);
+  };
+
+  const handleDateChange = (field, value) => {
+    handleInputChange(field, value);
+    validateDateField(field, value);
+  };
+
+  // Get minimum datetime for inputs (current time)
+  const getMinDateTime = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
   return (
@@ -211,13 +277,14 @@ const EventInfoStep = ({
             <input
               type="datetime-local"
               value={eventData.startTime || ""}
-              onChange={(e) => handleInputChange("startTime", e.target.value)}
+              onChange={(e) => handleDateChange("startTime", e.target.value)}
               className={`w-full px-4 py-3 bg-white/80 border rounded-xl focus:outline-none focus:ring-2 transition-all duration-300 text-slate-700 ${
                 errors.startTime
                   ? "border-red-400 focus:border-red-500 focus:ring-red-500/20"
                   : "border-slate-200 focus:border-blue-400 focus:ring-blue-500/20"
               }`}
               disabled={loading}
+              min={getMinDateTime()}
             />
             {errors.startTime && (
               <p className="text-xs text-red-500 mt-1">{errors.startTime}</p>
@@ -230,19 +297,33 @@ const EventInfoStep = ({
             <input
               type="datetime-local"
               value={eventData.endTime || ""}
-              onChange={(e) => handleInputChange("endTime", e.target.value)}
+              onChange={(e) => handleDateChange("endTime", e.target.value)}
               className={`w-full px-4 py-3 bg-white/80 border rounded-xl focus:outline-none focus:ring-2 transition-all duration-300 text-slate-700 ${
                 errors.endTime
                   ? "border-red-400 focus:border-red-500 focus:ring-red-500/20"
                   : "border-slate-200 focus:border-blue-400 focus:ring-blue-500/20"
               }`}
               disabled={loading}
+              min={getMinDateTime()}
             />
             {errors.endTime && (
               <p className="text-xs text-red-500 mt-1">{errors.endTime}</p>
             )}
           </div>
         </div>
+
+        {/* Hiển thị thời lượng sự kiện */}
+        {eventData.startTime &&
+          eventData.endTime &&
+          !errors.startTime &&
+          !errors.endTime && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-sm text-blue-700">
+                <span className="font-medium">Thời lượng sự kiện:</span>{" "}
+                {formatDuration(eventData.startTime, eventData.endTime)}
+              </p>
+            </div>
+          )}
 
         {/* Độ tuổi và Banner Text */}
         <div className="grid grid-cols-2 gap-4">

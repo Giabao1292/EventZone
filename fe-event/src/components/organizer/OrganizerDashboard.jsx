@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import OrganizerCard from "./OrganizerCard";
 import OrganizerButton from "./OrganizerButton";
 import OrganizerInput from "./OrganizerInput";
+import apiClient from "../../api/axios";
 
 const OrganizerDashboard = () => {
   const [stats, setStats] = useState({
@@ -15,50 +16,73 @@ const OrganizerDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate loading data
-    setTimeout(() => {
-      setStats({
-        totalEvents: 24,
-        activeEvents: 8,
-        totalRevenue: 12500000,
-        totalAttendees: 1247,
-      });
+    const fetchDashboardData = async () => {
+      try {
+        // Fetch real data from API
+        const [eventsResponse, statsResponse] = await Promise.all([
+          apiClient.get("/events/myevents"),
+          apiClient.get("/organizer/stats"), // Assuming this endpoint exists
+        ]);
 
-      setRecentEvents([
-        {
-          id: 1,
-          name: "Hội nghị công nghệ 2024",
-          date: "2024-01-15",
-          attendees: 150,
-          revenue: 2500000,
-          status: "active",
-          image:
-            "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400&h=200&fit=crop",
-        },
-        {
-          id: 2,
-          name: "Workshop Marketing số",
-          date: "2024-01-20",
-          attendees: 300,
-          revenue: 4500000,
-          status: "upcoming",
-          image:
-            "https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=400&h=200&fit=crop",
-        },
-        {
-          id: 3,
-          name: "Lễ hội âm nhạc mùa hè",
-          date: "2024-01-10",
-          attendees: 80,
-          revenue: 1200000,
-          status: "completed",
-          image:
-            "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=200&fit=crop",
-        },
-      ]);
+        const events = eventsResponse.data.data || [];
+        const dashboardStats = statsResponse.data.data || {};
 
-      setLoading(false);
-    }, 2000);
+        // Calculate stats from real data
+        const totalEvents = events.length;
+        const activeEvents = events.filter(
+          (e) => e.status === "ACTIVE" || e.status === "APPROVED"
+        ).length;
+        const totalRevenue = events.reduce(
+          (sum, event) => sum + (event.totalRevenue || 0),
+          0
+        );
+        const totalAttendees = events.reduce(
+          (sum, event) => sum + (event.totalAttendees || 0),
+          0
+        );
+
+        setStats({
+          totalEvents,
+          activeEvents,
+          totalRevenue,
+          totalAttendees,
+        });
+
+        // Get recent events (last 3)
+        const recent = events
+          .sort(
+            (a, b) =>
+              new Date(b.createdAt || b.updatedAt) -
+              new Date(a.createdAt || a.updatedAt)
+          )
+          .slice(0, 3)
+          .map((event) => ({
+            id: event.id,
+            name: event.eventTitle,
+            date: event.startTime,
+            attendees: event.totalAttendees || 0,
+            revenue: event.totalRevenue || 0,
+            status: event.status?.toLowerCase() || "unknown",
+            image: event.posterImage || "/placeholder.svg",
+          }));
+
+        setRecentEvents(recent);
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+        // Fallback to default values
+        setStats({
+          totalEvents: 0,
+          activeEvents: 0,
+          totalRevenue: 0,
+          totalAttendees: 0,
+        });
+        setRecentEvents([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
   }, []);
 
   const formatCurrency = (amount) => {

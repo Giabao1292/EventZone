@@ -131,10 +131,11 @@ export default function LayoutDesigner({ onSave }) {
     })();
   }, [showingTimeId]);
 
-  // Collision detection function - cải tiến
+  // Collision detection function - cải tiến để giảm thiểu giật
   const checkCollision = useCallback(
     (newItem, existingItems, itemType, excludeId = null) => {
-      const buffer = 5; // Khoảng cách tối thiểu giữa các items
+      // Giảm buffer để tránh giật quá nhiều
+      const buffer = itemType === "seat" ? 2 : 5;
 
       return existingItems.some((item) => {
         if (item.id === newItem.id || item.id === excludeId) return false;
@@ -148,20 +149,29 @@ export default function LayoutDesigner({ onSave }) {
         const newItemHeight =
           itemType === "seat" ? SEAT_SIZE : newItem.height || ZONE_MIN_SIZE;
 
-        return !(
-          newItem.x + newItemWidth + buffer <= item.x ||
-          item.x + itemWidth + buffer <= newItem.x ||
-          newItem.y + newItemHeight + buffer <= item.y ||
-          item.y + itemHeight + buffer <= newItem.y
+        // Kiểm tra overlap chính xác hơn
+        const overlapX = Math.max(
+          0,
+          Math.min(newItem.x + newItemWidth, item.x + itemWidth) -
+            Math.max(newItem.x, item.x)
         );
+        const overlapY = Math.max(
+          0,
+          Math.min(newItem.y + newItemHeight, item.y + itemHeight) -
+            Math.max(newItem.y, item.y)
+        );
+
+        // Chỉ coi là collision nếu overlap đủ lớn
+        return overlapX > buffer && overlapY > buffer;
       });
     },
     []
   );
 
-  // Snap to grid function
+  // Snap to grid function - cải thiện performance
   const snapToGrid = useCallback((value) => {
-    return Math.round(value / GRID_SIZE) * GRID_SIZE;
+    // Sử dụng Math.floor thay vì Math.round để tránh giật
+    return Math.floor(value / GRID_SIZE) * GRID_SIZE;
   }, []);
 
   // Find next available position - cải tiến
@@ -406,7 +416,7 @@ export default function LayoutDesigner({ onSave }) {
     }
   }, [aiPrompt, showToast]);
 
-  // Optimized seat rendering - sửa lỗi drag offset
+  // Optimized seat rendering - sửa lỗi drag offset và giật
   const renderSeat = useCallback(
     (seat) => {
       const typeData = getSeatTypeData(seat.type);
@@ -419,60 +429,81 @@ export default function LayoutDesigner({ onSave }) {
           size={{ width: SEAT_SIZE, height: SEAT_SIZE }}
           position={{ x: seat.x, y: seat.y }}
           onDragStop={(e, d) => {
-            const newX = snapToGrid(d.x);
-            const newY = snapToGrid(d.y);
+            // Sử dụng position thực tế từ drag event thay vì snapToGrid
+            const newX = Math.max(0, Math.min(d.x, canvasWidth - SEAT_SIZE));
+            const newY = Math.max(0, Math.min(d.y, canvasHeight - SEAT_SIZE));
 
-            // Đảm bảo không vượt ra ngoài canvas
-            const boundedX = Math.max(
-              0,
-              Math.min(newX, canvasWidth - SEAT_SIZE)
-            );
-            const boundedY = Math.max(
-              0,
-              Math.min(newY, canvasHeight - SEAT_SIZE)
-            );
+            // Chỉ snap to grid khi cần thiết
+            const snappedX = snapToGrid(newX);
+            const snappedY = snapToGrid(newY);
 
-            const newSeat = { ...seat, x: boundedX, y: boundedY };
+            const newSeat = { ...seat, x: snappedX, y: snappedY };
             const otherSeats = seats.filter((s) => s.id !== seat.id);
             const allOtherItems = [...otherSeats, ...zones];
 
-            // Kiểm tra collision, nếu có thì tìm vị trí gần nhất
-            if (checkCollision(newSeat, allOtherItems, "seat", seat.id)) {
+            // Chỉ kiểm tra collision khi thực sự cần thiết
+            const hasCollision = checkCollision(
+              newSeat,
+              allOtherItems,
+              "seat",
+              seat.id
+            );
+
+            if (hasCollision) {
+              // Tìm vị trí gần nhất không bị collision
               const availablePos = findAvailablePosition(
-                boundedX,
-                boundedY,
+                snappedX,
+                snappedY,
                 "seat"
               );
-              setSeats((prev) =>
-                prev.map((s) =>
-                  s.id === seat.id
-                    ? { ...s, x: availablePos.x, y: availablePos.y }
-                    : s
-                )
-              );
-              showToast(
-                "Đã tự động điều chỉnh vị trí để tránh trùng lặp!",
-                "warning"
-              );
+
+              // Chỉ update nếu vị trí mới khác với vị trí hiện tại
+              if (availablePos.x !== seat.x || availablePos.y !== seat.y) {
+                setSeats((prev) =>
+                  prev.map((s) =>
+                    s.id === seat.id
+                      ? { ...s, x: availablePos.x, y: availablePos.y }
+                      : s
+                  )
+                );
+                showToast(
+                  "Đã tự động điều chỉnh vị trí để tránh trùng lặp!",
+                  "warning"
+                );
+              }
             } else {
-              setSeats((prev) =>
-                prev.map((s) =>
-                  s.id === seat.id ? { ...s, x: boundedX, y: boundedY } : s
-                )
-              );
+              // Chỉ update nếu vị trí thực sự thay đổi
+              if (snappedX !== seat.x || snappedY !== seat.y) {
+                setSeats((prev) =>
+                  prev.map((s) =>
+                    s.id === seat.id ? { ...s, x: snappedX, y: snappedY } : s
+                  )
+                );
+              }
             }
           }}
           enableResizing={false}
           dragGrid={[GRID_SIZE, GRID_SIZE]}
           disableDragging={false}
+          // Thêm các props để giảm thiểu re-render
+          enableUserSelectHack={false}
+          dragHandleClassName="drag-handle"
         >
           <div
             className={`${
               typeData.color
-            } text-xs font-bold flex flex-col items-center justify-center rounded shadow cursor-pointer select-none transition-all hover:scale-110 relative ${
+            } text-xs font-bold flex flex-col items-center justify-center rounded shadow cursor-move select-none transition-all hover:scale-110 relative drag-handle ${
               isSelected ? "ring-2 ring-yellow-400" : ""
             }`}
-            style={{ width: "100%", height: "100%" }}
+            style={{
+              width: "100%",
+              height: "100%",
+              // Thêm CSS để cải thiện performance
+              willChange: "transform",
+              backfaceVisibility: "hidden",
+              userSelect: "none",
+              touchAction: "none",
+            }}
             onClick={() => {
               const itemId = `seat-${seat.id}`;
               setSelectedItems((prev) =>
@@ -521,7 +552,7 @@ export default function LayoutDesigner({ onSave }) {
     ]
   );
 
-  // Optimized zone rendering - sửa lỗi drag offset
+  // Optimized zone rendering - sửa lỗi drag offset và giật
   const renderZone = useCallback(
     (zone) => {
       const typeData = getSeatTypeData(zone.type);
@@ -534,46 +565,55 @@ export default function LayoutDesigner({ onSave }) {
           size={{ width: zone.width, height: zone.height }}
           position={{ x: zone.x, y: zone.y }}
           onDragStop={(e, d) => {
-            const newX = snapToGrid(d.x);
-            const newY = snapToGrid(d.y);
+            // Sử dụng position thực tế từ drag event
+            const newX = Math.max(0, Math.min(d.x, canvasWidth - zone.width));
+            const newY = Math.max(0, Math.min(d.y, canvasHeight - zone.height));
 
-            // Đảm bảo không vượt ra ngoài canvas
-            const boundedX = Math.max(
-              0,
-              Math.min(newX, canvasWidth - zone.width)
-            );
-            const boundedY = Math.max(
-              0,
-              Math.min(newY, canvasHeight - zone.height)
-            );
+            // Chỉ snap to grid khi cần thiết
+            const snappedX = snapToGrid(newX);
+            const snappedY = snapToGrid(newY);
 
-            const newZone = { ...zone, x: boundedX, y: boundedY };
+            const newZone = { ...zone, x: snappedX, y: snappedY };
             const otherZones = zones.filter((z) => z.id !== zone.id);
             const allOtherItems = [...seats, ...otherZones];
 
-            if (checkCollision(newZone, allOtherItems, "zone", zone.id)) {
+            const hasCollision = checkCollision(
+              newZone,
+              allOtherItems,
+              "zone",
+              zone.id
+            );
+
+            if (hasCollision) {
               const availablePos = findAvailablePosition(
-                boundedX,
-                boundedY,
+                snappedX,
+                snappedY,
                 "zone"
               );
-              setZones((prev) =>
-                prev.map((z) =>
-                  z.id === zone.id
-                    ? { ...z, x: availablePos.x, y: availablePos.y }
-                    : z
-                )
-              );
-              showToast(
-                "Đã tự động điều chỉnh vị trí để tránh trùng lặp!",
-                "warning"
-              );
+
+              // Chỉ update nếu vị trí mới khác với vị trí hiện tại
+              if (availablePos.x !== zone.x || availablePos.y !== zone.y) {
+                setZones((prev) =>
+                  prev.map((z) =>
+                    z.id === zone.id
+                      ? { ...z, x: availablePos.x, y: availablePos.y }
+                      : z
+                  )
+                );
+                showToast(
+                  "Đã tự động điều chỉnh vị trí để tránh trùng lặp!",
+                  "warning"
+                );
+              }
             } else {
-              setZones((prev) =>
-                prev.map((z) =>
-                  z.id === zone.id ? { ...z, x: boundedX, y: boundedY } : z
-                )
-              );
+              // Chỉ update nếu vị trí thực sự thay đổi
+              if (snappedX !== zone.x || snappedY !== zone.y) {
+                setZones((prev) =>
+                  prev.map((z) =>
+                    z.id === zone.id ? { ...z, x: snappedX, y: snappedY } : z
+                  )
+                );
+              }
             }
           }}
           onResizeStop={(e, direction, ref, delta, position) => {
@@ -628,9 +668,16 @@ export default function LayoutDesigner({ onSave }) {
           <div
             className={`${
               typeData.color
-            } bg-opacity-80 text-white rounded shadow w-full h-full p-2 select-none flex flex-col justify-center cursor-pointer transition-all hover:bg-opacity-90 relative ${
+            } bg-opacity-80 text-white rounded shadow w-full h-full p-2 select-none flex flex-col justify-center cursor-move transition-all hover:bg-opacity-90 relative drag-handle ${
               isSelected ? "ring-2 ring-yellow-400" : ""
             }`}
+            style={{
+              // Thêm CSS để cải thiện performance
+              willChange: "transform",
+              backfaceVisibility: "hidden",
+              userSelect: "none",
+              touchAction: "none",
+            }}
             onClick={() => {
               const itemId = `zone-${zone.id}`;
               setSelectedItems((prev) =>
@@ -1054,7 +1101,18 @@ export default function LayoutDesigner({ onSave }) {
 
         {/* Canvas - Cố định kích thước như cũ */}
         <div className="flex-1 p-4">
-          <div className="relative bg-slate-800 border border-slate-600 rounded overflow-hidden h-full">
+          <div
+            className="relative bg-slate-800 border border-slate-600 rounded overflow-hidden h-full"
+            style={{
+              // Thêm CSS để cải thiện performance
+              willChange: "transform",
+              backfaceVisibility: "hidden",
+              perspective: "1000px",
+              // Tối ưu cho drag & drop
+              touchAction: "none",
+              userSelect: "none",
+            }}
+          >
             {/* Grid */}
             {showGrid && (
               <div
@@ -1067,6 +1125,11 @@ export default function LayoutDesigner({ onSave }) {
                   backgroundSize: `${GRID_SIZE * zoom}px ${GRID_SIZE * zoom}px`,
                   transform: `scale(${zoom})`,
                   transformOrigin: "0 0",
+                  // Thêm CSS để cải thiện performance
+                  willChange: "transform",
+                  backfaceVisibility: "hidden",
+                  // Tối ưu cho grid rendering
+                  imageRendering: "pixelated",
                 }}
               />
             )}
@@ -1078,6 +1141,10 @@ export default function LayoutDesigner({ onSave }) {
                 height: canvasHeight,
                 transform: `scale(${zoom})`,
                 transformOrigin: "0 0",
+                // Thêm CSS để cải thiện performance
+                willChange: "transform",
+                backfaceVisibility: "hidden",
+                perspective: "1000px",
               }}
             >
               {(layoutMode === "seat" || layoutMode === "both") &&

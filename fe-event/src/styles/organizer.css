@@ -105,6 +105,107 @@
   animation: shimmer 2s infinite;
 }
 
+/* Optimized animations for better performance */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Use transform instead of margin/padding for better performance */
+.animate-fade-in-up {
+  animation: fade-in-up 0.3s ease-out;
+  will-change: transform, opacity;
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.3s ease-out;
+  will-change: transform, opacity;
+}
+
+/* Optimized loading skeleton */
+.loading-skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-up,
+  .animate-slide-in-left,
+  .loading-skeleton {
+    animation: none;
+  }
+
+  .animate-pulse {
+    animation: none;
+  }
+
+  .animate-ping {
+    animation: none;
+  }
+}
+
+/* Optimize backdrop blur for better performance */
+.backdrop-blur-xl {
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+/* Reduce the number of gradient layers */
+.bg-gradient-to-br {
+  background: linear-gradient(to bottom right, var(--tw-gradient-stops));
+}
+
+/* Optimize floating elements */
+.floating-orb {
+  will-change: transform;
+  transform: translateZ(0); /* Force hardware acceleration */
+}
+
+/* Reduce shadow complexity */
+.shadow-optimized {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Optimize grid pattern */
+.grid-pattern {
+  background-image: linear-gradient(
+      rgba(59, 130, 246, 0.02) 1px,
+      transparent 1px
+    ),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.02) 1px, transparent 1px);
+  background-size: 100px 100px;
+  will-change: auto;
+}
+
 /* Glassmorphism effects */
 .glass {
   background: rgba(255, 255, 255, 0.8);
@@ -170,18 +271,6 @@
 
 .hover-glow:hover {
   box-shadow: 0 0 30px rgba(59, 130, 246, 0.3);
-}
-
-/* Shimmer loading effect */
-.loading-skeleton {
-  background: linear-gradient(
-    90deg,
-    rgba(59, 130, 246, 0.1) 25%,
-    rgba(249, 115, 22, 0.2) 50%,
-    rgba(59, 130, 246, 0.1) 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
 }
 
 /* Focus ring */

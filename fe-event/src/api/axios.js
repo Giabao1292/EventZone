@@ -6,8 +6,11 @@ import {
   removeToken,
 } from "../utils/storage";
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+
 const apiClient = axios.create({
-  baseURL: "http://localhost:8080/api/",
+  baseURL: API_BASE_URL,
   timeout: 10000,
 });
 
@@ -79,7 +82,7 @@ apiClient.interceptors.response.use(
       try {
         // Gọi refresh token
         const response = await axios.post(
-          "http://localhost:8080/api/auth/refresh-token",
+          `${API_BASE_URL}/auth/refresh-token`,
           null,
           {
             headers: {

@@ -66,7 +66,7 @@ const SettingsStep = ({ eventData, eventId }) => {
         className="text-slate-500 text-center py-10"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
+        transition={{ duration: 0.1 }}
       >
         Không có suất chiếu nào được tạo. Vui lòng quay lại bước trước.
       </motion.div>
@@ -78,7 +78,7 @@ const SettingsStep = ({ eventData, eventId }) => {
       className="space-y-6"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
+      transition={{ duration: 0.1 }}
     >
       {/* Header */}
       <div className="text-center mb-8">

@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import SockJS from "sockjs-client/dist/sockjs"; // fix cho Vite
 import { over } from "stompjs";
+import getWebSocketUrl from "../api/websocket";
 
 let stompClient = null;
 
@@ -21,7 +22,7 @@ export default function NotificationTest() {
       return;
     }
 
-    const socket = new SockJS("http://localhost:8080/ws");
+    const socket = new SockJS(getWebSocketUrl());
     stompClient = over(socket);
 
     stompClient.connect(

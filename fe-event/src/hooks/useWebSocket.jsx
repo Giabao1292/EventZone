@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import SockJS from "sockjs-client/dist/sockjs";
 import { over } from "stompjs";
 import { getToken } from "../utils/storage";
+import getWebSocketUrl from "../api/websocket";
 
 const useWebSocket = () => {
   const [connected, setConnected] = useState(false);
@@ -21,7 +22,7 @@ const useWebSocket = () => {
     }
 
     try {
-      const socket = new SockJS("http://localhost:8080/ws");
+      const socket = new SockJS(getWebSocketUrl());
       stompClientRef.current = over(socket);
 
       stompClientRef.current.connect(

@@ -75,7 +75,10 @@ export default function CategoryManagementPage() {
           className="border px-4 py-2 rounded"
           required
         />
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">
+        <button
+          type="submit"
+          className="bg-blue-600 text-white px-4 py-2 rounded"
+        >
           {form.id ? "Cập nhật" : "Thêm mới"}
         </button>
         {form.id && (
