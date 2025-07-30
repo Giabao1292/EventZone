@@ -19,9 +19,13 @@ public interface EventAdsRepository extends JpaRepository<EventAds, Integer> {
             LocalDate endDate
     );
 
-    @Query("SELECT e.id FROM EventAds e")
-    Page<Long> findAllIdsEventAds(Pageable pageable);
+    @Query("SELECT e.id FROM EventAds e " +
+            "WHERE (:orgName IS NULL OR e.organizer.orgName LIKE %:orgName%)")
+    Page<Long> findAllIdsEventAds(String orgName, Pageable pageable);
 
-    @Query("SELECT ea FROM EventAds ea LEFT JOIN FETCH ea.event e LEFT JOIN FETCH ea.organizer WHERE ea.id IN :ids ORDER BY ea.createdAt DESC ")
+    @Query("SELECT ea FROM EventAds ea LEFT " +
+            "JOIN FETCH ea.event e " +
+            "LEFT JOIN FETCH ea.organizer " +
+            "WHERE ea.id IN :ids ORDER BY ea.createdAt DESC ")
     List<EventAds> findAllEventAdsByIds(List<Long> ids);
 }

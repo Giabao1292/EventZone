@@ -5,12 +5,12 @@ import {
   DollarSign,
   Users,
   Calendar,
-  Download,
   BarChart3,
   PieChart,
   Activity,
   ChevronLeft,
   ChevronRight,
+  Building2,
 } from "lucide-react";
 import {
   LineChart,
@@ -38,7 +38,6 @@ import {
   TableHeader,
   TableRow,
 } from "../../components/ui/table";
-import { Badge } from "../../components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -50,10 +49,14 @@ import {
   fetchRevenueChartData,
   fetchBookings,
   fetchEventAds,
+  getOrganizers,
 } from "../../services/revenueService";
 
 export default function RevenueDashboard() {
   const [selectedPeriod, setSelectedPeriod] = useState("30days");
+  const [selectedYear, setSelectedYear] = useState(null);
+  const [selectedOrganizer, setSelectedOrganizer] = useState("all");
+  const [organizers, setOrganizers] = useState([]);
   const [revenueData, setRevenueData] = useState(null);
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -88,6 +91,16 @@ export default function RevenueDashboard() {
     maxPrice: "",
   });
 
+  // Tạo danh sách năm (từ 2020 đến năm hiện tại)
+  const generateYearOptions = () => {
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    for (let year = 2020; year <= currentYear; year++) {
+      years.push(year);
+    }
+    return years.reverse(); // Năm mới nhất trước
+  };
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
@@ -105,10 +118,29 @@ export default function RevenueDashboard() {
     }));
   };
 
+  const loadOrganizers = async () => {
+    try {
+      const response = await getOrganizers(0, 100); // Lấy 100 organizers đầu tiên
+      if (response && response.data && response.data.content) {
+        setOrganizers(response.data.content || []);
+        console.log("Loaded organizers:", response.data.content);
+      } else {
+        console.error("Invalid organizers response structure:", response);
+      }
+    } catch (error) {
+      console.error("Error loading organizers:", error);
+    }
+  };
+
   const loadRevenueData = async () => {
     try {
       setLoading(true);
-      const data = await fetchRevenueChartData(selectedPeriod);
+      const orgName = selectedOrganizer === "all" ? null : selectedOrganizer;
+      const data = await fetchRevenueChartData(
+        selectedPeriod,
+        orgName,
+        selectedYear
+      );
       setRevenueData(data);
       setChartData(formatChartData(data));
     } catch (error) {
@@ -121,12 +153,11 @@ export default function RevenueDashboard() {
   const formatDateTimeForSearch = (dateInput, isEndDate = false) => {
     if (!dateInput) return null;
 
-    const date = new Date(dateInput); // luôn UTC bên JS
+    const date = new Date(dateInput);
     if (isEndDate) {
-      date.setDate(date.getDate() + 1); // +1 ngày
+      date.setDate(date.getDate() + 1);
     }
 
-    // Lấy phần yyyy-MM-dd của ISO
     return date.toISOString().slice(0, 10);
   };
 
@@ -179,10 +210,12 @@ export default function RevenueDashboard() {
         setBookingPage(0);
       }
       const searchFilters = buildSearchFilters(bookingFilters);
+      const orgName = selectedOrganizer === "all" ? null : selectedOrganizer;
       const data = await fetchBookings(
         currentPage,
         bookingPageSize,
-        searchFilters
+        searchFilters,
+        orgName
       );
       setBookings(data.content);
       setBookingTotalPages(data.totalPages);
@@ -198,10 +231,12 @@ export default function RevenueDashboard() {
         setEventAdsPage(0);
       }
       const searchFilters = buildEventAdsSearchFilters(eventAdsFilters);
+      const orgName = selectedOrganizer === "all" ? null : selectedOrganizer;
       const data = await fetchEventAds(
         currentPage,
         eventAdsPageSize,
-        searchFilters
+        searchFilters,
+        orgName
       );
       setEventAds(data.content);
       setEventAdsTotalPages(data.totalPages);
@@ -210,64 +245,31 @@ export default function RevenueDashboard() {
     }
   };
 
+  // Load organizers khi component mount
+  useEffect(() => {
+    loadOrganizers();
+  }, []);
+
+  // Load revenue data khi thay đổi period, organizer hoặc year
   useEffect(() => {
     loadRevenueData();
-  }, [selectedPeriod]);
+  }, [selectedPeriod, selectedOrganizer, selectedYear]);
 
+  // Load bookings khi thay đổi page, size hoặc organizer
   useEffect(() => {
     loadBookings();
-  }, [bookingPage, bookingPageSize]);
+  }, [bookingPage, bookingPageSize, selectedOrganizer]);
 
+  // Load event ads khi thay đổi page, size hoặc organizer
   useEffect(() => {
     loadEventAds();
-  }, [eventAdsPage, eventAdsPageSize]);
+  }, [eventAdsPage, eventAdsPageSize, selectedOrganizer]);
 
+  // Load initial data
   useEffect(() => {
     loadBookings();
     loadEventAds();
   }, []);
-
-  // const getStatusBadge = (status) => {
-  //   const baseClass =
-  //     "inline-flex items-center py-2 px-4 rounded-3xl font-semibold";
-
-  //   switch (status?.toLowerCase()) {
-  //     case "paid":
-  //     case "confirmed":
-  //     case "approved":
-  //       return (
-  //         <Badge className={`${baseClass} bg-green-100 !text-green-700`}>
-  //           Hoàn thành
-  //         </Badge>
-  //       );
-  //     case "pending":
-  //       return (
-  //         <Badge className={`${baseClass} bg-yellow-100 !text-yellow-700`}>
-  //           Đang xử lý
-  //         </Badge>
-  //       );
-  //     case "failed":
-  //     case "rejected":
-  //     case "cancelled":
-  //       return (
-  //         <Badge className={`${baseClass} bg-red-100 !text-red-700`}>
-  //           Thất bại
-  //         </Badge>
-  //       );
-  //     case "refunded":
-  //       return (
-  //         <Badge className={`${baseClass} bg-gray-100 !text-gray-700`}>
-  //           Hoàn tiền
-  //         </Badge>
-  //       );
-  //     default:
-  //       return (
-  //         <Badge className={`${baseClass} bg-gray-200 !text-gray-800`}>
-  //           {status}
-  //         </Badge>
-  //       );
-  //   }
-  // };
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -320,7 +322,60 @@ export default function RevenueDashboard() {
         {/* Filters */}
         <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <div className="flex flex-col sm:flex-row gap-4">
-            <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+            {/* Organizer Selector */}
+            <Select
+              value={selectedOrganizer}
+              onValueChange={setSelectedOrganizer}
+            >
+              <SelectTrigger className="w-[200px]">
+                <Building2 className="mr-2 h-4 w-4" />
+                <SelectValue placeholder="Chọn organizer" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tất cả organizers</SelectItem>
+                {organizers.map((org) => (
+                  <SelectItem key={org.id} value={org.orgName}>
+                    {org.orgName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Year Selector */}
+            <Select
+              value={selectedYear?.toString() || "all"}
+              onValueChange={(value) => {
+                if (value === "all") {
+                  setSelectedYear(null);
+                } else {
+                  setSelectedYear(Number.parseInt(value));
+                  setSelectedPeriod(""); // Clear period when year is selected
+                }
+              }}
+            >
+              <SelectTrigger className="w-[150px]">
+                <Calendar className="mr-2 h-4 w-4" />
+                <SelectValue placeholder="Chọn năm" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tất cả</SelectItem>
+                {generateYearOptions().map((year) => (
+                  <SelectItem key={year} value={year.toString()}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Period Selector - disabled when year is selected */}
+            <Select
+              value={selectedPeriod}
+              onValueChange={(value) => {
+                setSelectedPeriod(value);
+                setSelectedYear(null); // Clear year when period is selected
+              }}
+              disabled={selectedYear !== null}
+            >
               <SelectTrigger className="w-[180px]">
                 <Calendar className="mr-2 h-4 w-4" />
                 <SelectValue placeholder="Chọn thời gian" />
@@ -332,11 +387,6 @@ export default function RevenueDashboard() {
                 <SelectItem value="1year">1 năm qua</SelectItem>
               </SelectContent>
             </Select>
-
-            {/* <Button variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-2" />
-              Xuất báo cáo
-            </Button> */}
           </div>
         </div>
 
@@ -354,7 +404,9 @@ export default function RevenueDashboard() {
                 {formatCurrency(totalRevenue)}
               </div>
               <p className="text-xs text-muted-foreground">
-                Tổng doanh thu trong kỳ
+                {selectedOrganizer !== "all"
+                  ? `Doanh thu của ${selectedOrganizer}`
+                  : "Tổng doanh thu trong kỳ"}
               </p>
             </CardContent>
           </Card>
@@ -429,6 +481,8 @@ export default function RevenueDashboard() {
               </CardTitle>
               <CardDescription>
                 So sánh doanh thu giữa Booking và EventAds theo thời gian
+                {selectedYear && ` - Năm ${selectedYear}`}
+                {selectedOrganizer !== "all" && ` - ${selectedOrganizer}`}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -501,6 +555,7 @@ export default function RevenueDashboard() {
               </CardTitle>
               <CardDescription>
                 Tỷ lệ đóng góp của từng nguồn doanh thu
+                {selectedOrganizer !== "all" && ` - ${selectedOrganizer}`}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -602,6 +657,7 @@ export default function RevenueDashboard() {
             <CardTitle>Quản Lý Booking</CardTitle>
             <CardDescription>
               Danh sách các giao dịch booking và bộ lọc
+              {selectedOrganizer !== "all" && ` - ${selectedOrganizer}`}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -693,7 +749,7 @@ export default function RevenueDashboard() {
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <label htmlFor="from" className="text-sm text-gray-600">
+                <label htmlFor="to" className="text-sm text-gray-600">
                   Đến ngày
                 </label>
                 <Input
@@ -826,6 +882,7 @@ export default function RevenueDashboard() {
             <CardTitle>Quản Lý EventAds</CardTitle>
             <CardDescription>
               Danh sách các giao dịch quảng cáo sự kiện và bộ lọc
+              {selectedOrganizer !== "all" && ` - ${selectedOrganizer}`}
             </CardDescription>
           </CardHeader>
           <CardContent>

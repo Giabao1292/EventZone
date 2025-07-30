@@ -19,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -138,14 +139,18 @@ public class EventAdsServiceImpl implements EventAdsService {
     }
 
 
-    private Page<EventAds> findAll(Pageable pageable) {
-        Page<Long> ids = eventAdsRepository.findAllIdsEventAds(pageable);
+    private Page<EventAds> findAll(String orgName, Pageable pageable) {
+        Page<Long> ids = eventAdsRepository.findAllIdsEventAds(orgName, pageable);
         List<EventAds> eventAds = eventAdsRepository.findAllEventAdsByIds(ids.getContent());
         return new PageImpl<>(eventAds, pageable, ids.getTotalElements());
     }
     @Override
-    public PageResponse<EventAdsRevenueResponse> searchEventAds(Pageable pageable, String[] search) {
-        Page<EventAds> eventAdsPage = search != null && search.length != 0 ? searchCriteriaRepository.searchEventAds(pageable, search) : findAll(pageable);
+    public PageResponse<EventAdsRevenueResponse> searchEventAds(String orgName, Pageable pageable, String... search) {
+        String[] searchList = search != null ? Arrays.copyOf(search, search.length + 1) : new String[1];
+        if(orgName != null && !orgName.trim().isEmpty()) {
+            searchList[searchList.length - 1] = "orgName:" + orgName;
+        }
+        Page<EventAds> eventAdsPage = search != null && search.length != 0 ? searchCriteriaRepository.searchEventAds(pageable, searchList) : findAll(orgName,pageable);
         List<EventAdsRevenueResponse> listEventAds = eventAdsPage.getContent().stream().map(eventAds ->
             EventAdsRevenueResponse.builder()
                     .eventAdsId(eventAds.getId())

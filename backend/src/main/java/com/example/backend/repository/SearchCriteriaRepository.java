@@ -243,9 +243,10 @@ public class SearchCriteriaRepository {
         Fetch<Booking, ShowingTime> showingTimeFetch = bookingRoot.fetch("showingTime", JoinType.LEFT);
         showingTimeFetch.fetch("event", JoinType.LEFT);
         Join<Booking, User> joinUser = bookingRoot.join("user", JoinType.LEFT);
+        Join<User, Organizer> joinOrganizer = joinUser.join("organizer", JoinType.LEFT);
         Join<Booking, ShowingTime> joinShowingTime = bookingRoot.join("showingTime", JoinType.LEFT);
         Join<ShowingTime, Event> joinEvent = joinShowingTime.join("event", JoinType.LEFT);
-        Predicate predicate = getSearchPredicate(List.of(bookingRoot, joinUser, joinShowingTime, joinEvent), criteriaBuilder, search);
+        Predicate predicate = getSearchPredicate(List.of(bookingRoot, joinUser, joinOrganizer, joinShowingTime, joinEvent), criteriaBuilder, search);
         criteriaQuery.select(bookingRoot).where(predicate).orderBy(criteriaBuilder.desc(bookingRoot.get("paidAt")));
         List<Booking> bookings = entityManager.createQuery(criteriaQuery).setMaxResults(pageable.getPageSize()).setFirstResult((int)pageable.getOffset()).getResultList();
         Long count = countBookingSearch(criteriaBuilder,search);
@@ -257,9 +258,10 @@ public class SearchCriteriaRepository {
         CriteriaQuery<Long> countQuery = criteriaBuilder.createQuery(Long.class);
         Root<Booking> bookingRoot = countQuery.from(Booking.class);
         Join<Booking, User> joinUser = bookingRoot.join("user", JoinType.LEFT);
+        Join<User, Organizer> joinOrganizer = joinUser.join("organizer", JoinType.LEFT);
         Join<Booking, ShowingTime> joinShowingTime = bookingRoot.join("showingTime", JoinType.LEFT);
         Join<ShowingTime, Event> joinEvent = joinShowingTime.join("event", JoinType.LEFT);
-        Predicate predicate = getSearchPredicate(List.of(bookingRoot, joinUser, joinShowingTime, joinEvent), criteriaBuilder, search);
+        Predicate predicate = getSearchPredicate(List.of(bookingRoot, joinUser, joinOrganizer , joinShowingTime, joinEvent), criteriaBuilder, search);
         countQuery.select(criteriaBuilder.count(bookingRoot)).where(predicate);
         Long count = entityManager.createQuery(countQuery).getSingleResult();
         log.info("End count Booking search...");
@@ -293,6 +295,4 @@ public class SearchCriteriaRepository {
         log.info("End count EventAds search...");
         return count;
     }
-
-
 }

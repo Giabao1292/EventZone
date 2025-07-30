@@ -31,6 +31,6 @@ public interface BookingService {
 
     List<Booking> findByUserIdAndPaymentStatus(Integer userId, String paymentStatus);
 
-    PageResponse<BookingResponseDTO> searchBooking(Pageable pageable, String[] search);
+    PageResponse<BookingResponseDTO> searchBooking(String orgName, Pageable pageable, String[] search);
 
 }

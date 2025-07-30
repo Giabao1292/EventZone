@@ -18,9 +18,9 @@ public class RevenueService {
 
     private final BookingRepository bookingRepository;
 
-    public RevenueResponse getRevenueInTimeSeries(String groupBy, String type, LocalDate from, LocalDate to){
+    public RevenueResponse getRevenueInTimeSeries(String orgName, String groupBy, String type, LocalDate from, LocalDate to){
         String format = groupBy.equals("day") ? "%d/%m" : "%m/%Y" ;
-        List<RevenueBucketView> revenueBucketViews = bookingRepository.findRevenueInTimeSeries(format, type, from, to.plusDays(1));
+        List<RevenueBucketView> revenueBucketViews = bookingRepository.findRevenueInTimeSeries(orgName, format, type, from, to.plusDays(1));
         BigDecimal adsRevenue = revenueBucketViews.stream().map(RevenueBucketView::getAds).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal ticketSellingRevenue = revenueBucketViews.stream().map(RevenueBucketView::getBooking).reduce(BigDecimal.ZERO, BigDecimal::add);
         return RevenueResponse.builder()

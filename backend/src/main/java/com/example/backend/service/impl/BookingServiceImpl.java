@@ -386,16 +386,19 @@ public class BookingServiceImpl implements BookingService {
 
     }
 
-    private Page<Booking> findAll(Pageable pageable) {
-        Page<Long> ids = bookingRepository.findAllBookingId(pageable);
+    private Page<Booking> findAll(String orgName, Pageable pageable) {
+        Page<Long> ids = bookingRepository.findAllBookingId(orgName, pageable);
         List<Booking> bookings = bookingRepository.findAllBookingById(ids.getContent());
         return new PageImpl<>(bookings, pageable, ids.getTotalElements());
     }
 
-
     @Override
-    public PageResponse<BookingResponseDTO> searchBooking(Pageable pageable, String[] search) {
-        Page<Booking> page = search != null && search.length != 0 ? searchCriteriaRepository.searchBooking(pageable, search) : findAll(pageable);
+    public PageResponse<BookingResponseDTO> searchBooking(String orgName, Pageable pageable, String[] search) {
+        String[] newSearch = search != null ? Arrays.copyOf(search, search.length + 1) : new String[1];
+        if(orgName != null && !orgName.isEmpty()){
+            newSearch[newSearch.length - 1] = "orgName:" + orgName;
+        }
+        Page<Booking> page = search != null && search.length != 0 ? searchCriteriaRepository.searchBooking(pageable, newSearch) : findAll(orgName, pageable);
         List<BookingResponseDTO> bookingResponseDTOS = page.getContent().stream().map(booking ->
                 BookingResponseDTO.builder()
                         .bookingId(booking.getId())

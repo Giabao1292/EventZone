@@ -71,5 +71,4 @@ public class ImageService {
                 .secure(true)          // dùng HTTPS
                 .generate(publicId);
     }
-
 }

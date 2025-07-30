@@ -38,5 +38,4 @@ public class QrCodeService {
             throw new RuntimeException("Tạo mã QR thất bại");
         }
     }
-
 }

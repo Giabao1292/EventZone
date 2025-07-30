@@ -25,21 +25,21 @@ public class RevenueController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/time-series")
-    public ResponseData<RevenueResponse> getRevenueInTimeSeries(@RequestParam("groupBy") String groupBy, @RequestParam("type") String type, @RequestParam("from") LocalDate from, @RequestParam("to") LocalDate to) {
-        return new ResponseData<>(HttpStatus.OK.value(), "Get revenues in " + groupBy + " from " + from + " to " + to, revenueService.getRevenueInTimeSeries(groupBy, type, from, to));
+    public ResponseData<RevenueResponse> getRevenueInTimeSeries(@RequestParam(required = false, name ="orgName") String orgName, @RequestParam("groupBy") String groupBy, @RequestParam("type") String type, @RequestParam("from") LocalDate from, @RequestParam("to") LocalDate to) {
+        return new ResponseData<>(HttpStatus.OK.value(), "Get revenues in " + groupBy + " from " + from + " to " + to, revenueService.getRevenueInTimeSeries(orgName, groupBy, type, from, to));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/event-ads")
-    public ResponseData<PageResponse<EventAdsRevenueResponse>> searchEventAds(Pageable pageable, @RequestParam(required = false, name = "search") String... search) {
-        PageResponse<EventAdsRevenueResponse> eventAdsRevenueResponses = eventAdsService.searchEventAds(pageable, search);
+    public ResponseData<PageResponse<EventAdsRevenueResponse>> searchEventAds(@RequestParam(required = false, name = "orgName") String orgName, Pageable pageable, @RequestParam(required = false, name = "search") String... search) {
+        PageResponse<EventAdsRevenueResponse> eventAdsRevenueResponses = eventAdsService.searchEventAds(orgName, pageable, search);
         return new ResponseData<>(HttpStatus.OK.value(), "Search EventAds succesfully", eventAdsRevenueResponses);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/bookings")
-    public ResponseData<PageResponse<BookingResponseDTO>> searchBooking(Pageable pageable, @RequestParam(required = false, name = "search") String... search) {
-        PageResponse<BookingResponseDTO> bookingResponseDTOS = bookingService.searchBooking(pageable, search);
+    public ResponseData<PageResponse<BookingResponseDTO>> searchBooking(@RequestParam(required = false, name = "orgName") String orgName, Pageable pageable, @RequestParam(required = false, name = "search") String... search) {
+        PageResponse<BookingResponseDTO> bookingResponseDTOS = bookingService.searchBooking(orgName, pageable, search);
         return new ResponseData<>(HttpStatus.OK.value(), "Search Booking succesfully", bookingResponseDTOS);
     }
 }

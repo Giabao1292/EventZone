@@ -20,6 +20,5 @@ public interface EventAdsService {
     List<EventAds> getByStatus(EventAds.AdsStatus status);
     List<EventAds> getAll();
     List<EventAdsResponse> getActiveAdsToday();
-
-    PageResponse<EventAdsRevenueResponse> searchEventAds(Pageable pageable, String[] search);
+    PageResponse<EventAdsRevenueResponse> searchEventAds(String orgName,Pageable pageable, String[] search);
 }

@@ -112,8 +112,9 @@ public class OrganizerController {
     }
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/organizers")
-    public ResponseData<PageResponse<OrganizerSummaryDTO>> searchOrganizers(Pageable pageable,@RequestParam(name = "search", required = false) String... search) {
-        return new ResponseData<>(HttpStatus.OK.value(), "Search organizer successfully", organizerService.searchOrganizers(pageable, search));
+    public ResponseData<PageResponse<OrganizerSummaryDTO>> searchOrganizers(Pageable pageable, @RequestParam(name = "search", required = false) String... search) {
+        PageResponse<OrganizerSummaryDTO> page = organizerService.searchOrganizers(pageable, search);
+        return new ResponseData<>(HttpStatus.OK.value(), "Search organizer successfully", page);
     }
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/organizers/{orgId}")
@@ -191,5 +192,4 @@ public class OrganizerController {
         }
         return false;
     }
-
 }
