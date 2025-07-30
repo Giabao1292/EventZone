@@ -4,6 +4,8 @@ import { Upload } from "lucide-react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { uploadImage } from "../../services/imagesService";
+import { useEffect } from "react";
+
 
 const EventInfoStep = ({
                          eventData,
@@ -15,6 +17,31 @@ const EventInfoStep = ({
   const [headerLoading, setHeaderLoading] = useState(false);
   const [posterLoading, setPosterLoading] = useState(false);
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    const newErrors = { ...errors };
+    const now = new Date();
+
+    const start = eventData.startTime ? new Date(eventData.startTime) : null;
+    const end = eventData.endTime ? new Date(eventData.endTime) : null;
+
+    // Kiểm tra thời gian bắt đầu không được ở quá khứ
+    if (start && start < now) {
+      newErrors.startTime = "Thời gian bắt đầu phải từ hiện tại trở đi.";
+    } else {
+      delete newErrors.startTime;
+    }
+
+    // Kiểm tra thời gian kết thúc phải sau thời gian bắt đầu
+    if (start && end && end <= start) {
+      newErrors.endTime = "Thời gian kết thúc phải sau thời gian bắt đầu.";
+    } else {
+      delete newErrors.endTime;
+    }
+
+    setErrors(newErrors);
+  }, [eventData.startTime, eventData.endTime]);
+  // ✅ KẾT THÚC validate thời gian
 
   // Đảm bảo categoryId là string để select hoạt động tốt
   const categoryValue =
@@ -262,6 +289,11 @@ const EventInfoStep = ({
           </div>
         </div>
       </div>
+<<<<<<< Updated upstream
+=======
+            
+    </div>
+>>>>>>> Stashed changes
   );
 };
 
