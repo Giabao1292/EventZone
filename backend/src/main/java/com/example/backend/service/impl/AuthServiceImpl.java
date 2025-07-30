@@ -106,7 +106,6 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
-
     @Override
     public void resetPassword(String token, String newPassword) {
         VerificationToken verificationToken = verificationTokenRepository.findByToken(token)

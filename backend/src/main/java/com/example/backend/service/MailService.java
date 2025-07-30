@@ -14,6 +14,7 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 import java.time.LocalDateTime;
+import java.time.Year;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -255,6 +256,22 @@ public class MailService {
         mailSender.send(message);
     }
 
+    public void sendBankAccountVerificationEmail(String toEmail, String code) throws MessagingException {
+        String subject = "Xác minh thêm tài khoản ngân hàng";
 
+        // Tạo Thymeleaf context
+        Context context = new Context();
+        context.setVariable("code", code);
+        context.setVariable("year", Year.now().getValue());
+
+        // Gửi mail
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+        helper.setTo(toEmail);
+        helper.setSubject(subject);
+        helper.setText(templateEngine.process("add-bank-account-verification.html", context), true);
+
+        mailSender.send(message);
+    }
 
 }

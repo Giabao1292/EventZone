@@ -100,6 +100,7 @@ export const getTopClients = async (params = {}) => {
     throw error;
   }
 };
+
 export const getBankList = async () => {
   try {
     const res = await apiClient.get("/users/banks");
@@ -120,6 +121,8 @@ export const addBankAccount = async (bankData) => {
       bankName: bankData.bankName,
       accountNumber: bankData.accountNumber,
       holderName: bankData.holderName,
+      code: bankData.code,
+      isDefault: bankData.isDefault || 0,
     });
     if (res.data && res.data.code === 200) {
       return res.data.data;
@@ -135,8 +138,27 @@ export const addBankAccount = async (bankData) => {
   }
 };
 
+// New function for sending bank verification code
+export const sendBankVerificationCode = async () => {
+  try {
+    const res = await apiClient.post("/users/banks/sending-code");
+    if (res.data && res.data.code === 200) {
+      return res.data;
+    } else {
+      throw new Error(res.data.message || "Failed to send verification code");
+    }
+  } catch (error) {
+    console.error("Error sending verification code:", error);
+    if (error.response && error.response.data && error.response.data.message) {
+      throw new Error(error.response.data.message);
+    }
+    throw new Error("Có lỗi xảy ra khi gửi mã xác thực!");
+  }
+};
+
 // Alias for backward compatibility
 export const addBank = addBankAccount;
+
 export const deleteBank = async (bankId) => {
   try {
     const res = await apiClient.delete(`/users/banks/${bankId}`);
