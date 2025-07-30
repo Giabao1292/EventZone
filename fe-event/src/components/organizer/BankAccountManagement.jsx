@@ -92,6 +92,17 @@ export default function BankAccountManagement() {
   };
 
   const handleAddBank = async () => {
+    // Kiểm tra đã có tài khoản chưa
+    if (bankAccounts.length > 0) {
+      toast({
+        title: "❌ Không thể thêm",
+        description:
+          "Bạn đã có tài khoản ngân hàng. Chỉ được phép 1 tài khoản duy nhất.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!newBank.bankName || !newBank.accountNumber || !newBank.holderName) {
       toast({
         title: "Lỗi",
@@ -110,8 +121,9 @@ export default function BankAccountManagement() {
       });
 
       toast({
-        title: "Thành công",
-        description: "Thêm tài khoản ngân hàng thành công",
+        title: "✅ Thành công",
+        description:
+          "Đã thêm tài khoản ngân hàng thành công. Bạn không thể thêm tài khoản khác.",
       });
 
       // Reset form and close dialog
@@ -197,100 +209,138 @@ export default function BankAccountManagement() {
             <CardTitle className="text-xl font-semibold text-gray-800">
               Tài Khoản Ngân Hàng Của Tôi
             </CardTitle>
-            <Dialog open={isAddBankOpen} onOpenChange={setIsAddBankOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-orange-500 hover:bg-orange-600 text-white">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Thêm Thẻ Mới
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Thêm Ngân Hàng Liên Kết</DialogTitle>
-                  <DialogDescription>
-                    Nhập thông tin tài khoản ngân hàng của bạn
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="bank-name">Tên ngân hàng</Label>
-                    <Select
-                      value={newBank.bankName}
-                      onValueChange={(value) =>
-                        setNewBank({ ...newBank, bankName: value })
-                      }
+            {bankAccounts.length === 0 ? (
+              <Dialog open={isAddBankOpen} onOpenChange={setIsAddBankOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-orange-500 hover:bg-orange-600 text-white">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Thêm Tài Khoản Ngân Hàng
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Thêm Tài Khoản Ngân Hàng</DialogTitle>
+                    <DialogDescription>
+                      Nhập thông tin tài khoản ngân hàng của bạn.
+                      <span className="text-orange-600 font-medium">
+                        Lưu ý: Chỉ được phép thêm 1 tài khoản ngân hàng duy
+                        nhất.
+                      </span>
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="bank-name">Tên ngân hàng</Label>
+                      <Select
+                        value={newBank.bankName}
+                        onValueChange={(value) =>
+                          setNewBank({ ...newBank, bankName: value })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Chọn ngân hàng" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {vietnameseBanks.map((bank) => (
+                            <SelectItem key={bank} value={bank}>
+                              {bank}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="account-number">Số tài khoản</Label>
+                      <Input
+                        id="account-number"
+                        placeholder="1234567890"
+                        value={newBank.accountNumber}
+                        onChange={(e) =>
+                          setNewBank({
+                            ...newBank,
+                            accountNumber: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="account-holder">Tên chủ tài khoản</Label>
+                      <Input
+                        id="account-holder"
+                        placeholder="NGUYEN VAN A"
+                        value={newBank.holderName}
+                        onChange={(e) =>
+                          setNewBank({ ...newBank, holderName: e.target.value })
+                        }
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsAddBankOpen(false)}
+                      disabled={submitting}
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Chọn ngân hàng" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {vietnameseBanks.map((bank) => (
-                          <SelectItem key={bank} value={bank}>
-                            {bank}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="account-number">Số tài khoản</Label>
-                    <Input
-                      id="account-number"
-                      placeholder="1234567890"
-                      value={newBank.accountNumber}
-                      onChange={(e) =>
-                        setNewBank({
-                          ...newBank,
-                          accountNumber: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="account-holder">Tên chủ tài khoản</Label>
-                    <Input
-                      id="account-holder"
-                      placeholder="NGUYEN VAN A"
-                      value={newBank.holderName}
-                      onChange={(e) =>
-                        setNewBank({ ...newBank, holderName: e.target.value })
-                      }
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsAddBankOpen(false)}
-                    disabled={submitting}
-                  >
-                    Hủy
-                  </Button>
-                  <Button
-                    onClick={handleAddBank}
-                    className="bg-orange-500 hover:bg-orange-600"
-                    disabled={submitting}
-                  >
-                    {submitting ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Đang thêm...
-                      </>
-                    ) : (
-                      "Thêm Tài Khoản"
-                    )}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+                      Hủy
+                    </Button>
+                    <Button
+                      onClick={handleAddBank}
+                      className="bg-orange-500 hover:bg-orange-600"
+                      disabled={submitting}
+                    >
+                      {submitting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Đang thêm...
+                        </>
+                      ) : (
+                        "Thêm Tài Khoản"
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Badge
+                  variant="secondary"
+                  className="bg-green-100 text-green-700"
+                >
+                  ✅ Đã có tài khoản ngân hàng
+                </Badge>
+                <span className="text-sm text-gray-500">
+                  Chỉ được phép thêm 1 tài khoản
+                </span>
+              </div>
+            )}
           </CardHeader>
           <CardContent>
             {bankAccounts.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                Bạn chưa có tài khoản ngân hàng nào.
+              <div className="text-center py-12">
+                <div className="text-gray-500 mb-4">
+                  Bạn chưa có tài khoản ngân hàng nào.
+                </div>
+                <div className="text-sm text-orange-600 bg-orange-50 p-3 rounded-lg">
+                  💡 <strong>Lưu ý:</strong> Chỉ được phép thêm 1 tài khoản ngân
+                  hàng duy nhất. Hãy chọn tài khoản chính xác để nhận thanh
+                  toán.
+                </div>
               </div>
             ) : (
               <div className="space-y-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                  <div className="flex items-center gap-2 text-blue-800">
+                    <span className="text-lg">ℹ️</span>
+                    <span className="font-medium">
+                      Thông tin tài khoản ngân hàng
+                    </span>
+                  </div>
+                  <p className="text-sm text-blue-700 mt-1">
+                    Bạn đã có 1 tài khoản ngân hàng. Tài khoản này sẽ được sử
+                    dụng để nhận thanh toán từ các sự kiện.
+                  </p>
+                </div>
+
                 {bankAccounts.map((bank) => (
                   <div
                     key={bank.paymentId}
@@ -330,47 +380,10 @@ export default function BankAccountManagement() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2 ml-4">
-                      {/* Delete Button with Confirmation Dialog */}
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50 bg-transparent"
-                            disabled={deletingBankId === bank.paymentId}
-                          >
-                            {deletingBankId === bank.paymentId ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Trash2 className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>
-                              Xác nhận xóa tài khoản
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Bạn có chắc chắn muốn xóa tài khoản ngân hàng{" "}
-                              <strong>{bank.bankName}</strong> -{" "}
-                              <strong>*{bank.endAccountNumber}</strong> không?
-                              <br />
-                              <br />
-                              Hành động này không thể hoàn tác.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Hủy</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDeleteBank(bank.paymentId)}
-                              className="bg-red-600 hover:bg-red-700"
-                            >
-                              Xóa tài khoản
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                      {/* Ẩn nút xóa - chỉ cho phép 1 tài khoản */}
+                      <div className="text-sm text-gray-500 italic">
+                        🔒 Không thể xóa tài khoản
+                      </div>
 
                       {bank.isDefault === 0 && (
                         <Button

@@ -294,12 +294,13 @@ public class BookingServiceImpl implements BookingService {
         
         // Kiểm tra thời gian sự kiện
         LocalDateTime eventStartTime = booking.getShowingTime().getStartTime();
+        LocalDateTime eventEndTime = booking.getShowingTime().getEndTime();
         LocalDateTime currentTime = LocalDateTime.now();
         LocalDateTime checkInDeadline = eventStartTime.minusHours(12); // Chỉ cho phép check-in trước 12 tiếng
         
         // Kiểm tra xem thời gian hiện tại có trong khoảng cho phép check-in không
         // Chỉ cho phép check-in từ thời điểm hiện tại đến 12 tiếng trước sự kiện
-        if (currentTime.isAfter(eventStartTime)) {
+        if (currentTime.isAfter(eventEndTime)) {
             throw new RuntimeException("Không thể check-in. Sự kiện đã kết thúc.");
         }
         

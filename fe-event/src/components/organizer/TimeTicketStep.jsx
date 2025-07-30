@@ -10,43 +10,12 @@ import {
   AlertCircle,
 } from "lucide-react";
 import apiClient from "../../api/axios";
-
-// Mock AddressPicker component
-const AddressPicker = ({ onSelect, initialValue }) => {
-  return (
-    <div className="space-y-3">
-      <select
-        className="w-full px-4 py-3 bg-white/80 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all duration-300"
-        onChange={(e) =>
-          onSelect({
-            city: e.target.value,
-            location: "",
-            address_id: e.target.value,
-          })
-        }
-        defaultValue={initialValue?.city || ""}
-      >
-        <option value="">Chọn thành phố</option>
-        <option value="hanoi">Hà Nội</option>
-        <option value="hcmc">TP. Hồ Chí Minh</option>
-        <option value="danang">Đà Nẵng</option>
-      </select>
-      <input
-        type="text"
-        placeholder="Nhập địa chỉ cụ thể..."
-        className="w-full px-4 py-3 bg-white/80 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all duration-300"
-        defaultValue={initialValue?.location || ""}
-        onChange={(e) =>
-          onSelect({
-            city: initialValue?.city || "",
-            location: e.target.value,
-            address_id: initialValue?.address_id || "",
-          })
-        }
-      />
-    </div>
-  );
-};
+import {
+  validateShowingTime,
+  formatDuration,
+  validateSaleTimes,
+} from "../../utils/dateValidation";
+import AddressPicker from "./AddressPicker";
 
 const TimeTicketStep = ({
   eventData = {},
@@ -103,81 +72,17 @@ const TimeTicketStep = ({
     }
   };
 
-  const validateShowingTime = () => {
-    const errors = {};
-    const { startTime, endTime, saleOpenTime, saleCloseTime, layoutMode } =
-      newShowing;
-
-    // Required field validation
-    if (!startTime) errors.startTime = "Thời gian bắt đầu là bắt buộc";
-    if (!endTime) errors.endTime = "Thời gian kết thúc là bắt buộc";
-    if (!saleOpenTime) errors.saleOpenTime = "Thời gian mở bán là bắt buộc";
-    if (!saleCloseTime) errors.saleCloseTime = "Thời gian đóng bán là bắt buộc";
-    if (!layoutMode) errors.layoutMode = "Chế độ layout là bắt buộc";
-
-    // Time logic validation
-    if (startTime && endTime) {
-      const start = new Date(startTime);
-      const end = new Date(endTime);
-
-      if (start >= end) {
-        errors.endTime = "Thời gian kết thúc phải sau thời gian bắt đầu";
-      }
-
-      // Check if event duration is reasonable (at least 30 minutes)
-      const duration = end - start;
-      const minDuration = 30 * 60 * 1000; // 30 minutes in milliseconds
-      if (duration < minDuration) {
-        errors.endTime = "Sự kiện phải kéo dài ít nhất 30 phút";
-      }
-    }
-
-    if (saleOpenTime && saleCloseTime) {
-      const open = new Date(saleOpenTime);
-      const close = new Date(saleCloseTime);
-
-      if (open >= close) {
-        errors.saleCloseTime = "Thời gian đóng bán phải sau thời gian mở bán";
-      }
-    }
-
-    if (startTime && saleOpenTime) {
-      const start = new Date(startTime);
-      const open = new Date(saleOpenTime);
-
-      if (open > start) {
-        errors.saleOpenTime =
-          "Thời gian mở bán phải trước hoặc bằng thời gian bắt đầu";
-      }
-    }
-
-    // Check for overlapping showing times
-    if (startTime && endTime) {
-      const start = new Date(startTime);
-      const end = new Date(endTime);
-
-      const overlap = (eventData?.showingTimes || []).some((showing) => {
-        const existingStart = new Date(showing.startTime);
-        const existingEnd = new Date(showing.endTime);
-        return (
-          (start >= existingStart && start < existingEnd) ||
-          (end > existingStart && end <= existingEnd) ||
-          (start <= existingStart && end >= existingEnd)
-        );
-      });
-
-      if (overlap) {
-        errors.startTime = "Xuất chiếu bị trùng với lịch đã có";
-        errors.endTime = "Xuất chiếu bị trùng với lịch đã có";
-      }
-    }
-
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
+  const validateShowingTimeLocal = () => {
+    const validationResult = validateShowingTime(
+      newShowing,
+      eventData?.showingTimes || []
+    );
+    setValidationErrors(validationResult.errors);
+    return validationResult.isValid;
   };
 
   const handleAddShowingTime = () => {
-    if (!validateShowingTime()) {
+    if (!validateShowingTimeLocal()) {
       return;
     }
 
@@ -315,6 +220,7 @@ const TimeTicketStep = ({
                       onChange={(e) =>
                         handleInputTimeChange(field, e.target.value)
                       }
+                      min={new Date().toISOString().slice(0, 16)}
                       className={`w-full px-4 py-3 bg-white/80 border rounded-xl text-slate-700 focus:outline-none focus:ring-2 transition-all duration-300 ${
                         validationErrors[field]
                           ? "border-red-400 focus:border-red-500 focus:ring-red-500/20"
@@ -445,6 +351,12 @@ const TimeTicketStep = ({
                       <span>{formatDateTime(showing.endTime)}</span>
                     </div>
                     <div className="flex justify-between">
+                      <span>Thời lượng:</span>
+                      <span className="font-medium text-blue-600">
+                        {formatDuration(showing.startTime, showing.endTime)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
                       <span>Bán vé:</span>
                       <span>{formatDateTime(showing.saleOpenTime)}</span>
                     </div>
@@ -526,14 +438,16 @@ const TimeTicketStep = ({
               Địa chỉ *
             </label>
             <AddressPicker
-              onSelect={({ location, city, address_id }) => {
+              onSelect={({ location, city, specificAddress, address_id }) => {
                 handleInputChange("location", location);
                 handleInputChange("city", city);
+                handleInputChange("specificAddress", specificAddress);
                 if (address_id) handleInputChange("address_id", address_id);
               }}
               initialValue={{
                 city: eventData?.city,
                 location: eventData?.location,
+                specificAddress: eventData?.specificAddress,
                 address_id: eventData?.address_id,
               }}
             />

@@ -21,6 +21,7 @@ public class BookingHistoryDTO {
     private LocalDateTime endTime;
     private LocalDateTime bookedAt;
     private BigDecimal finalPrice;
+    private BigDecimal originalPrice;
     private String paymentMethod;
     private String paymentStatus;
     private String checkinStatus;
@@ -48,7 +49,7 @@ public class BookingHistoryDTO {
         this.showingTimeId = booking.getShowingTime() != null
                 ? booking.getShowingTime().getId()
                 : 0;
-
+this.originalPrice = booking.getOriginalPrice();
         // Tiêu đề sự kiện
         this.eventTitle = booking.getShowingTime() != null && booking.getShowingTime().getEvent() != null
                 ? booking.getShowingTime().getEvent().getEventTitle()

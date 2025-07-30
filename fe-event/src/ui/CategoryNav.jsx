@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import apiClient from "../api/axios";
 import { motion, AnimatePresence } from "framer-motion";
 
 const CategoryNav = ({ onSelectCategory, selectedCategoryId }) => {
@@ -8,9 +8,7 @@ const CategoryNav = ({ onSelectCategory, selectedCategoryId }) => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:8080/api/categories"
-        );
+        const response = await apiClient.get("/categories");
         if (Array.isArray(response.data.data)) {
           setCategories(response.data.data);
         } else {

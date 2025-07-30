@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import axios from "axios";
+import apiClient from "../../api/axios";
 import { Link } from "react-router-dom";
 import {
   Calendar,
@@ -35,10 +35,7 @@ const OrganizerEventList = () => {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const token = localStorage.getItem("accessToken");
-        const res = await axios.get("/api/events/myevents", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await apiClient.get("/events/myevents");
 
         // Sắp xếp sự kiện mới lên đầu
         const sortedEvents = res.data.data.sort(

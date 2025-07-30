@@ -12,6 +12,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { useLocation, useNavigate } from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
 import DepositStep from "./DepositStep";
+import { validateEventDuration } from "../../utils/dateValidation";
 
 const steps = [
   { id: 1, title: "Thông tin sự kiện", icon: "🎉" },
@@ -141,8 +142,34 @@ const EventCreationForm = () => {
 
   const isStepValid = () => {
     switch (currentStep) {
-      case 1:
-        return !!eventData.eventTitle && !!eventData.categoryId;
+      case 1: {
+        // Kiểm tra thông tin cơ bản và validation ngày tháng
+        const hasBasicInfo = !!eventData.eventTitle && !!eventData.categoryId;
+        const hasValidDates = eventData.startTime && eventData.endTime;
+
+        if (hasValidDates) {
+          const startTime = new Date(eventData.startTime);
+          const endTime = new Date(eventData.endTime);
+          const now = new Date();
+
+          // Kiểm tra thời gian không trong quá khứ và logic hợp lệ
+          const isFutureTime = startTime > now && endTime > now;
+          const isValidLogic = startTime < endTime;
+
+          // Kiểm tra thời lượng với validation chi tiết
+          const durationValidation = validateEventDuration(
+            eventData.startTime,
+            eventData.endTime
+          );
+          const hasValidDuration = durationValidation.isValid;
+
+          return (
+            hasBasicInfo && isFutureTime && isValidLogic && hasValidDuration
+          );
+        }
+
+        return hasBasicInfo;
+      }
       case 2:
         return (
           !!eventData.venueName &&
@@ -215,12 +242,37 @@ const EventCreationForm = () => {
       if (currentStep === 4) {
         try {
           await apiClient.post(`/events/save/${eventData.id}`);
-          toast.success("Sự kiện đã được gửi để phê duyệt!", {
-            autoClose: 2000,
-            onClose: () => navigate("/organizer"),
-          });
+          toast.success(
+            `🎉 Sự kiện "${eventData.eventTitle}" đã được gửi lên phê duyệt thành công!`,
+            {
+              autoClose: 4000,
+              onClose: () => navigate("/organizer"),
+              position: "top-center",
+              style: {
+                fontSize: "16px",
+                fontWeight: "600",
+              },
+            }
+          );
+
+          // Thêm thông báo chi tiết
+          setTimeout(() => {
+            toast.info(
+              "📋 Sự kiện của bạn sẽ được admin xem xét trong thời gian sớm nhất. Bạn có thể theo dõi trạng thái trong trang quản lý sự kiện.",
+              {
+                autoClose: 5000,
+                position: "top-center",
+              }
+            );
+          }, 1000);
         } catch (error) {
-          toast.error("Lỗi khi gửi sự kiện!");
+          toast.error(
+            "❌ Có lỗi xảy ra khi gửi sự kiện lên phê duyệt. Vui lòng thử lại!",
+            {
+              autoClose: 4000,
+              position: "top-center",
+            }
+          );
           console.error(error);
         }
         return;
@@ -230,7 +282,8 @@ const EventCreationForm = () => {
         setCurrentStep((prev) => prev + 1);
       }
     } catch (err) {
-      const message = "Lỗi khi lưu dữ liệu. Vui lòng kiểm tra lại.";
+      const message =
+        "Lỗi về Thời gian mở bán và bán vé. Vui lòng kiểm tra lại.";
       toast.error(message);
     } finally {
       setLoading(false);
@@ -299,19 +352,24 @@ const EventCreationForm = () => {
             disabled={!isStepValid() || loading}
             className={`px-8 py-3 rounded-xl flex items-center space-x-3 transition-all duration-300 ${
               isStepValid() && !loading
-                ? "bg-gradient-to-r from-blue-500 to-orange-500 hover:from-blue-600 hover:to-orange-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40"
+                ? currentStep === 4
+                  ? "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-lg shadow-green-500/25 hover:shadow-green-500/40"
+                  : "bg-gradient-to-r from-blue-500 to-orange-500 hover:from-blue-600 hover:to-orange-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40"
                 : "bg-slate-200 text-slate-500 cursor-not-allowed"
             }`}
           >
             {loading && <Loader2 className="animate-spin" size={18} />}
             <span className="font-medium">
               {loading
-                ? "Đang xử lý..."
+                ? currentStep === 4
+                  ? "🚀 Đang gửi phê duyệt..."
+                  : "Đang xử lý..."
                 : currentStep === 4
-                ? "Hoàn tất"
+                ? "🚀 Gửi phê duyệt"
                 : "Tiếp tục"}
             </span>
             {currentStep < 4 && !loading && <ChevronRight size={18} />}
+            {currentStep === 4 && !loading && <span>✅</span>}
           </button>
         </div>
 

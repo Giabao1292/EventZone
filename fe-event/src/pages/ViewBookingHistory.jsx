@@ -524,13 +524,15 @@ export default function ViewBookingHistory() {
                       </p>
                     </div>
                   </div>
+
                   <div className="bg-gray-50 rounded-lg p-4 mt-4">
                     <div className="flex justify-between items-center">
                       <span className="text-lg font-semibold text-gray-700">
                         Tổng tiền:
                       </span>
                       <span className="text-2xl font-bold text-orange-600">
-                        {selectedBooking.finalPrice?.toLocaleString() || "0"} đ
+                        {selectedBooking.originalPrice?.toLocaleString() || "0"}{" "}
+                        đ
                       </span>
                     </div>
                   </div>

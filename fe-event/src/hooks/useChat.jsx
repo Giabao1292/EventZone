@@ -6,6 +6,7 @@ import { over } from "stompjs";
 import { getToken } from "../utils/storage";
 import chatService from "../services/chatService";
 import useAuth from "./useAuth";
+import getWebSocketUrl from "../api/websocket";
 
 const useChat = () => {
   const { user } = useAuth();
@@ -31,7 +32,7 @@ const useChat = () => {
     }
 
     try {
-      const socket = new SockJS("http://localhost:8080/ws");
+      const socket = new SockJS(getWebSocketUrl());
       stompClientRef.current = over(socket);
 
       stompClientRef.current.connect(

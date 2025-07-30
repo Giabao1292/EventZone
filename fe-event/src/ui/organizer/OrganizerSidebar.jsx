@@ -27,13 +27,7 @@ const OrganizerSidebar = () => {
       color: "green",
       description: "Theo dõi doanh thu và báo cáo",
     },
-    {
-      path: "/organizer/analytics",
-      label: "Thống kê chi tiết",
-      icon: "📈",
-      color: "purple",
-      description: "Phân tích dữ liệu sự kiện",
-    },
+
     {
       path: "/organizer/reviews",
       label: "Quản lý đánh giá",

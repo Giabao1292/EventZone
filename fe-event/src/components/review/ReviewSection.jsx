@@ -165,7 +165,7 @@ const ReviewSection = ({ showingTimeId, canReview, organizerId, onClose }) => {
       setRating(0);
       fetchReviews();
     } catch {
-      alert("Gửi đánh giá thất bại!");
+      alert("Bạn đã đánh giá sự kiện này rồi!");
     } finally {
       setSubmitting(false);
     }
