@@ -5,20 +5,27 @@ import com.example.backend.dto.response.BankResponse;
 import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.model.User;
 import com.example.backend.model.UserBankAccount;
+import com.example.backend.model.VerificationToken;
 import com.example.backend.repository.UserBankAccountRepository;
 import com.example.backend.repository.UserRepository;
+import com.example.backend.repository.VerificationRepository;
 import com.google.zxing.NotFoundException;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class UserBankAccountService {
     private final UserBankAccountRepository userBankAccountRepository;
     private final UserRepository userRepository;
+    private final VerificationRepository verificationRepository;
+    private final MailService mailService;
 
     public List<BankResponse> getAllBank(String email){
         List<UserBankAccount> bankAccountList = userBankAccountRepository.findAllByUser_Email(email);
@@ -46,6 +53,9 @@ public class UserBankAccountService {
 
     public void addBank(BankRequest bankRequest){
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        verificationRepository.findByTokenAndEmail(bankRequest.getCode(), email).orElseThrow(() -> new ResourceNotFoundException("Verification Token not found"));
+
         User user = userRepository.findByEmail(email).get();
         UserBankAccount userBankAccount = new UserBankAccount();
 
@@ -67,5 +77,18 @@ public class UserBankAccountService {
         else{
             throw new ResourceNotFoundException("Organizer not found");
         }
+    }
+
+    public void generateToken() throws MessagingException {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        String token = UUID.randomUUID().toString().substring(0, 6);
+
+        VerificationToken verificationToken = new VerificationToken();
+        verificationToken.setToken(token);
+        verificationToken.setExpiryDate(Instant.now().plusSeconds(60 * 5));
+        verificationToken.setEmail(email);
+        verificationRepository.save(verificationToken);
+
+        mailService.sendBankAccountVerificationEmail(email, token);
     }
 }

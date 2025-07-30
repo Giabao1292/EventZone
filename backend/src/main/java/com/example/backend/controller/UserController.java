@@ -11,6 +11,7 @@ import com.example.backend.service.UserBankAccountService;
 import com.example.backend.service.UserService;
 import com.example.backend.service.WishlistService;
 import com.example.backend.util.TokenType;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -217,5 +218,12 @@ public class UserController {
     public ResponseData<?> updateDefaultBank(@PathVariable Integer bankId){
         userBankAccountService.setDefault(bankId);
         return new ResponseData<>(HttpStatus.OK.value(), "Bank updated successfully");
+    }
+
+    @PreAuthorize("hasRole('ORGANIZER')")
+    @PostMapping("/banks/sending-code")
+    public ResponseData<?> generateBankVerificationCode() throws MessagingException {
+        userBankAccountService.generateToken();
+        return new ResponseData<>(HttpStatus.OK.value(), "Token send successfully");
     }
 }
