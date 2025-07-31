@@ -368,7 +368,13 @@ public class BookingServiceImpl implements BookingService {
     @Transactional(readOnly = true)
     public List<BookingHistoryDTO> getBookingHistory(String username) {
         List<Booking> bookings = bookingRepository.findByUserEmail(username);
-
+        // Debug logging
+        System.out.println("Debug - Found " + bookings.size() + " bookings for user: " + username);
+        bookings.forEach(booking -> {
+            System.out.println("Debug - Booking ID: " + booking.getId() + 
+                             ", Original Price: " + booking.getOriginalPrice() + 
+                             ", Final Price: " + booking.getFinalPrice());
+        });
         return bookings.stream()
                 .map(BookingHistoryDTO::new)
                 .toList();

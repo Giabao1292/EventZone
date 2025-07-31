@@ -1,6 +1,7 @@
 package com.example.backend.dto.response;
 
 import com.example.backend.model.Booking;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -20,7 +21,9 @@ public class BookingHistoryDTO {
     private LocalDateTime showTime;
     private LocalDateTime endTime;
     private LocalDateTime bookedAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private BigDecimal finalPrice;
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private BigDecimal originalPrice;
     private String paymentMethod;
     private String paymentStatus;
@@ -49,7 +52,9 @@ public class BookingHistoryDTO {
         this.showingTimeId = booking.getShowingTime() != null
                 ? booking.getShowingTime().getId()
                 : 0;
-this.originalPrice = booking.getOriginalPrice();
+        this.originalPrice = booking.getOriginalPrice();
+        // Debug logging
+        System.out.println("Debug - Booking ID: " + booking.getId() + ", Original Price: " + this.originalPrice);
         // Tiêu đề sự kiện
         this.eventTitle = booking.getShowingTime() != null && booking.getShowingTime().getEvent() != null
                 ? booking.getShowingTime().getEvent().getEventTitle()

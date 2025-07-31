@@ -5,6 +5,7 @@ const ViewBookingHistoryService = {
   async getBookings() {
     try {
       const response = await apiClient.get("/bookings/history"); // ✅ đúng endpoint
+      console.log("Debug - Booking history response:", response.data);
       if (response.data.code === 200) {
         return response.data.data || [];
       }
