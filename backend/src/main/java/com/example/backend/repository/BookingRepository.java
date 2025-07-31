@@ -39,12 +39,17 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
             """)
     Optional<Booking> findBookingWithAllDetails(@Param("bookingId") Integer bookingId);
 
-    @EntityGraph(attributePaths = {
-            "showingTime",
-            "showingTime.event",
-            "showingTime.address"
-    })
-    List<Booking> findByUserEmail(String email);
+    @Query("""
+            SELECT DISTINCT b FROM Booking b
+            LEFT JOIN FETCH b.tblBookingSeats bs
+            LEFT JOIN FETCH bs.seat
+            LEFT JOIN FETCH bs.zone
+            LEFT JOIN FETCH b.showingTime st
+            LEFT JOIN FETCH st.event
+            LEFT JOIN FETCH st.address
+            WHERE b.user.email = :email
+            """)
+    List<Booking> findByUserEmail(@Param("email") String email);
 
     default void deleteExpiredHolds(LocalDateTime expirationTime) {
         List<Booking> expiredBookings = findAllByPaymentStatusAndCreatedDatetimeBefore("HOLD", expirationTime);

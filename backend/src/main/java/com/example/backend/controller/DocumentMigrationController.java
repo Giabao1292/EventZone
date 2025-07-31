@@ -23,10 +23,7 @@ public class DocumentMigrationController {
     
     private final DocumentMigrationUtil documentMigrationUtil;
     
-    /**
-     * Migrate tất cả organizer documents từ URL sang public_id
-     * CHỈ CHẠY MỘT LẦN KHI CẦN THIẾT
-     */
+
     @PostMapping("/documents")
     public ResponseData<String> migrateAllDocuments() {
         try {

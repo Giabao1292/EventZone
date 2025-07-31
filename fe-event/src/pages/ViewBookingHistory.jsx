@@ -20,6 +20,23 @@ import QrCodeService from "../services/qrCodeService";
 import jsPDF from "jspdf";
 import ReviewSection from "../components/review/ReviewSection";
 
+// Helper function to format Vietnamese currency
+const formatVietnameseCurrency = (amount) => {
+  if (!amount || amount === 0) return "Miễn phí";
+
+  // Convert to number if it's a string
+  const numAmount = typeof amount === "string" ? parseFloat(amount) : amount;
+
+  if (isNaN(numAmount)) return "Miễn phí";
+
+  return numAmount.toLocaleString("vi-VN", {
+    style: "currency",
+    currency: "VND",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  });
+};
+
 export default function ViewBookingHistory() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -87,6 +104,8 @@ export default function ViewBookingHistory() {
   );
 
   const handleViewDetails = (booking) => {
+    console.log("Debug - Selected booking:", booking);
+    console.log("Debug - Original price:", booking.originalPrice);
     setSelectedBooking(booking);
     setIsModalOpen(true);
   };
@@ -531,8 +550,9 @@ export default function ViewBookingHistory() {
                         Tổng tiền:
                       </span>
                       <span className="text-2xl font-bold text-orange-600">
-                        {selectedBooking.originalPrice?.toLocaleString() || "0"}{" "}
-                        đ
+                        {formatVietnameseCurrency(
+                          selectedBooking.originalPrice
+                        )}
                       </span>
                     </div>
                   </div>
@@ -686,7 +706,7 @@ const BookingCard = ({
         {/* Price badge */}
         <div className="absolute bottom-3 left-3">
           <span className="px-3 py-1 bg-orange-500/90 text-orange-100 rounded-full text-sm font-bold backdrop-blur-sm shadow-lg">
-            {finalPrice ? `${finalPrice.toLocaleString()} đ` : "Miễn phí"}
+            {formatVietnameseCurrency(finalPrice)}
           </span>
         </div>
       </div>
