@@ -16,6 +16,7 @@ import {
   TrendingUp,
   Edit,
   Plus,
+  Filter,
   Search,
   MapPin,
 } from "lucide-react";
@@ -62,9 +63,10 @@ export default function EventManager() {
   const { user } = useAuth();
   const organizerId = user?.organizer?.id;
 
-  const [currentTab, setCurrentTab] = useState(0);
+  const [currentTab, setCurrentTab] = useState(1);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [tabCounts, setTabCounts] = useState({});
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [showingTimes, setShowingTimes] = useState([]);
@@ -96,6 +98,7 @@ export default function EventManager() {
       )
     ).then((countsArr) => {
       const counts = Object.fromEntries(countsArr);
+      setTabCounts(counts);
 
       // Tính toán stats
       setStats({
@@ -111,71 +114,34 @@ export default function EventManager() {
   useEffect(() => {
     if (!organizerId) return;
     setLoading(true);
+    getEventsByStatus(organizerId, currentTab)
+      .then((data) => {
+        // Sắp xếp sự kiện mới lên đầu
+        const sortedEvents = (data || []).sort((a, b) => {
+          // Ưu tiên: updatedAt > createdAt > startTime > current time
+          const getDateA = (event) => {
+            if (event.updatedAt) return new Date(event.updatedAt);
+            if (event.createdAt) return new Date(event.createdAt);
+            if (event.startTime) return new Date(event.startTime);
+            return new Date(); // fallback
+          };
 
-    if (currentTab === 0) {
-      // Fetch all events
-      Promise.all(
-        STATUS_TABS.map((tab) => getEventsByStatus(organizerId, tab.id))
-      )
-        .then((allEventsArrays) => {
-          const allEvents = allEventsArrays.flat();
-          // Sắp xếp sự kiện mới lên đầu
-          const sortedEvents = (allEvents || []).sort((a, b) => {
-            // Ưu tiên: updatedAt > createdAt > startTime > current time
-            const getDateA = (event) => {
-              if (event.updatedAt) return new Date(event.updatedAt);
-              if (event.createdAt) return new Date(event.createdAt);
-              if (event.startTime) return new Date(event.startTime);
-              return new Date(); // fallback
-            };
+          const getDateB = (event) => {
+            if (event.updatedAt) return new Date(event.updatedAt);
+            if (event.createdAt) return new Date(event.createdAt);
+            if (event.startTime) return new Date(event.startTime);
+            return new Date(); // fallback
+          };
 
-            const getDateB = (event) => {
-              if (event.updatedAt) return new Date(event.updatedAt);
-              if (event.createdAt) return new Date(event.createdAt);
-              if (event.startTime) return new Date(event.startTime);
-              return new Date(); // fallback
-            };
+          const dateA = getDateA(b);
+          const dateB = getDateB(a);
 
-            const dateA = getDateA(b);
-            const dateB = getDateB(a);
-
-            return dateA - dateB;
-          });
-          setEvents(sortedEvents);
-        })
-        .catch(() => setEvents([]))
-        .finally(() => setLoading(false));
-    } else {
-      // Fetch events by specific status
-      getEventsByStatus(organizerId, currentTab)
-        .then((data) => {
-          // Sắp xếp sự kiện mới lên đầu
-          const sortedEvents = (data || []).sort((a, b) => {
-            // Ưu tiên: updatedAt > createdAt > startTime > current time
-            const getDateA = (event) => {
-              if (event.updatedAt) return new Date(event.updatedAt);
-              if (event.createdAt) return new Date(event.createdAt);
-              if (event.startTime) return new Date(event.startTime);
-              return new Date(); // fallback
-            };
-
-            const getDateB = (event) => {
-              if (event.updatedAt) return new Date(event.updatedAt);
-              if (event.createdAt) return new Date(event.createdAt);
-              if (event.startTime) return new Date(event.startTime);
-              return new Date(); // fallback
-            };
-
-            const dateA = getDateA(b);
-            const dateB = getDateB(a);
-
-            return dateA - dateB;
-          });
-          setEvents(sortedEvents);
-        })
-        .catch(() => setEvents([]))
-        .finally(() => setLoading(false));
-    }
+          return dateA - dateB;
+        });
+        setEvents(sortedEvents);
+      })
+      .catch(() => setEvents([]))
+      .finally(() => setLoading(false));
   }, [organizerId, currentTab]);
 
   const openRescheduleModal = async (event) => {
@@ -235,8 +201,6 @@ export default function EventManager() {
   );
 
   function EmptyIcon() {
-    if (currentTab === 0)
-      return <Calendar className="text-5xl text-blue-400 mb-2" />;
     if (currentTab === 3)
       return <XCircle className="text-5xl text-red-400 mb-2" />;
     if (currentTab === 4)
@@ -276,12 +240,7 @@ export default function EventManager() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          <button
-            onClick={() => setCurrentTab(0)}
-            className={`bg-white/80 backdrop-blur-xl p-6 rounded-2xl border border-blue-200/50 shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer ${
-              currentTab === 0 ? "ring-2 ring-blue-400 scale-105" : ""
-            }`}
-          >
+          <div className="bg-white/80 backdrop-blur-xl p-6 rounded-2xl border border-blue-200/50 shadow-xl hover:shadow-2xl transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-slate-600 text-sm font-medium">
@@ -295,14 +254,9 @@ export default function EventManager() {
                 <Calendar className="text-white" size={20} />
               </div>
             </div>
-          </button>
+          </div>
 
-          <button
-            onClick={() => setCurrentTab(1)}
-            className={`bg-white/80 backdrop-blur-xl p-6 rounded-2xl border border-blue-200/50 shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer ${
-              currentTab === 1 ? "ring-2 ring-blue-400 scale-105" : ""
-            }`}
-          >
+          <div className="bg-white/80 backdrop-blur-xl p-6 rounded-2xl border border-blue-200/50 shadow-xl hover:shadow-2xl transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-slate-600 text-sm font-medium">Nháp</p>
@@ -314,14 +268,9 @@ export default function EventManager() {
                 <FileText className="text-white" size={20} />
               </div>
             </div>
-          </button>
+          </div>
 
-          <button
-            onClick={() => setCurrentTab(2)}
-            className={`bg-white/80 backdrop-blur-xl p-6 rounded-2xl border border-blue-200/50 shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer ${
-              currentTab === 2 ? "ring-2 ring-blue-400 scale-105" : ""
-            }`}
-          >
+          <div className="bg-white/80 backdrop-blur-xl p-6 rounded-2xl border border-blue-200/50 shadow-xl hover:shadow-2xl transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-slate-600 text-sm font-medium">Chờ duyệt</p>
@@ -333,14 +282,9 @@ export default function EventManager() {
                 <Clock className="text-white" size={20} />
               </div>
             </div>
-          </button>
+          </div>
 
-          <button
-            onClick={() => setCurrentTab(4)}
-            className={`bg-white/80 backdrop-blur-xl p-6 rounded-2xl border border-blue-200/50 shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer ${
-              currentTab === 4 ? "ring-2 ring-blue-400 scale-105" : ""
-            }`}
-          >
+          <div className="bg-white/80 backdrop-blur-xl p-6 rounded-2xl border border-blue-200/50 shadow-xl hover:shadow-2xl transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-slate-600 text-sm font-medium">Đã duyệt</p>
@@ -352,14 +296,9 @@ export default function EventManager() {
                 <CheckCircle className="text-white" size={20} />
               </div>
             </div>
-          </button>
+          </div>
 
-          <button
-            onClick={() => setCurrentTab(3)}
-            className={`bg-white/80 backdrop-blur-xl p-6 rounded-2xl border border-blue-200/50 shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer ${
-              currentTab === 3 ? "ring-2 ring-blue-400 scale-105" : ""
-            }`}
-          >
+          <div className="bg-white/80 backdrop-blur-xl p-6 rounded-2xl border border-blue-200/50 shadow-xl hover:shadow-2xl transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-slate-600 text-sm font-medium">Từ chối</p>
@@ -371,10 +310,10 @@ export default function EventManager() {
                 <XCircle className="text-white" size={20} />
               </div>
             </div>
-          </button>
+          </div>
         </motion.div>
 
-        {/* Search Section */}
+        {/* Filter Section */}
         <motion.div
           className="bg-white/80 backdrop-blur-xl p-6 rounded-2xl border border-blue-200/50 shadow-xl mb-8"
           initial={{ opacity: 0, y: 20 }}
@@ -382,28 +321,61 @@ export default function EventManager() {
           transition={{ duration: 0.6, delay: 0.4 }}
         >
           <div className="flex items-center space-x-3 mb-6">
-            <Search className="text-blue-500" size={20} />
+            <Filter className="text-blue-500" size={20} />
             <h3 className="text-xl font-semibold text-slate-700">
-              Tìm kiếm sự kiện
+              Bộ lọc sự kiện
             </h3>
           </div>
 
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-slate-600">
-              Tìm kiếm
-            </label>
-            <div className="relative">
-              <Search
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"
-                size={16}
-              />
-              <input
-                type="text"
-                placeholder="Tìm theo tên hoặc mô tả..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full h-12 pl-10 pr-4 rounded-xl bg-white/80 border border-slate-200 text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-300"
-              />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-slate-600">
+                Tìm kiếm
+              </label>
+              <div className="relative">
+                <Search
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"
+                  size={16}
+                />
+                <input
+                  type="text"
+                  placeholder="Tìm theo tên hoặc mô tả..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full h-12 pl-10 pr-4 rounded-xl bg-white/80 border border-slate-200 text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-300"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-slate-600">
+                Trạng thái
+              </label>
+              <div className="flex gap-2 flex-wrap">
+                {STATUS_TABS.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setCurrentTab(tab.id)}
+                    className={`
+                      flex items-center gap-2 px-4 py-2 rounded-xl font-semibold
+                      shadow transition-all duration-300
+                      bg-gradient-to-r ${tab.color}
+                      ${
+                        currentTab === tab.id
+                          ? "scale-105 border-2 border-blue-400 shadow-blue-300/20"
+                          : "opacity-80 hover:scale-105"
+                      }
+                      text-white relative
+                    `}
+                  >
+                    {tab.icon}
+                    {tab.label}
+                    <span className="ml-2 px-2 py-0.5 rounded-full text-xs bg-white/90 text-slate-900 font-bold shadow">
+                      {tabCounts[tab.id] || 0}
+                    </span>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </motion.div>
@@ -434,7 +406,6 @@ export default function EventManager() {
               <div className="text-slate-500">
                 <EmptyIcon />
                 <p className="text-lg font-medium">
-                  {currentTab === 0 && "Chưa có sự kiện nào."}
                   {currentTab === 1 && "Chưa có bản nháp sự kiện nào."}
                   {currentTab === 2 && "Không có sự kiện nào đang chờ duyệt."}
                   {currentTab === 3 && "Không có sự kiện nào bị từ chối."}

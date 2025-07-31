@@ -7,9 +7,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target:
-          import.meta.env.VITE_API_URL?.replace("/api", "") ||
-          "http://localhost:8080", // địa chỉ backend Spring Boot của bạn
+        target: "http://localhost:8080",
         changeOrigin: true,
         secure: false,
       },

@@ -296,7 +296,7 @@ public class BookingServiceImpl implements BookingService {
         LocalDateTime eventStartTime = booking.getShowingTime().getStartTime();
         LocalDateTime eventEndTime = booking.getShowingTime().getEndTime();
         LocalDateTime currentTime = LocalDateTime.now();
-        LocalDateTime checkInDeadline = eventStartTime.minusHours(12); // Chỉ cho phép check-in trước 12 tiếng
+        LocalDateTime checkInDeadline = eventStartTime.minusHours(48); // Chỉ cho phép check-in trước 12 tiếng
         
         // Kiểm tra xem thời gian hiện tại có trong khoảng cho phép check-in không
         // Chỉ cho phép check-in từ thời điểm hiện tại đến 12 tiếng trước sự kiện
