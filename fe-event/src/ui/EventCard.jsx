@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Heart, Share2, Calendar, MapPin, Bell, BellOff } from "lucide-react";
@@ -9,7 +8,6 @@ import {
   untrackEvent,
   isEventTracked,
 } from "../services/trackingService";
-import { wishlistService } from "../services/wishlistServices";
 
 const formatDate = (isoDate) => {
   if (!isoDate) return "Chưa rõ ngày";
@@ -35,6 +33,7 @@ const formatPrice = (price) => {
  * @param {boolean} props.isUpcoming - Là sự kiện sắp mở bán không
  * @param {function} props.onToggleFavorite - Hàm toggle yêu thích
  * @param {function} props.onToggleTrack - Hàm toggle theo dõi
+ * @param {boolean} props.isAuthenticated - Trạng thái đăng nhập
  */
 const EventCard = ({
   event,
@@ -42,14 +41,16 @@ const EventCard = ({
   isUpcoming = false,
   onToggleFavorite,
   onToggleTrack,
+  isAuthenticated = false,
 }) => {
   const navigate = useNavigate();
   const [tracking, setTracking] = useState(false);
   const [isLoadingTrack, setIsLoadingTrack] = useState(false);
-
+  const [isLoadingFavorite, setIsLoadingFavorite] = useState(false);
+  console.log(isFavorite, "isFavorite prop in EventCard");
   // Kiểm tra trạng thái theo dõi nếu là sự kiện sắp mở bán
   useEffect(() => {
-    if (isUpcoming) {
+    if (isUpcoming && isAuthenticated) {
       const checkTrackingStatus = async () => {
         try {
           const status = await isEventTracked(event.id);
@@ -60,7 +61,7 @@ const EventCard = ({
       };
       checkTrackingStatus();
     }
-  }, [event.id, isUpcoming]);
+  }, [event.id, isUpcoming, isAuthenticated]);
 
   const handleClick = () => {
     navigate(`/events/${event.id}`);
@@ -68,35 +69,41 @@ const EventCard = ({
 
   const handleFavoriteClick = async (e) => {
     e.stopPropagation();
-    if (!localStorage.getItem("accessToken")) {
-      toast.error("Vui lòng đăng nhập để thêm vào danh sách yêu thích");
+
+    // Kiểm tra đăng nhập
+    if (!isAuthenticated) {
+      toast.warning("Vui lòng đăng nhập để sử dụng tính năng yêu thích");
       navigate("/login");
       return;
     }
+
+    // Kiểm tra có callback function không
+    if (!onToggleFavorite) {
+      toast.error("Chức năng yêu thích không khả dụng");
+      return;
+    }
+
+    setIsLoadingFavorite(true);
     try {
-      const updatedFavorite = !isFavorite;
-      if (updatedFavorite) {
-        await wishlistService.addToWishlist(event.id);
-        toast.success("Đã thêm vào danh sách yêu thích");
-      } else {
-        await wishlistService.removeFromWishlist(event.id);
-        toast.info("Đã xóa khỏi danh sách yêu thích");
-      }
-      if (onToggleFavorite) onToggleFavorite(event.id);
+      // Gọi callback function từ parent component
+      await onToggleFavorite(event.id);
     } catch (error) {
-      toast.error(
-        error.response?.data?.message || "Lỗi khi cập nhật danh sách yêu thích"
-      );
+      console.error("Error in handleFavoriteClick:", error);
+      toast.error("Lỗi khi cập nhật danh sách yêu thích");
+    } finally {
+      setIsLoadingFavorite(false);
     }
   };
 
   const handleTrackClick = async (e) => {
     e.stopPropagation();
-    if (!localStorage.getItem("accessToken")) {
-      toast.error("Vui lòng đăng nhập để theo dõi sự kiện");
+
+    if (!isAuthenticated) {
+      toast.warning("Vui lòng đăng nhập để theo dõi sự kiện");
       navigate("/login");
       return;
     }
+
     setIsLoadingTrack(true);
     try {
       if (tracking) {
@@ -148,7 +155,6 @@ const EventCard = ({
             e.target.src = "/placeholder.svg";
           }}
         />
-
         {/* Overlay + Giá */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
         <div className="absolute bottom-3 left-3 z-10">
@@ -156,7 +162,6 @@ const EventCard = ({
             {formatPrice(event.lowestPrice || event.price)}
           </span>
         </div>
-
         <div className="p-5">
           <h3 className="font-bold text-white text-lg mb-3 line-clamp-2 group-hover:text-orange-400 transition-colors duration-200">
             {event.eventTitle}
@@ -185,7 +190,7 @@ const EventCard = ({
 
       {/* Nút yêu thích + share + theo dõi */}
       <div className="absolute top-3 right-3 z-20 flex gap-2">
-        {isUpcoming && (
+        {isUpcoming && isAuthenticated && (
           <button
             onClick={handleTrackClick}
             disabled={isLoadingTrack}
@@ -193,16 +198,19 @@ const EventCard = ({
               tracking
                 ? "bg-blue-500 text-white shadow-lg transform scale-110"
                 : "bg-gray-800/80 text-white hover:bg-gray-700/80 border border-gray-600 hover:border-orange-500/50"
-            }`}
+            } ${isLoadingTrack ? "opacity-50 cursor-not-allowed" : ""}`}
             title={tracking ? "Bỏ thông báo" : "Nhận thông báo khi mở bán"}
           >
-            {tracking ? (
+            {isLoadingTrack ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : tracking ? (
               <BellOff className="w-4 h-4" />
             ) : (
               <Bell className="w-4 h-4" />
             )}
           </button>
         )}
+
         <button
           onClick={handleShareClick}
           className="p-2 bg-gray-800/80 backdrop-blur-sm rounded-full border border-gray-600 hover:border-orange-500/50 hover:bg-gray-700/80 transition"
@@ -210,19 +218,27 @@ const EventCard = ({
         >
           <Share2 size={16} className="text-gray-300 hover:text-orange-400" />
         </button>
+
         <button
           onClick={handleFavoriteClick}
-          className="p-2 bg-gray-800/80 backdrop-blur-sm rounded-full border border-gray-600 hover:border-orange-500/50 hover:bg-gray-700/80 transition"
+          disabled={isLoadingFavorite}
+          className={`p-2 bg-gray-800/80 backdrop-blur-sm rounded-full border border-gray-600 hover:border-orange-500/50 hover:bg-gray-700/80 transition ${
+            isLoadingFavorite ? "opacity-50 cursor-not-allowed" : ""
+          }`}
           title={isFavorite ? "Bỏ yêu thích" : "Thêm vào yêu thích"}
         >
-          <Heart
-            size={16}
-            className={
-              isFavorite
-                ? "fill-red-500 text-red-500"
-                : "text-gray-300 hover:text-orange-400"
-            }
-          />
+          {isLoadingFavorite ? (
+            <div className="w-4 h-4 border-2 border-gray-300 border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <Heart
+              size={16}
+              className={
+                isFavorite
+                  ? "fill-red-500 text-red-500"
+                  : "text-gray-300 hover:text-orange-400"
+              }
+            />
+          )}
         </button>
       </div>
     </div>

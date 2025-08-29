@@ -1,5 +1,6 @@
 package com.example.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -32,6 +33,7 @@ public class OrgType {
     private String typeName;
 
     @OneToMany(mappedBy = "orgType")
+    @JsonIgnore
     private Set<Organizer> tblOrganizers = new LinkedHashSet<>();
 
 }

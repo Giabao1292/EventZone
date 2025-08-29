@@ -8,13 +8,13 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 @Data
-public class BookingRequest {
+public class    BookingRequest {
     @NotNull
     private Integer showingTimeId;
 
     private List<SeatBookingDTO> seats;
     private List<ZoneBookingDTO> zones;
-
+    private Integer voucherId;
     @Data
     public static class SeatBookingDTO {
         @NotNull
@@ -22,7 +22,6 @@ public class BookingRequest {
         @NotNull
         private BigDecimal price;
     }
-
     @Data
     public static class ZoneBookingDTO {
         @NotNull

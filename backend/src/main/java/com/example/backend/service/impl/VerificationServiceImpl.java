@@ -22,10 +22,10 @@ public class VerificationServiceImpl implements VerificationService {
     private final SecureRandom random = new SecureRandom();
     @Override
     public Boolean validateToken(String token, String email) {
-        VerificationToken verificationToken = verificationRepository.findByTokenAndEmail(token, email).orElseThrow(() -> new ResourceNotFoundException("Wrong code"));
+        VerificationToken verificationToken = verificationRepository.findByTokenAndEmail(token, email).orElseThrow(() -> new ResourceNotFoundException("Mã code sai"));
         if(verificationToken.getExpiryDate().isBefore(Instant.now())){
             verificationRepository.delete(verificationToken);
-            throw new ResourceNotFoundException("Code is expired, please resend mail!");
+            throw new ResourceNotFoundException("Mã code đã hết hạn, vui lòng gửi lại email!");
         }
         return true;
     }
@@ -42,7 +42,7 @@ public class VerificationServiceImpl implements VerificationService {
     @Override
     public String resendToken(String email) {
         if (StringUtils.isBlank(email)) {
-            throw new ResourceNotFoundException("Expired time, please register again!");
+            throw new ResourceNotFoundException("Hết thời gian, vui lòng đăng ký lại!");
         }
         VerificationToken existingToken = verificationRepository.findByEmail(email).orElse(null);
         if (existingToken != null && validateToken(existingToken.getToken(), existingToken.getEmail())) {

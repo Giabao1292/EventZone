@@ -1,6 +1,7 @@
 package com.example.backend.dto.response;
 
 import com.example.backend.model.Booking;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -16,19 +17,24 @@ public class BookingHistoryDTO {
     private Long bookingId;
     private String eventTitle;
     private String venue;
+    private int showingTimeId;
     private LocalDateTime showTime;
+    private LocalDateTime endTime;
     private LocalDateTime bookedAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private BigDecimal finalPrice;
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    private BigDecimal originalPrice;
     private String paymentMethod;
     private String paymentStatus;
     private String checkinStatus;
     private String imageUrl;
-
     private List<String> seatNumbers;
 
     public BookingHistoryDTO(Booking booking) {
         this.bookingId = booking.getId();
 
+        // Danh sách ghế hoặc khu
         this.seatNumbers = booking.getTblBookingSeats()
                 .stream()
                 .map(bs -> {
@@ -42,24 +48,39 @@ public class BookingHistoryDTO {
                 })
                 .collect(Collectors.toList());
 
-
-        // Lấy tiêu đề sự kiện
+        // ID suất chiếu
+        this.showingTimeId = booking.getShowingTime() != null
+                ? booking.getShowingTime().getId()
+                : 0;
+        this.originalPrice = booking.getOriginalPrice();
+        // Debug logging
+        System.out.println("Debug - Booking ID: " + booking.getId() + ", Original Price: " + this.originalPrice);
+        // Tiêu đề sự kiện
         this.eventTitle = booking.getShowingTime() != null && booking.getShowingTime().getEvent() != null
                 ? booking.getShowingTime().getEvent().getEventTitle()
                 : null;
 
-        // Lấy địa điểm tổ chức
+        // Địa điểm
         this.venue = booking.getShowingTime() != null && booking.getShowingTime().getAddress() != null
                 ? booking.getShowingTime().getAddress().getVenueName()
                 : null;
 
-        // Lấy thời gian chiếu
+        // Thời gian chiếu
         this.showTime = booking.getShowingTime() != null
                 ? booking.getShowingTime().getStartTime()
                 : null;
 
+        this.endTime = booking.getShowingTime() != null
+                ? booking.getShowingTime().getEndTime()
+                : null;
+
+        // Ngày đặt
         this.bookedAt = booking.getCreatedDatetime();
+
+        // Giá
         this.finalPrice = booking.getFinalPrice();
+
+        // Thanh toán
         this.paymentMethod = booking.getPaymentMethod();
         this.paymentStatus = booking.getPaymentStatus();
 
@@ -68,7 +89,7 @@ public class BookingHistoryDTO {
                 ? booking.getCheckinStatus().name()
                 : null;
 
-        // ✅ Lấy ảnh sự kiện từ posterImage của Event
+        // Ảnh sự kiện
         this.imageUrl = booking.getShowingTime() != null &&
                 booking.getShowingTime().getEvent() != null
                 ? booking.getShowingTime().getEvent().getPosterImage()

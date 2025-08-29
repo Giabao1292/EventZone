@@ -12,11 +12,13 @@ import "react-toastify/dist/ReactToastify.css";
 import { useLocation, useNavigate } from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
 import DepositStep from "./DepositStep";
+import { validateEventDuration } from "../../utils/dateValidation";
+
 const steps = [
-  { id: 1, title: "Thông tin sự kiện" },
-  { id: 2, title: "Địa chỉ & Thời gian" },
-  { id: 3, title: "Thiết kế vé Và chỗ ngồi" },
-  { id: 4, title: "Thông tin thanh toán" },
+  { id: 1, title: "Thông tin sự kiện", icon: "🎉" },
+  { id: 2, title: "Địa chỉ & Thời gian", icon: "📍" },
+  { id: 3, title: "Thiết kế vé & Chỗ ngồi", icon: "🎫" },
+  { id: 4, title: "Hoàn Tất Sự Kiện", icon: "💰" },
 ];
 
 const ProgressSteps = ({ steps, currentStep }) => (
@@ -30,23 +32,27 @@ const ProgressSteps = ({ steps, currentStep }) => (
           <div key={step.id} className="flex items-center">
             <div className="flex flex-col items-center">
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${
                   isCompleted
-                    ? "bg-green-500 text-white"
+                    ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25"
                     : isCurrent
-                    ? "bg-green-900/30 text-green-400 border-2 border-green-500"
-                    : "bg-gray-800 text-gray-500"
+                    ? "bg-gradient-to-r from-blue-500 to-orange-500 text-white border-2 border-blue-400 shadow-lg shadow-blue-500/25"
+                    : "bg-white/80 text-slate-400 border-2 border-slate-200 shadow-sm"
                 }`}
               >
                 {isCompleted ? (
                   <Check size={20} />
                 ) : (
-                  <span className="text-sm font-medium">{step.id}</span>
+                  <span className="text-lg">{step.icon}</span>
                 )}
               </div>
               <p
-                className={`mt-2 text-xs font-medium text-center ${
-                  isCurrent ? "text-green-400" : "text-gray-400"
+                className={`mt-3 text-sm font-medium text-center transition-colors duration-300 ${
+                  isCurrent
+                    ? "text-blue-600"
+                    : isCompleted
+                    ? "text-green-600"
+                    : "text-slate-500"
                 }`}
               >
                 {step.title}
@@ -54,8 +60,10 @@ const ProgressSteps = ({ steps, currentStep }) => (
             </div>
             {index < steps.length - 1 && (
               <div
-                className={`w-16 h-0.5 mx-4 ${
-                  isCompleted ? "bg-green-500" : "bg-gray-700"
+                className={`w-20 h-1 mx-6 rounded-full transition-all duration-500 ${
+                  isCompleted
+                    ? "bg-gradient-to-r from-green-500 to-emerald-500"
+                    : "bg-slate-200"
                 }`}
               />
             )}
@@ -102,7 +110,7 @@ const EventCreationForm = () => {
 
   useEffect(() => {
     if (location.state?.eventData) {
-      console.log("Received state:", location.state); // Debug
+      console.log("Received state:", location.state);
       setEventData(location.state.eventData);
       setEventId(location.state.eventData.id || location.state.eventId);
     }
@@ -110,6 +118,7 @@ const EventCreationForm = () => {
       setCurrentStep(location.state.returnStep);
     }
   }, [location.state]);
+
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -131,11 +140,36 @@ const EventCreationForm = () => {
     setEventData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // In EventCreationForm.js
   const isStepValid = () => {
     switch (currentStep) {
-      case 1:
-        return !!eventData.eventTitle && !!eventData.categoryId;
+      case 1: {
+        // Kiểm tra thông tin cơ bản và validation ngày tháng
+        const hasBasicInfo = !!eventData.eventTitle && !!eventData.categoryId;
+        const hasValidDates = eventData.startTime && eventData.endTime;
+
+        if (hasValidDates) {
+          const startTime = new Date(eventData.startTime);
+          const endTime = new Date(eventData.endTime);
+          const now = new Date();
+
+          // Kiểm tra thời gian không trong quá khứ và logic hợp lệ
+          const isFutureTime = startTime > now && endTime > now;
+          const isValidLogic = startTime < endTime;
+
+          // Kiểm tra thời lượng với validation chi tiết
+          const durationValidation = validateEventDuration(
+            eventData.startTime,
+            eventData.endTime
+          );
+          const hasValidDuration = durationValidation.isValid;
+
+          return (
+            hasBasicInfo && isFutureTime && isValidLogic && hasValidDuration
+          );
+        }
+
+        return hasBasicInfo;
+      }
       case 2:
         return (
           !!eventData.venueName &&
@@ -144,7 +178,7 @@ const EventCreationForm = () => {
           eventData.showingTimes.length > 0
         );
       case 3:
-        return eventData.showingTimes.every((st) => st.hasDesignedLayout); // All showing times must be designed
+        return eventData.showingTimes.every((st) => st.hasDesignedLayout);
       case 4:
         return true;
       default:
@@ -174,11 +208,10 @@ const EventCreationForm = () => {
         const res = await apiClient.post("/events/create", payload);
         const createdId = res.data.data.eventId;
         setEventId(createdId);
-        setEventData((prev) => ({ ...prev, id: createdId })); // Store eventId in eventData
+        setEventData((prev) => ({ ...prev, id: createdId }));
         toast.success("Tạo bản nháp sự kiện thành công!");
       }
 
-      // In EventCreationForm.js, handleNextStep, step 2
       if (currentStep === 2 && eventId) {
         const payload = {
           eventId,
@@ -197,7 +230,7 @@ const EventCreationForm = () => {
             ...prev,
             showingTimes: showingTimes.map((st) => ({
               ...st,
-              hasDesignedLayout: false, // Initialize hasDesignedLayout
+              hasDesignedLayout: false,
             })),
           }));
           toast.success("Lưu địa điểm & thời gian thành công!");
@@ -205,16 +238,41 @@ const EventCreationForm = () => {
           toast.error("Không nhận được dữ liệu showing time.");
         }
       }
+
       if (currentStep === 4) {
-        // Final submission
         try {
-          const res = await apiClient.post(`/events/save/${eventData.id}`);
-          toast.success("Sự kiện đã được gửi để phê duyệt!", {
-            autoClose: 2000, // Show for 2 seconds
-            onClose: () => navigate("/organizer"), // Navigate after toast closes
-          });
+          await apiClient.post(`/events/save/${eventData.id}`);
+          toast.success(
+            `🎉 Sự kiện "${eventData.eventTitle}" đã được gửi lên phê duyệt thành công!`,
+            {
+              autoClose: 4000,
+              onClose: () => navigate("/organizer"),
+              position: "top-center",
+              style: {
+                fontSize: "16px",
+                fontWeight: "600",
+              },
+            }
+          );
+
+          // Thêm thông báo chi tiết
+          setTimeout(() => {
+            toast.info(
+              "📋 Sự kiện của bạn sẽ được admin xem xét trong thời gian sớm nhất. Bạn có thể theo dõi trạng thái trong trang quản lý sự kiện.",
+              {
+                autoClose: 5000,
+                position: "top-center",
+              }
+            );
+          }, 1000);
         } catch (error) {
-          toast.error("Lỗi khi gửi sự kiện!");
+          toast.error(
+            "❌ Có lỗi xảy ra khi gửi sự kiện lên phê duyệt. Vui lòng thử lại!",
+            {
+              autoClose: 4000,
+              position: "top-center",
+            }
+          );
           console.error(error);
         }
         return;
@@ -224,12 +282,14 @@ const EventCreationForm = () => {
         setCurrentStep((prev) => prev + 1);
       }
     } catch (err) {
-      const message = "Lỗi khi lưu dữ liệu. Vui lòng kiểm tra lại.";
+      const message =
+        "Lỗi về Thời gian mở bán và bán vé. Vui lòng kiểm tra lại.";
       toast.error(message);
     } finally {
       setLoading(false);
     }
   };
+
   const renderStepContent = () => {
     const stepProps = {
       eventData,
@@ -255,32 +315,61 @@ const EventCreationForm = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <div className="max-w-4xl mx-auto p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-orange-50 text-slate-800">
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-200/30 to-orange-200/30 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-orange-200/30 to-blue-200/30 rounded-full blur-3xl"></div>
+      </div>
+
+      <div className="relative max-w-6xl mx-auto p-6">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-orange-500 to-blue-600 bg-clip-text text-transparent mb-2">
+            Tạo sự kiện mới
+          </h1>
+          <p className="text-slate-600 text-lg">
+            Thiết lập sự kiện của bạn với thông tin chi tiết
+          </p>
+        </div>
+
         <ProgressSteps steps={steps} currentStep={currentStep} />
-        <div className="bg-gray-800 rounded-lg p-6 min-h-96 border border-gray-700">
+
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-8 min-h-96 border border-blue-200/50 shadow-2xl">
           {renderStepContent()}
         </div>
 
-        <div className="flex justify-end mt-6">
+        <div className="flex justify-between items-center mt-8">
+          <button
+            onClick={() => navigate("/organizer")}
+            className="px-6 py-3 rounded-xl bg-slate-200 text-slate-600 hover:bg-slate-300 transition-all duration-300 flex items-center space-x-2"
+          >
+            <span>← Quay lại</span>
+          </button>
+
           <button
             onClick={handleNextStep}
             disabled={!isStepValid() || loading}
-            className={`px-6 py-2 rounded-md flex items-center space-x-2 ${
+            className={`px-8 py-3 rounded-xl flex items-center space-x-3 transition-all duration-300 ${
               isStepValid() && !loading
-                ? "bg-green-600 text-white hover:bg-green-700"
-                : "bg-gray-700 text-gray-500 cursor-not-allowed"
+                ? currentStep === 4
+                  ? "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-lg shadow-green-500/25 hover:shadow-green-500/40"
+                  : "bg-gradient-to-r from-blue-500 to-orange-500 hover:from-blue-600 hover:to-orange-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40"
+                : "bg-slate-200 text-slate-500 cursor-not-allowed"
             }`}
           >
-            {loading && <Loader2 className="animate-spin" size={16} />}
-            <span>
+            {loading && <Loader2 className="animate-spin" size={18} />}
+            <span className="font-medium">
               {loading
-                ? "Đang xử lý..."
+                ? currentStep === 4
+                  ? "🚀 Đang gửi phê duyệt..."
+                  : "Đang xử lý..."
                 : currentStep === 4
-                ? "Hoàn tất"
+                ? "🚀 Gửi phê duyệt"
                 : "Tiếp tục"}
             </span>
-            {currentStep < 4 && !loading && <ChevronRight size={16} />}
+            {currentStep < 4 && !loading && <ChevronRight size={18} />}
+            {currentStep === 4 && !loading && <span>✅</span>}
           </button>
         </div>
 
@@ -294,7 +383,7 @@ const EventCreationForm = () => {
           pauseOnFocusLoss
           draggable
           pauseOnHover
-          theme="dark"
+          theme="light"
         />
       </div>
     </div>

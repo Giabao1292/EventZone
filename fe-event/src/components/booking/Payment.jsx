@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState, useRef } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import bookingService from "../../services/bookingService";
@@ -12,13 +14,12 @@ export default function Payment() {
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [timeLeft, setTimeLeft] = useState(300); // 5 phút
-  const [paymentMethod, setPaymentMethod] = useState("PAYOS"); // Mặc định PayOS
-
+  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes
+  const [paymentMethod, setPaymentMethod] = useState("PAYOS"); // Default PayOS
   const timerRef = useRef(null);
   const isHoldCalled = useRef(false);
 
-  // Đếm ngược thời gian giữ chỗ
+  // Countdown timer for seat hold
   const startTimer = () => {
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
@@ -45,9 +46,9 @@ export default function Payment() {
 
     const holdBooking = async () => {
       try {
+        const voucher = selection.find((s) => s.type === "voucher");
         const bookingRequest = {
           showingTimeId: showing.id,
-          paymentMethod, // Gửi phương thức lên BE
           seats: selection
             .filter((s) => s.type === "seat")
             .map((s) => ({
@@ -61,11 +62,14 @@ export default function Payment() {
               quantity: s.qty,
               price: s.price,
             })),
+          voucherId: voucher ? voucher.voucherId : null,
         };
+
         const response = await bookingService.holdBooking(bookingRequest);
         setBooking(response);
         startTimer();
       } catch (err) {
+        console.error("Hold booking error:", err);
         if (err.message.includes("401")) {
           toast.error("Vui lòng đăng nhập lại.");
           navigate("/login");
@@ -106,10 +110,20 @@ export default function Payment() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-[#1a1f2e] via-[#222831] to-[#2d3748] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white text-lg">Đang giữ chỗ...</p>
+          <div className="relative">
+            <div className="w-20 h-20 border-4 border-[#76ABAE]/30 rounded-full animate-spin"></div>
+            <div className="absolute top-0 left-0 w-20 h-20 border-4 border-transparent border-t-[#76ABAE] rounded-full animate-spin"></div>
+          </div>
+          <div className="mt-6 space-y-2">
+            <p className="text-[#EEEEEE] text-xl font-semibold">
+              Đang giữ chỗ...
+            </p>
+            <p className="text-[#76ABAE] text-sm">
+              Vui lòng đợi trong giây lát
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -117,11 +131,47 @@ export default function Payment() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 flex items-center justify-center">
-        <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-6 max-w-md">
-          <div className="flex items-center gap-3 mb-3">
+      <div className="min-h-screen bg-gradient-to-br from-[#1a1f2e] via-[#222831] to-[#2d3748] flex items-center justify-center p-4">
+        <div className="bg-gradient-to-br from-[#31363F] to-[#2a2f3a] border border-red-500/20 rounded-2xl p-8 max-w-md shadow-2xl">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg
+                className="w-8 h-8 text-red-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-red-400 font-bold text-lg mb-2">
+              Có lỗi xảy ra
+            </h3>
+            <p className="text-[#EEEEEE] mb-4">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-2 bg-[#76ABAE] text-[#222831] rounded-lg font-semibold hover:bg-[#76ABAE]/80 transition-colors"
+            >
+              Thử lại
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!booking || !event || !showing || !selection || !user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#1a1f2e] via-[#222831] to-[#2d3748] flex items-center justify-center p-4">
+        <div className="bg-gradient-to-br from-[#31363F] to-[#2a2f3a] border border-[#31363F]/80 rounded-2xl p-8 max-w-md text-center shadow-2xl">
+          <div className="w-16 h-16 bg-[#76ABAE]/20 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg
-              className="w-6 h-6 text-red-400"
+              className="w-8 h-8 text-[#76ABAE]"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -133,83 +183,111 @@ export default function Payment() {
                 d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <h3 className="text-red-400 font-semibold">Có lỗi xảy ra</h3>
           </div>
-          <p className="text-white">{error}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!booking || !event || !showing || !selection || !user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 flex items-center justify-center">
-        <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-6 max-w-md text-center">
-          <svg
-            className="w-12 h-12 text-red-400 mx-auto mb-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <h3 className="text-red-400 font-semibold mb-2">
+          <h3 className="text-[#76ABAE] font-bold text-lg mb-2">
             Dữ liệu không hợp lệ
           </h3>
-          <p className="text-white">Vui lòng thử lại.</p>
+          <p className="text-[#EEEEEE]">Vui lòng thử lại.</p>
         </div>
       </div>
     );
   }
 
-  const total = selection.reduce((sum, s) => {
-    return s.type === "seat" ? sum + s.price : sum + s.price * s.qty;
-  }, 0);
+  const timerPercentage = (timeLeft / 300) * 100;
+  const isUrgent = timeLeft <= 60;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 flex items-center justify-center p-4">
-      <div className="w-full max-w-5xl">
+    <div className="min-h-screen bg-transparent py-8 px-4">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-6">
-          <h2 className="text-3xl font-bold text-white mb-2">Thanh toán</h2>
-          <p className="text-gray-300">Hoàn tất đặt vé của bạn</p>
-        </div>
-
-        {/* Timer Alert - Fixed at top */}
-        <div className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 rounded-xl p-4 mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse"></div>
-              <span className="text-amber-300 font-medium">
-                Thời gian giữ chỗ
-              </span>
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-[#76ABAE] to-[#5a8a8d] rounded-xl flex items-center justify-center shadow-lg">
+              <svg
+                className="w-6 h-6 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                />
+              </svg>
             </div>
-            <span className="text-2xl font-bold text-amber-400">
-              {formatTime(timeLeft)}
-            </span>
-          </div>
-          <div className="w-full bg-amber-900/30 rounded-full h-2">
-            <div
-              className="bg-gradient-to-r from-amber-400 to-orange-400 h-2 rounded-full transition-all duration-1000"
-              style={{ width: `${(timeLeft / 300) * 100}%` }}
-            ></div>
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-[#EEEEEE] to-[#76ABAE] bg-clip-text text-transparent">
+                Thanh toán
+              </h1>
+              <p className="text-[#76ABAE] text-lg">Hoàn tất đặt vé của bạn</p>
+            </div>
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-6">
+        {/* Timer Alert - Enhanced */}
+        <div
+          className={`relative overflow-hidden rounded-2xl mb-8 transition-all duration-500 ${
+            isUrgent
+              ? "bg-gradient-to-r from-red-500/20 to-orange-500/20 border border-red-500/30 shadow-red-500/20"
+              : "bg-gradient-to-r from-[#76ABAE]/20 to-[#5a8a8d]/20 border border-[#76ABAE]/30 shadow-[#76ABAE]/20"
+          } shadow-2xl`}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-pulse"></div>
+          <div className="relative p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div
+                  className={`w-3 h-3 rounded-full animate-pulse ${
+                    isUrgent ? "bg-red-400" : "bg-[#76ABAE]"
+                  }`}
+                ></div>
+                <span className="text-[#EEEEEE] font-semibold text-lg">
+                  Thời gian giữ chỗ
+                </span>
+                {isUrgent && (
+                  <span className="px-3 py-1 bg-red-500/20 text-red-400 text-xs font-bold rounded-full animate-bounce">
+                    KHẨN CẤP
+                  </span>
+                )}
+              </div>
+              <div className="text-right">
+                <div
+                  className={`text-3xl font-bold ${
+                    isUrgent ? "text-red-400" : "text-[#76ABAE]"
+                  }`}
+                >
+                  {formatTime(timeLeft)}
+                </div>
+                <div className="text-xs text-[#76ABAE]">còn lại</div>
+              </div>
+            </div>
+            <div className="relative">
+              <div className="w-full bg-[#31363F]/80 rounded-full h-3 overflow-hidden">
+                <div
+                  className={`h-3 rounded-full transition-all duration-1000 ${
+                    isUrgent
+                      ? "bg-gradient-to-r from-red-500 to-orange-500"
+                      : "bg-gradient-to-r from-[#76ABAE] to-[#5a8a8d]"
+                  }`}
+                  style={{ width: `${timerPercentage}%` }}
+                ></div>
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent rounded-full animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-8">
           {/* Left Column - Event & Booking Details */}
-          <div className="space-y-4">
+          <div className="lg:col-span-2 space-y-6">
             {/* Event Information */}
-            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-5">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
+            <div className="bg-gradient-to-br from-[#31363F] to-[#2a2f3a] backdrop-blur-sm border border-[#31363F]/80 rounded-2xl p-6 shadow-2xl hover:shadow-[#76ABAE]/10 transition-all duration-300">
+              <div className="flex items-start gap-4 mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-[#76ABAE]/20 to-[#5a8a8d]/20 rounded-xl flex items-center justify-center flex-shrink-0">
                   <svg
-                    className="w-4 h-4 text-blue-400"
+                    className="w-6 h-6 text-[#76ABAE]"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -222,92 +300,165 @@ export default function Payment() {
                     />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-white">Sự kiện</h3>
-              </div>
-              <div className="space-y-2">
-                <h4 className="text-base font-medium text-white">
-                  {event.title}
-                </h4>
-                <div className="flex items-center gap-2 text-gray-300 text-sm">
-                  <svg
-                    className="w-3 h-3"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                  <span>
-                    {new Date(showing.startTime).toLocaleString("vi-VN")}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 text-gray-300 text-sm">
-                  <svg
-                    className="w-3 h-3"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                  </svg>
-                  <span>{event.location}</span>
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-[#EEEEEE] mb-2">
+                    Thông tin sự kiện
+                  </h3>
+                  <h4 className="text-lg font-semibold text-[#76ABAE] mb-3">
+                    {event.title}
+                  </h4>
+                  <div className="grid md:grid-cols-2 gap-3">
+                    <div className="flex items-center gap-3 p-3 bg-[#222831]/50 rounded-lg">
+                      <svg
+                        className="w-4 h-4 text-[#76ABAE] flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                      <div>
+                        <p className="text-xs text-[#76ABAE] font-medium">
+                          Thời gian
+                        </p>
+                        <p className="text-[#EEEEEE] text-sm font-semibold">
+                          {new Date(showing.startTime).toLocaleString("vi-VN")}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 bg-[#222831]/50 rounded-lg">
+                      <svg
+                        className="w-4 h-4 text-[#76ABAE] flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                      </svg>
+                      <div>
+                        <p className="text-xs text-[#76ABAE] font-medium">
+                          Địa điểm
+                        </p>
+                        <p className="text-[#EEEEEE] text-sm font-semibold">
+                          {event.location}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Booking Details */}
-            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-5">
-              <h3 className="text-lg font-semibold text-white mb-3">
-                Chi tiết đặt chỗ
-              </h3>
-              <div className="space-y-2">
+            <div className="bg-gradient-to-br from-[#31363F] to-[#2a2f3a] backdrop-blur-sm border border-[#31363F]/80 rounded-2xl p-6 shadow-2xl">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-gradient-to-br from-[#76ABAE]/20 to-[#5a8a8d]/20 rounded-lg flex items-center justify-center">
+                  <svg
+                    className="w-5 h-5 text-[#76ABAE]"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-[#EEEEEE]">
+                  Chi tiết đặt chỗ
+                </h3>
+              </div>
+
+              <div className="space-y-4">
                 {selection.map((s, idx) => (
                   <div
                     key={idx}
-                    className="flex justify-between items-center py-2"
+                    className="flex justify-between items-center p-4 bg-[#222831]/30 rounded-xl border border-[#31363F]/50 hover:bg-[#222831]/50 transition-colors"
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded-full font-medium">
-                        {s.type === "seat" ? "Ghế" : "Khu vực"}
+                    <div className="flex items-center gap-3">
+                      <span
+                        className={`px-3 py-1 text-xs font-bold rounded-full ${
+                          s.type === "seat"
+                            ? "bg-blue-500/20 text-blue-400"
+                            : s.type === "zone"
+                            ? "bg-green-500/20 text-green-400"
+                            : "bg-purple-500/20 text-purple-400"
+                        }`}
+                      >
+                        {s.type === "seat"
+                          ? "GHẾ"
+                          : s.type === "zone"
+                          ? "KHU VỰC"
+                          : "VOUCHER"}
                       </span>
-                      <span className="text-white text-sm font-medium">
+                      <span className="text-[#EEEEEE] font-semibold">
                         {s.type === "seat"
                           ? `Ghế ${s.seatLabel}`
-                          : `${s.zoneName} (x${s.qty})`}
+                          : s.type === "zone"
+                          ? `${s.zoneName} (x${s.qty})`
+                          : `Voucher ${s.voucherCode || s.voucherId}`}
                       </span>
                     </div>
-                    <span className="text-white font-semibold text-sm">
-                      {(s.type === "seat"
-                        ? s.price
-                        : s.price * s.qty
-                      ).toLocaleString("vi-VN")}
-                      ₫
-                    </span>
+                    {s.type !== "voucher" && (
+                      <span className="text-[#76ABAE] font-bold">
+                        {(s.price * (s.qty || 1)).toLocaleString("vi-VN")}₫
+                      </span>
+                    )}
                   </div>
                 ))}
-                <div className="pt-2 border-t border-white/20">
-                  <div className="flex justify-between items-center">
-                    <span className="text-base font-bold text-white">
+
+                {booking.discountAmount > 0 && (
+                  <div className="flex justify-between items-center p-4 bg-green-500/10 rounded-xl border border-green-500/20">
+                    <div className="flex items-center gap-2">
+                      <svg
+                        className="w-5 h-5 text-green-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                        />
+                      </svg>
+                      <span className="text-green-400 font-semibold">
+                        Giảm giá
+                      </span>
+                    </div>
+                    <span className="text-green-400 font-bold text-lg">
+                      -{booking.discountAmount.toLocaleString("vi-VN")}₫
+                    </span>
+                  </div>
+                )}
+
+                <div className="pt-4 border-t border-[#31363F]/80">
+                  <div className="flex justify-between items-center p-4 bg-gradient-to-r from-[#76ABAE]/10 to-[#5a8a8d]/10 rounded-xl">
+                    <span className="text-xl font-bold text-[#EEEEEE]">
                       Tổng cộng:
                     </span>
-                    <span className="text-xl font-bold text-green-400">
-                      {total.toLocaleString("vi-VN")}₫
+                    <span className="text-2xl font-bold text-[#76ABAE]">
+                      {booking.finalPrice.toLocaleString("vi-VN")}₫
                     </span>
                   </div>
                 </div>
@@ -315,11 +466,11 @@ export default function Payment() {
             </div>
 
             {/* Customer Information */}
-            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-5">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center">
+            <div className="bg-gradient-to-br from-[#31363F] to-[#2a2f3a] backdrop-blur-sm border border-[#31363F]/80 rounded-2xl p-6 shadow-2xl">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-gradient-to-br from-[#76ABAE]/20 to-[#5a8a8d]/20 rounded-lg flex items-center justify-center">
                   <svg
-                    className="w-4 h-4 text-green-400"
+                    className="w-5 h-5 text-[#76ABAE]"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -332,29 +483,40 @@ export default function Payment() {
                     />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-white">Khách hàng</h3>
+                <h3 className="text-xl font-bold text-[#EEEEEE]">
+                  Thông tin khách hàng
+                </h3>
               </div>
-              <div className="space-y-2">
-                <div>
-                  <p className="text-xs text-gray-400">Họ tên</p>
-                  <p className="text-white font-medium text-sm">{user.name}</p>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="p-4 bg-[#222831]/30 rounded-xl">
+                  <p className="text-xs text-[#76ABAE] font-medium mb-1">
+                    Họ tên
+                  </p>
+                  <p className="text-[#EEEEEE] font-semibold text-lg">
+                    {user.name}
+                  </p>
                 </div>
-                <div>
-                  <p className="text-xs text-gray-400">Email</p>
-                  <p className="text-white font-medium text-sm">{user.email}</p>
+                <div className="p-4 bg-[#222831]/30 rounded-xl">
+                  <p className="text-xs text-[#76ABAE] font-medium mb-1">
+                    Email
+                  </p>
+                  <p className="text-[#EEEEEE] font-semibold text-lg">
+                    {user.email}
+                  </p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Right Column - Payment Method & Summary */}
-          <div className="space-y-4">
+          {/* Right Column - Payment */}
+          <div className="space-y-6">
             {/* Payment Method */}
-            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-5">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center">
+            <div className="bg-gradient-to-br from-[#31363F] to-[#2a2f3a] backdrop-blur-sm border border-[#31363F]/80 rounded-2xl p-6 shadow-2xl">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-gradient-to-br from-[#76ABAE]/20 to-[#5a8a8d]/20 rounded-lg flex items-center justify-center">
                   <svg
-                    className="w-4 h-4 text-purple-400"
+                    className="w-5 h-5 text-[#76ABAE]"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -367,30 +529,41 @@ export default function Payment() {
                     />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-white">
+                <h3 className="text-xl font-bold text-[#EEEEEE]">
                   Phương thức thanh toán
                 </h3>
               </div>
+
               <div className="space-y-3">
-                <label className="flex items-center p-3 border border-white/20 rounded-lg hover:bg-white/5 transition-colors cursor-pointer">
+                <label
+                  className={`relative flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-300 hover:scale-[1.02] ${
+                    paymentMethod === "PAYOS"
+                      ? "border-[#76ABAE] bg-[#76ABAE]/10 shadow-lg shadow-[#76ABAE]/20"
+                      : "border-[#31363F]/80 hover:border-[#76ABAE]/50 hover:bg-[#31363F]/50"
+                  }`}
+                >
                   <input
                     type="radio"
                     value="PAYOS"
                     checked={paymentMethod === "PAYOS"}
                     onChange={(e) => setPaymentMethod(e.target.value)}
-                    className="w-4 h-4 text-blue-500 bg-transparent border-gray-300 focus:ring-blue-500"
+                    className="sr-only"
                   />
-                  <div className="ml-3 flex-1">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-white font-medium text-sm">PayOS</p>
-                        <p className="text-xs text-gray-400">
-                          Thanh toán qua PayOS
-                        </p>
-                      </div>
-                      <div className="w-6 h-6 bg-blue-500/20 rounded flex items-center justify-center">
+                  <div className="flex-1 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div
+                        className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                          paymentMethod === "PAYOS"
+                            ? "bg-[#76ABAE]/20"
+                            : "bg-[#31363F]/50"
+                        }`}
+                      >
                         <svg
-                          className="w-3 h-3 text-blue-400"
+                          className={`w-6 h-6 ${
+                            paymentMethod === "PAYOS"
+                              ? "text-[#76ABAE]"
+                              : "text-gray-400"
+                          }`}
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -403,29 +576,64 @@ export default function Payment() {
                           />
                         </svg>
                       </div>
+                      <div>
+                        <p className="text-[#EEEEEE] font-bold text-lg">
+                          PayOS
+                        </p>
+                        <p className="text-[#76ABAE] text-sm">
+                          Thanh toán nhanh chóng
+                        </p>
+                      </div>
                     </div>
+                    {paymentMethod === "PAYOS" && (
+                      <div className="w-6 h-6 bg-[#76ABAE] rounded-full flex items-center justify-center">
+                        <svg
+                          className="w-4 h-4 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                      </div>
+                    )}
                   </div>
                 </label>
 
-                <label className="flex items-center p-3 border border-white/20 rounded-lg hover:bg-white/5 transition-colors cursor-pointer">
+                <label
+                  className={`relative flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-300 hover:scale-[1.02] ${
+                    paymentMethod === "VNPAY"
+                      ? "border-[#76ABAE] bg-[#76ABAE]/10 shadow-lg shadow-[#76ABAE]/20"
+                      : "border-[#31363F]/80 hover:border-[#76ABAE]/50 hover:bg-[#31363F]/50"
+                  }`}
+                >
                   <input
                     type="radio"
                     value="VNPAY"
                     checked={paymentMethod === "VNPAY"}
                     onChange={(e) => setPaymentMethod(e.target.value)}
-                    className="w-4 h-4 text-blue-500 bg-transparent border-gray-300 focus:ring-blue-500"
+                    className="sr-only"
                   />
-                  <div className="ml-3 flex-1">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-white font-medium text-sm">VNPay</p>
-                        <p className="text-xs text-gray-400">
-                          Thanh toán qua VNPay
-                        </p>
-                      </div>
-                      <div className="w-6 h-6 bg-red-500/20 rounded flex items-center justify-center">
+                  <div className="flex-1 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div
+                        className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                          paymentMethod === "VNPAY"
+                            ? "bg-[#76ABAE]/20"
+                            : "bg-[#31363F]/50"
+                        }`}
+                      >
                         <svg
-                          className="w-3 h-3 text-red-400"
+                          className={`w-6 h-6 ${
+                            paymentMethod === "VNPAY"
+                              ? "text-[#76ABAE]"
+                              : "text-gray-400"
+                          }`}
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -438,29 +646,60 @@ export default function Payment() {
                           />
                         </svg>
                       </div>
+                      <div>
+                        <p className="text-[#EEEEEE] font-bold text-lg">
+                          VNPay
+                        </p>
+                        <p className="text-[#76ABAE] text-sm">
+                          Ví điện tử phổ biến
+                        </p>
+                      </div>
                     </div>
+                    {paymentMethod === "VNPAY" && (
+                      <div className="w-6 h-6 bg-[#76ABAE] rounded-full flex items-center justify-center">
+                        <svg
+                          className="w-4 h-4 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                      </div>
+                    )}
                   </div>
                 </label>
               </div>
             </div>
 
-            {/* Payment Summary - Prominent */}
-            <div className="bg-gradient-to-r from-green-500/20 to-blue-500/20 border border-green-500/30 rounded-xl p-6">
-              <div className="text-center space-y-4">
-                <div>
-                  <p className="text-sm text-gray-300">Tổng thanh toán</p>
-                  <p className="text-4xl font-bold text-white">
-                    {total.toLocaleString("vi-VN")}₫
+            {/* Payment Summary */}
+            <div className="bg-gradient-to-br from-[#76ABAE]/10 via-[#31363F] to-[#2a2f3a] border-2 border-[#76ABAE]/30 rounded-2xl p-8 shadow-2xl shadow-[#76ABAE]/20 sticky top-4">
+              <div className="text-center space-y-6">
+                <div className="space-y-2">
+                  <p className="text-[#76ABAE] font-semibold">
+                    Tổng thanh toán
                   </p>
+                  <div className="relative">
+                    <p className="text-5xl font-bold bg-gradient-to-r from-[#EEEEEE] to-[#76ABAE] bg-clip-text text-transparent">
+                      {booking.finalPrice.toLocaleString("vi-VN")}₫
+                    </p>
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#76ABAE]/20 to-transparent animate-pulse rounded-lg"></div>
+                  </div>
                 </div>
 
                 <button
                   onClick={handleConfirmPayment}
-                  className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white py-4 rounded-xl font-semibold text-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                  className="group relative w-full bg-gradient-to-r from-[#76ABAE] to-[#5a8a8d] hover:from-[#5a8a8d] hover:to-[#76ABAE] text-white py-4 px-6 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-[#76ABAE]/30 overflow-hidden"
                 >
-                  <div className="flex items-center justify-center gap-2">
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                  <div className="relative flex items-center justify-center gap-3">
                     <svg
-                      className="w-5 h-5"
+                      className="w-6 h-6"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -472,14 +711,26 @@ export default function Payment() {
                         d="M5 13l4 4L19 7"
                       />
                     </svg>
-                    Xác nhận thanh toán
+                    <span>Xác nhận thanh toán</span>
                   </div>
                 </button>
 
-                <p className="text-xs text-gray-400">
-                  Bằng cách nhấn "Xác nhận thanh toán", bạn đồng ý với điều
-                  khoản sử dụng
-                </p>
+                <div className="flex items-center justify-center gap-2 text-xs text-[#76ABAE]">
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                    />
+                  </svg>
+                  <p>Thanh toán được bảo mật với SSL</p>
+                </div>
               </div>
             </div>
           </div>

@@ -13,4 +13,5 @@ public class UserDetailResponse {
     private String phone;
     private String profileUrl;
     private LocalDate dateOfBirth;
+    private Integer points;
 }

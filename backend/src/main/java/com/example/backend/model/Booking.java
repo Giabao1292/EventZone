@@ -37,6 +37,7 @@ public class Booking {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JsonBackReference
     @JoinColumn(name = "voucher_id")
     private Voucher voucher;
 
@@ -57,9 +58,9 @@ public class Booking {
     private String paymentMethod;
 
     @NotNull
-    @ColumnDefault("'pending'")
+    @ColumnDefault("'PENDING'")
     @Column(name = "payment_status", nullable = false)
-    private String paymentStatus;
+    private String  paymentStatus;
 
     @Column(name = "paid_at")
     private LocalDateTime paidAt;

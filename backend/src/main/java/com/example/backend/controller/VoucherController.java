@@ -1,6 +1,7 @@
 package com.example.backend.controller;
 
 import com.example.backend.dto.request.OnCreate;
+import com.example.backend.dto.request.UserVoucherResponse;
 import com.example.backend.dto.request.VoucherRequest;
 import com.example.backend.dto.response.PageResponse;
 import com.example.backend.dto.response.ResponseData;
@@ -27,7 +28,8 @@ public class VoucherController {
 
     @GetMapping("/me")
     public ResponseData<?> getUserVouchers() {
-        return null;
+        UserVoucherResponse response = voucherService.getUserVouchers();
+        return new ResponseData<>(HttpStatus.OK.value(), "Get user vouchers successful", response);
     }
 
     @GetMapping
@@ -53,5 +55,11 @@ public class VoucherController {
     public ResponseData<?> createVoucher(@Validated(OnCreate.class) @Valid @RequestBody VoucherRequest voucherRequest) {
         voucherService.createVoucher(voucherRequest);
         return new ResponseData<>(HttpStatus.OK.value(), "Create voucher successful");
+    }
+    @PostMapping("/{id}/redeem")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseData<?> redeemVoucher(@PathVariable("id") int voucherId) {
+        voucherService.redeemVoucher(voucherId);
+        return new ResponseData<>(HttpStatus.OK.value(), "Redeem voucher successful");
     }
 }

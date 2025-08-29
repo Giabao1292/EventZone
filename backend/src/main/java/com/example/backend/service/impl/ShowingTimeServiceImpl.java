@@ -3,15 +3,11 @@ package com.example.backend.service.impl;
 import com.example.backend.dto.request.CreateMultipleShowingTimeRequest;
 import com.example.backend.dto.request.ShowingTimeRequest;
 import com.example.backend.dto.request.UpdateShowingTimeRequest;
-import com.example.backend.dto.response.LayoutDTO;
-import com.example.backend.dto.response.SeatDTO;
-import com.example.backend.dto.response.ShowingTimeAdmin;
-import com.example.backend.dto.response.ZoneDTO;
+import com.example.backend.dto.response.*;
 import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.model.*;
 import com.example.backend.repository.*;
 import com.example.backend.service.ShowingTimeService;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -34,6 +30,8 @@ public  class ShowingTimeServiceImpl implements ShowingTimeService {
     private final EventRepository eventRepo;
 
     private final AddressRepository addressRepo;
+
+    private final BookingRepository bookingRepo;
 
 
     @Override
@@ -207,18 +205,32 @@ public  class ShowingTimeServiceImpl implements ShowingTimeService {
         return showingTimeRepository.save(st);
     }
 
+
     @Override
     public List<ShowingTimeAdmin> getListShowingTime(int eventId) {
-        List<ShowingTime> showingTimes = eventRepo.findById(eventId).get().getTblShowingTimes().stream().toList();
+        // Lấy event từ repository
+        Event event = eventRepo.findById(eventId).orElse(null);
+        if (event == null) return List.of(); // Nếu không có event thì trả list rỗng
+
+        // Lấy organizerId từ event (chính là người tạo event này)
+        Integer organizerId = event.getOrganizer() != null ? event.getOrganizer().getId() : null;
+
+        // Lấy danh sách suất chiếu từ event
+        List<ShowingTime> showingTimes = event.getTblShowingTimes().stream().toList();
+
+        // Map sang DTO
         return showingTimes.stream().map(showingTime -> ShowingTimeAdmin.builder()
-                .id(showingTime.getId())
-                .event_id(eventId)
-                .startTime(showingTime.getStartTime())
-                .endTime(showingTime.getEndTime())
-                .saleCloseTime(showingTime.getStartTime())
-                .saleOpenTime(showingTime.getSaleOpenTime())
-                .build()).toList();
+                        .id(showingTime.getId())
+                        .event_id(eventId)
+                        .organizerId(organizerId) // <- Đúng chỗ này!
+                        .startTime(showingTime.getStartTime())
+                        .endTime(showingTime.getEndTime())
+                        .saleOpenTime(showingTime.getSaleOpenTime())
+                        .saleCloseTime(showingTime.getSaleCloseTime())
+                        .build())
+                .toList();
     }
+
 
     @Override
     public ShowingTime createShowingTime(UpdateShowingTimeRequest req) {
@@ -260,4 +272,38 @@ public  class ShowingTimeServiceImpl implements ShowingTimeService {
     }
 
 
+
+    @Override
+    public List<ShowingTimeDTO> getShowingTimesByEventId(int eventId) {
+        Event event = eventRepo.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy event id=" + eventId));
+
+        List<ShowingTime> showingTimes = event.getTblShowingTimes().stream().toList();
+
+        return showingTimes.stream()
+                .map(st -> ShowingTimeDTO.builder()
+                        .id(st.getId())
+                        .startTime(st.getStartTime())
+                        .endTime(st.getEndTime())
+                        .saleOpenTime(st.getSaleOpenTime())
+                        .saleCloseTime(st.getSaleCloseTime())
+                        .layoutMode(st.getLayoutMode())
+                        .address(new AddressDTO(
+                                st.getAddress().getId(),
+                                st.getAddress().getVenueName(),
+                                st.getAddress().getLocation(),
+                                st.getAddress().getCity()
+                        ))
+                        .status(st.getStatus() != null ? st.getStatus().name() : null) // <-- map status
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+
+
+
 }
+
+
+
+

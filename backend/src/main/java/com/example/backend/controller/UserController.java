@@ -1,18 +1,17 @@
 package com.example.backend.controller;
 
 import com.cloudinary.Cloudinary;
-import com.example.backend.dto.request.ChangePasswordRequest;
-import com.example.backend.dto.request.OnCreate;
-import com.example.backend.dto.request.UserRequestDTO;
-import com.example.backend.dto.request.UserUpdateRequest;
+import com.example.backend.dto.request.*;
 import com.example.backend.dto.response.*;
 import com.example.backend.model.User;
 import com.example.backend.repository.RoleRepository;
 import com.example.backend.repository.UserRoleRepository;
 import com.example.backend.service.JwtService;
+import com.example.backend.service.UserBankAccountService;
 import com.example.backend.service.UserService;
 import com.example.backend.service.WishlistService;
 import com.example.backend.util.TokenType;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -40,17 +40,18 @@ public class UserController {
     private final RoleRepository roleRepository;
     private final UserRoleRepository userRoleRepository;
     private final WishlistService wishlistService;
+    private final UserBankAccountService userBankAccountService;
 
     // Helper method to extract and validate token
     private String extractToken(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new IllegalArgumentException("Missing or invalid token format");
+            throw new IllegalArgumentException("Thiếu hoặc định dạng token không hợp lệ");
         }
         String token = authHeader.substring(7);
         String username = jwtService.extractUsername(token, TokenType.ACCESS_TOKEN);
         if (username == null) {
-            throw new IllegalArgumentException("Invalid token");
+            throw new IllegalArgumentException("Token không hợp lệ");
         }
         return username;
     }
@@ -68,7 +69,8 @@ public class UserController {
         dto.setProfileUrl(user.getProfileUrl());
         dto.setDateOfBirth(user.getDateOfBirth());
         dto.setId(user.getId());
-        return new ResponseData<>(HttpStatus.OK.value(), "Profile retrieved successfully", dto);
+        dto.setPoints(user.getScore());
+        return new ResponseData<>(HttpStatus.OK.value(), "Lấy thông tin hồ sơ thành công", dto);
     }
 
 
@@ -87,8 +89,9 @@ public class UserController {
         dto.setProfileUrl(updatedUser.getProfileUrl());
         dto.setPhone(updatedUser.getPhone());
         dto.setDateOfBirth(updatedUser.getDateOfBirth());
+        dto.setPoints(updatedUser.getScore());
 
-        return new ResponseData<>(HttpStatus.OK.value(), "Profile updated successfully", dto);
+        return new ResponseData<>(HttpStatus.OK.value(), "Cập nhật hồ sơ thành công", dto);
     }
 
     @PostMapping("/avatar")
@@ -98,7 +101,7 @@ public class UserController {
     ) throws IOException {
         String username = extractToken(request);
         String imageUrl = userService.updateAvatar(username, file, cloudinary);
-        return new ResponseData<>(HttpStatus.OK.value(), "Avatar updated successfully", imageUrl);
+        return new ResponseData<>(HttpStatus.OK.value(), "Cập nhật avatar thành công", imageUrl);
     }
 
     @PutMapping("/change-password")
@@ -108,7 +111,7 @@ public class UserController {
     ) {
         String username = extractToken(httpRequest);
         userService.changePassword(username, request);
-        return new ResponseData<>(HttpStatus.OK.value(), "Password changed successfully");
+        return new ResponseData<>(HttpStatus.OK.value(), "Đổi mật khẩu thành công");
     }
 
     @PostMapping("/wishlist/{eventId}")
@@ -116,8 +119,7 @@ public class UserController {
             @PathVariable Integer eventId) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         userService.addToWishlist(username, eventId);
-        return new ResponseData<>(HttpStatus.OK.value(), "Added to wishlist");
-
+        return new ResponseData<>(HttpStatus.OK.value(), "Đã thêm vào danh sách yêu thích");
     }
 
     @DeleteMapping("/wishlist/{eventId}")
@@ -126,7 +128,7 @@ public class UserController {
         // giống add nhưng gọi removeToWishlist
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         userService.removeFromWishlist(username, eventId);
-        return new ResponseData<>(HttpStatus.OK.value(), "Removed from wishlist");
+        return new ResponseData<>(HttpStatus.OK.value(), "Đã xóa khỏi danh sách yêu thích");
     }
 
     @GetMapping("/wishlist")
@@ -180,5 +182,48 @@ public class UserController {
     public ResponseData<?> addRole(@RequestBody Map<String, Object> role) {
         userService.createRole(role.get("role").toString());
         return new ResponseData<>(HttpStatus.OK.value(), "Role created successfully");
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/top")
+    public ResponseData<?> getTopBooking(Pageable pageable) {
+        List<TopClientResponse> topClients = userService.getTopBooking(pageable);
+        return new ResponseData<>(HttpStatus.OK.value(), "Top bookings fetched", topClients);
+    }
+
+    @PreAuthorize("hasRole('ORGANIZER')")
+    @GetMapping("/banks")
+    public ResponseData<?> getListBank(){
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        List<BankResponse> bankLists = userBankAccountService.getAllBank(email);
+        return new ResponseData<>(HttpStatus.OK.value(), "Bank list fetched", bankLists);
+    }
+
+    @PreAuthorize("hasRole('ORGANIZER')")
+    @DeleteMapping("/banks/{bankId}")
+    public ResponseData<?> deleteOrganizerBank(@PathVariable Integer bankId) {
+        userBankAccountService.deleteBank(bankId);
+        return new ResponseData<>(HttpStatus.OK.value(), "Bank deleted successfully");
+    }
+
+    @PreAuthorize("hasRole('ORGANIZER')")
+    @PostMapping("/banks")
+    public ResponseData<?>  addBank(@RequestBody BankRequest bankRequest) {
+        userBankAccountService.addBank(bankRequest);
+        return new ResponseData<>(HttpStatus.OK.value(), "Bank added successfully");
+    }
+
+    @PreAuthorize("hasRole('ORGANIZER')")
+    @PatchMapping("/banks/{bankId}/default")
+    public ResponseData<?> updateDefaultBank(@PathVariable Integer bankId){
+        userBankAccountService.setDefault(bankId);
+        return new ResponseData<>(HttpStatus.OK.value(), "Bank updated successfully");
+    }
+
+    @PreAuthorize("hasRole('ORGANIZER')")
+    @PostMapping("/banks/sending-code")
+    public ResponseData<?> generateBankVerificationCode() throws MessagingException {
+        userBankAccountService.generateToken();
+        return new ResponseData<>(HttpStatus.OK.value(), "Token send successfully");
     }
 }

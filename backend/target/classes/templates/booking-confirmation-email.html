@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xác nhận đặt vé</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .email-container {
+            max-width: 680px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="20" cy="80" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            pointer-events: none;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 300;
+            margin-bottom: 8px;
+            position: relative;
+        }
+
+        .header .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            font-weight: 300;
+            position: relative;
+        }
+
+        .content {
+            padding: 50px 40px;
+        }
+
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+
+        .customer-name {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .success-message {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-left: 4px solid #28a745;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 0 10px 10px 0;
+            font-size: 16px;
+            color: #2c3e50;
+        }
+
+        .event-title {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .detail-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #e9ecef;
+            transition: transform 0.2s ease;
+        }
+
+        .detail-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .detail-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #6c757d;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .detail-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .seat-info {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .seat-info .detail-label {
+            color: rgba(255,255,255,0.8);
+        }
+
+        .seat-info .detail-value {
+            color: white;
+            font-size: 18px;
+        }
+
+        .price-section {
+            background: #2c3e50;
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 40px 0;
+        }
+
+        .price-label {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-bottom: 10px;
+        }
+
+        .price-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #ffd700;
+        }
+
+        .qr-section {
+            text-align: center;
+            padding: 40px 0;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            margin: 40px 0;
+        }
+
+        .qr-title {
+            font-size: 18px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .qr-instruction {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 25px;
+        }
+
+        .qr-code {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            display: inline-block;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .qr-code img {
+            max-width: 180px;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        .footer {
+            background: #2c3e50;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .footer-logo {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #ffd700;
+        }
+
+        .footer-text {
+            font-size: 14px;
+            opacity: 0.8;
+            line-height: 1.5;
+        }
+
+        .divider {
+            height: 2px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 40px 0;
+            border-radius: 1px;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .content {
+                padding: 30px 20px;
+            }
+
+            .details-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .price-value {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="email-container">
+    <div class="header">
+        <h1>XÁC NHẬN ĐẶT VÉ</h1>
+        <div class="subtitle">Đặt vé thành công</div>
+    </div>
+
+    <div class="content">
+        <div class="greeting">
+            Xin chào <span class="customer-name" th:text="${fullName}">Khách hàng</span>,
+        </div>
+
+        <div class="success-message">
+            Chúc mừng! Bạn đã đặt vé thành công cho sự kiện <span class="event-title" th:text="${eventTitle}">Tên sự kiện</span>.
+        </div>
+
+        <div class="details-grid">
+            <div class="detail-item">
+                <div class="detail-label">Mã đặt vé</div>
+                <div class="detail-value" th:text="${bookingId}">BK001</div>
+            </div>
+
+            <div class="detail-item">
+                <div class="detail-label">Ngày đặt</div>
+                <div class="detail-value" th:text="${bookingDate}">15/07/2025</div>
+            </div>
+
+            <div class="detail-item">
+                <div class="detail-label">Thời gian sự kiện</div>
+                <div class="detail-value" th:text="${eventDate}">20/07/2025 - 19:00</div>
+            </div>
+
+            <div class="detail-item">
+                <div class="detail-label">Địa điểm</div>
+                <div class="detail-value" th:text="${address}">Nhà hát Thành phố</div>
+            </div>
+
+            <div class="detail-item seat-info">
+                <div class="detail-label">Thông tin ghế</div>
+                <div class="detail-value" th:utext="${seatInfo}">Hàng A - Ghế 15, 16</div>
+            </div>
+        </div>
+
+        <div class="price-section">
+            <div class="price-label">Tổng thành tiền</div>
+            <div class="price-value"><span th:text="${finalPrice}">500,000</span> VND</div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="qr-section">
+            <div class="qr-title">Mã QR Check-in</div>
+            <div class="qr-instruction">Vui lòng xuất trình mã QR này tại cổng để check-in</div>
+            <div class="qr-code">
+                <img th:src="${qrImageUrl}" alt="QR Code cho check-in" />
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="footer-logo">EventZone</div>
+        <div class="footer-text">
+            Cảm ơn bạn đã tin tưởng và sử dụng dịch vụ của chúng tôi.<br>
+            Chúc bạn có những trải nghiệm tuyệt vời!
+        </div>
+    </div>
+</div>
+</body>
+</html>

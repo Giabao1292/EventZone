@@ -32,4 +32,6 @@ public interface OrganizerService {
 
     List<EventSummaryDTO> getEventsByCurrentOrganizer();
 
+    long getOrganizerCount();
+
 }

@@ -80,7 +80,6 @@ public class WithdrawController {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-
         List<WithdrawRequestDTO> list = withdrawService.getRequestsByUser(user);
         return ResponseEntity.ok(new ResponseData<>(200, "Lấy danh sách yêu cầu rút tiền của bạn thành công", list));
     }

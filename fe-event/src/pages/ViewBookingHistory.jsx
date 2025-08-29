@@ -14,9 +14,28 @@ import {
   X,
   MapPin,
   CreditCard,
+  Star,
 } from "lucide-react";
 import QrCodeService from "../services/qrCodeService";
-import jsPDF from "jspdf"; // Import jsPDF
+import jsPDF from "jspdf";
+import ReviewSection from "../components/review/ReviewSection";
+
+// Helper function to format Vietnamese currency
+const formatVietnameseCurrency = (amount) => {
+  if (!amount || amount === 0) return "Miễn phí";
+
+  // Convert to number if it's a string
+  const numAmount = typeof amount === "string" ? parseFloat(amount) : amount;
+
+  if (isNaN(numAmount)) return "Miễn phí";
+
+  return numAmount.toLocaleString("vi-VN", {
+    style: "currency",
+    currency: "VND",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  });
+};
 
 export default function ViewBookingHistory() {
   const [bookings, setBookings] = useState([]);
@@ -25,12 +44,19 @@ export default function ViewBookingHistory() {
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [qrImage, setQrImage] = useState(null);
+  const [reviewBooking, setReviewBooking] = useState(null);
 
   useEffect(() => {
     const fetchBookings = async () => {
       try {
         const data = await ViewBookingHistoryService.getBookings();
-        setBookings(data);
+        // Sort bookings by booking date (newest first)
+        const sortedData = data.sort((a, b) => {
+          const dateA = new Date(a.bookedAt || 0);
+          const dateB = new Date(b.bookedAt || 0);
+          return dateB - dateA;
+        });
+        setBookings(sortedData);
       } catch (err) {
         console.error("Lỗi khi tải lịch sử đặt vé:", err.message);
       } finally {
@@ -53,20 +79,45 @@ export default function ViewBookingHistory() {
         setQrImage(null);
       }
     };
-
     fetchQr();
   }, [selectedBooking]);
+
+  const isEventEnded = (endTime) => {
+    if (!endTime) return false;
+    return new Date(endTime) < new Date();
+  };
+
+  const canReview = (booking) => {
+    return (
+      booking.paymentStatus === "CONFIRMED" && isEventEnded(booking.endTime)
+    );
+  };
 
   const filteredBookings = bookings.filter((b) =>
     b.eventTitle?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Separate bookings into those needing reviews and others
+  const reviewableBookings = filteredBookings.filter(canReview);
+  const regularBookings = filteredBookings.filter(
+    (booking) => !canReview(booking)
+  );
+
   const handleViewDetails = (booking) => {
+    console.log("Debug - Selected booking:", booking);
+    console.log("Debug - Original price:", booking.originalPrice);
     setSelectedBooking(booking);
     setIsModalOpen(true);
   };
 
-  // Function to generate and download PDF ticket
+  const handleOpenReview = (booking) => {
+    setReviewBooking(booking);
+  };
+
+  const handleCloseReview = () => {
+    setReviewBooking(null);
+  };
+
   const downloadTicketPDF = () => {
     if (!selectedBooking || !qrImage) {
       console.error("No ticket information or QR code available to download.");
@@ -79,23 +130,17 @@ export default function ViewBookingHistory() {
       format: "a4",
     });
 
-    // Add fonts (optional: you can add custom fonts for specific characters)
-    // For simplicity, we'll use default fonts.
-
-    // Header
     doc.setFontSize(20);
-    doc.setTextColor(255, 102, 0); // Orange color
+    doc.setTextColor(255, 102, 0);
     doc.text("Event Ticket", 105, 20, { align: "center" });
     doc.setFontSize(16);
-    doc.setTextColor(0, 0, 0); // Black color
+    doc.setTextColor(0, 0, 0);
     doc.text(selectedBooking.eventTitle, 105, 30, { align: "center" });
 
-    // Divider
     doc.setLineWidth(0.5);
     doc.setDrawColor(200, 200, 200);
     doc.line(20, 35, 190, 35);
 
-    // Event Details
     doc.setFontSize(12);
     doc.setTextColor(100, 100, 100);
     doc.text("Event Information", 20, 45);
@@ -126,7 +171,6 @@ export default function ViewBookingHistory() {
       75
     );
 
-    // Booking Details
     doc.setFontSize(12);
     doc.setTextColor(100, 100, 100);
     doc.text("Booking Details", 20, 90);
@@ -156,22 +200,19 @@ export default function ViewBookingHistory() {
       130
     );
 
-    // QR Code
     if (qrImage) {
-      doc.addImage(qrImage, "PNG", 130, 45, 50, 50); // Position QR code
+      doc.addImage(qrImage, "PNG", 130, 45, 50, 50);
       doc.setFontSize(10);
       doc.setTextColor(100, 100, 100);
       doc.text("Scan QR code to check-in", 130, 100, { align: "center" });
     }
 
-    // Footer
     doc.setFontSize(8);
     doc.setTextColor(150, 150, 150);
     doc.text("Thank you for using our service!", 105, 280, {
       align: "center",
     });
 
-    // Save the PDF
     doc.save(
       `Ticket_${selectedBooking.eventTitle}_${selectedBooking.bookingId}.pdf`
     );
@@ -191,8 +232,92 @@ export default function ViewBookingHistory() {
     );
   }
 
+  const formatDateTime = (dateStr) => {
+    if (!dateStr) return "Chưa có thông tin";
+    return new Date(dateStr).toLocaleDateString("vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  };
+
+  const BookingSection = ({
+    title,
+    bookings,
+    icon,
+    emptyMessage,
+    gradientFrom,
+    gradientTo,
+    borderColor,
+  }) => (
+    <div className="mb-16">
+      <div className="relative mb-8">
+        {/* Decorative background */}
+        <div
+          className={`absolute inset-0 bg-gradient-to-r ${gradientFrom} ${gradientTo} rounded-2xl blur-xl opacity-30`}
+        ></div>
+
+        {/* Section header */}
+        <div
+          className={`relative bg-gray-800/60 backdrop-blur-sm border ${borderColor} rounded-2xl p-6`}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <div
+                className={`flex items-center justify-center w-12 h-12 bg-gradient-to-r ${gradientFrom} ${gradientTo} rounded-xl mr-4 shadow-lg`}
+              >
+                {icon}
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-1">{title}</h2>
+                <p className="text-gray-400 text-sm">
+                  {bookings.length === 0
+                    ? "Chưa có vé nào"
+                    : `${bookings.length} vé`}
+                </p>
+              </div>
+            </div>
+            <div
+              className={`px-4 py-2 bg-gradient-to-r ${gradientFrom} ${gradientTo} rounded-full`}
+            >
+              <span className="text-white font-bold text-lg">
+                {bookings.length}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {bookings.length === 0 ? (
+        <div className="text-center py-16">
+          <div
+            className={`w-20 h-20 bg-gradient-to-r ${gradientFrom} ${gradientTo} rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg`}
+          >
+            {icon}
+          </div>
+          <h3 className="text-xl font-semibold text-white mb-2">Trống</h3>
+          <p className="text-gray-400 text-lg">{emptyMessage}</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {bookings.map((booking, index) => (
+            <BookingCard
+              key={booking.bookingId}
+              booking={booking}
+              onViewDetails={handleViewDetails}
+              onOpenReview={handleOpenReview}
+              isEventEnded={isEventEnded}
+              index={index}
+              sectionGradient={`${gradientFrom} ${gradientTo}`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gray-900 text-white relative">
+    <div className="min-h-screen bg-black text-white relative">
       <BackgroundEffect image={backgroundImage} />
 
       {/* Header Section */}
@@ -228,53 +353,77 @@ export default function ViewBookingHistory() {
         </div>
       </div>
 
-      {/* Content Section */}
-      <div className="relative z-10 px-6 pb-20">
-        <div className="max-w-7xl mx-auto">
-          {filteredBookings.length === 0 ? (
-            <div className="text-center py-16">
-              <div className="w-24 h-24 bg-gray-700/30 rounded-full flex items-center justify-center mx-auto mb-8">
-                {searchQuery ? (
-                  <Search className="w-12 h-12 text-gray-400" />
-                ) : (
-                  <Ticket className="w-12 h-12 text-gray-400" />
-                )}
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-4">
-                {searchQuery
-                  ? "🔍 Không tìm thấy vé phù hợp"
-                  : "🙁 Bạn chưa có vé nào được đặt"}
-              </h3>
-              <p className="text-gray-300 text-lg mb-8">
-                {searchQuery
-                  ? "Hãy thử lại với từ khóa khác."
-                  : "Bắt đầu khám phá và đặt vé các sự kiện bạn yêu thích!"}
-              </p>
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl transition-colors"
-                >
-                  Xóa bộ lọc
-                </button>
+      {/* Booking Sections */}
+      <div className="relative z-10 px-6 pb-20 max-w-7xl mx-auto">
+        {filteredBookings.length === 0 ? (
+          <div className="text-center py-16">
+            <div className="w-24 h-24 bg-gray-700/30 rounded-full flex items-center justify-center mx-auto mb-8">
+              {searchQuery ? (
+                <Search className="w-12 h-12 text-gray-400" />
+              ) : (
+                <Ticket className="w-12 h-12 text-gray-400" />
               )}
             </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredBookings.map((booking, index) => (
-                <BookingCard
-                  key={booking.bookingId}
-                  booking={booking}
-                  onViewDetails={handleViewDetails}
-                  index={index}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+            <h3 className="text-2xl font-bold text-white mb-4">
+              {searchQuery
+                ? "🔍 Không tìm thấy vé phù hợp"
+                : "🙁 Bạn chưa có vé nào được đặt"}
+            </h3>
+            <p className="text-gray-300 text-lg mb-8">
+              {searchQuery
+                ? "Hãy thử lại với từ khóa khác."
+                : "Bắt đầu khám phá và đặt vé các sự kiện bạn yêu thích!"}
+            </p>
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl transition-colors"
+              >
+                Xóa bộ lọc
+              </button>
+            )}
+          </div>
+        ) : (
+          <>
+            {/* All Bookings Section */}
+            <BookingSection
+              title="🎫 Tất cả vé đã đặt"
+              bookings={regularBookings}
+              icon={<Ticket className="w-6 h-6 text-blue-400" />}
+              emptyMessage="Không có vé nào khác"
+              gradientFrom="from-blue-500/20"
+              gradientTo="to-purple-500/20"
+              borderColor="border-blue-500/30"
+            />
+
+            {/* Reviews Needed Section */}
+            <BookingSection
+              title="⭐ Cần đánh giá"
+              bookings={reviewableBookings}
+              icon={<Star className="w-6 h-6 text-yellow-400" />}
+              emptyMessage="Không có sự kiện nào cần đánh giá"
+              gradientFrom="from-yellow-500/20"
+              gradientTo="to-orange-500/20"
+              borderColor="border-yellow-500/30"
+            />
+          </>
+        )}
       </div>
 
-      {/* Modal */}
+      {/* Review Modal */}
+      {reviewBooking && (
+        <div className="fixed inset-0 z-[100000] bg-black/70 flex justify-center items-center p-6">
+          <div className="bg-gray-900 rounded-2xl shadow-lg max-w-3xl w-full p-6 text-white relative">
+            <ReviewSection
+              showingTimeId={reviewBooking.showingTimeId}
+              canReview={true}
+              onClose={handleCloseReview}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Details Modal */}
       {isModalOpen && selectedBooking && (
         <div className="fixed inset-0 z-[99999] bg-black/70 backdrop-blur-sm flex justify-center items-center p-4 modal-overlay">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative z-[10000]">
@@ -309,14 +458,12 @@ export default function ViewBookingHistory() {
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
                 {selectedBooking.eventTitle}
               </h2>
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Event Details */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2">
                     Thông tin sự kiện
                   </h3>
-
                   <div className="flex items-start space-x-3">
                     <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
                     <div>
@@ -326,7 +473,6 @@ export default function ViewBookingHistory() {
                       </p>
                     </div>
                   </div>
-
                   <div className="flex items-start space-x-3">
                     <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
                     <div>
@@ -340,7 +486,6 @@ export default function ViewBookingHistory() {
                       </p>
                     </div>
                   </div>
-
                   <div className="flex items-start space-x-3">
                     <Clock className="w-5 h-5 text-gray-400 mt-0.5" />
                     <div>
@@ -361,7 +506,6 @@ export default function ViewBookingHistory() {
                   <h3 className="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2">
                     Chi tiết đặt vé
                   </h3>
-
                   <div className="flex items-start space-x-3">
                     <Ticket className="w-5 h-5 text-gray-400 mt-0.5" />
                     <div>
@@ -371,7 +515,6 @@ export default function ViewBookingHistory() {
                       </p>
                     </div>
                   </div>
-
                   <div className="flex items-start space-x-3">
                     <User className="w-5 h-5 text-gray-400 mt-0.5" />
                     <div>
@@ -382,7 +525,6 @@ export default function ViewBookingHistory() {
                       </p>
                     </div>
                   </div>
-
                   <div className="flex items-start space-x-3">
                     <CreditCard className="w-5 h-5 text-gray-400 mt-0.5" />
                     <div>
@@ -408,7 +550,9 @@ export default function ViewBookingHistory() {
                         Tổng tiền:
                       </span>
                       <span className="text-2xl font-bold text-orange-600">
-                        {selectedBooking.finalPrice?.toLocaleString() || "0"} đ
+                        {formatVietnameseCurrency(
+                          selectedBooking.originalPrice
+                        )}
                       </span>
                     </div>
                   </div>
@@ -435,7 +579,7 @@ export default function ViewBookingHistory() {
               {/* Action Buttons */}
               <div className="flex gap-3 mt-8 pt-6 border-t border-gray-200">
                 <button
-                  onClick={downloadTicketPDF} // Call the download function
+                  onClick={downloadTicketPDF}
                   className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
                 >
                   Tải vé PDF
@@ -483,15 +627,23 @@ export default function ViewBookingHistory() {
   );
 }
 
-// Booking Card Component
-const BookingCard = ({ booking, onViewDetails, index }) => {
+const BookingCard = ({
+  booking,
+  onViewDetails,
+  onOpenReview,
+  isEventEnded,
+  index,
+  sectionGradient,
+}) => {
   const {
     eventTitle,
     imageUrl,
     showTime,
+    endTime,
     finalPrice,
     checkinStatus,
     seatNumbers,
+    paymentStatus,
   } = booking;
 
   const formatDateTime = (dateStr) => {
@@ -503,9 +655,11 @@ const BookingCard = ({ booking, onViewDetails, index }) => {
     });
   };
 
+  const canReview = paymentStatus === "CONFIRMED" && isEventEnded(endTime);
+
   return (
     <div
-      className="bg-gray-800/60 backdrop-blur-sm border border-gray-700 rounded-2xl overflow-hidden hover:border-orange-500/50 hover:shadow-xl transition-all duration-300 group"
+      className="bg-gray-800/60 backdrop-blur-sm border border-gray-700 rounded-2xl overflow-hidden hover:border-orange-500/50 hover:shadow-2xl hover:shadow-orange-500/10 transition-all duration-300 group relative"
       style={{
         animationName: "fadeInUp",
         animationDuration: "0.6s",
@@ -514,55 +668,86 @@ const BookingCard = ({ booking, onViewDetails, index }) => {
         animationDelay: `${index * 100}ms`,
       }}
     >
-      {/* Image */}
+      {/* Hover gradient effect */}
+      <div
+        className={`absolute inset-0 bg-gradient-to-r ${sectionGradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-2xl`}
+      ></div>
+
       <div className="relative">
         <img
           src={imageUrl}
           alt={eventTitle}
           className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
         />
-        <div className="absolute top-3 right-3">
+
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+
+        {/* Status badges */}
+        <div className="absolute top-3 right-3 flex flex-col gap-2">
+          {canReview && (
+            <span className="px-3 py-1 bg-yellow-500/90 text-yellow-100 border border-yellow-400/50 rounded-full text-xs font-medium backdrop-blur-sm shadow-lg">
+              ⭐ Có thể đánh giá
+            </span>
+          )}
           <span
-            className={`px-2 py-1 rounded-full text-xs font-medium ${
+            className={`px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm shadow-lg ${
               checkinStatus === "Đã check-in"
-                ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                : "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+                ? "bg-green-500/90 text-green-100 border border-green-400/50"
+                : "bg-blue-500/90 text-blue-100 border border-blue-400/50"
             }`}
           >
-            {checkinStatus || "Chưa check-in"}
+            {checkinStatus === "CHECKED_IN"
+              ? "✓ Đã check-in"
+              : "⏳ Chưa check-in"}
+          </span>
+        </div>
+
+        {/* Price badge */}
+        <div className="absolute bottom-3 left-3">
+          <span className="px-3 py-1 bg-orange-500/90 text-orange-100 rounded-full text-sm font-bold backdrop-blur-sm shadow-lg">
+            {formatVietnameseCurrency(finalPrice)}
           </span>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="p-5">
-        <h3 className="text-lg font-semibold text-white mb-2 line-clamp-2 group-hover:text-orange-400 transition-colors">
-          {eventTitle}
-        </h3>
-
-        <div className="space-y-2 text-sm text-gray-300">
-          <p className="flex items-center">
-            <span className="text-green-400 mr-2">💰</span>
-            {finalPrice ? `${finalPrice.toLocaleString()} đ` : "Miễn phí"}
-          </p>
-          <p className="flex items-center">
-            <span className="mr-2">📅</span>
-            {formatDateTime(showTime)}
-          </p>
-          {seatNumbers && seatNumbers.length > 0 && (
-            <p className="flex items-center">
-              <span className="mr-2">🪑</span>
-              {seatNumbers.join(", ")}
-            </p>
-          )}
+      <div className="relative p-6 flex flex-col justify-between h-[220px]">
+        <div>
+          <h3 className="text-lg font-bold text-white mb-3 line-clamp-2 group-hover:text-orange-400 transition-colors">
+            {eventTitle}
+          </h3>
+          <div className="space-y-3 text-sm text-gray-300">
+            <div className="flex items-center">
+              <Calendar className="w-4 h-4 mr-2 text-orange-400" />
+              <span>{formatDateTime(showTime)}</span>
+            </div>
+            {seatNumbers && seatNumbers.length > 0 && (
+              <div className="flex items-center">
+                <User className="w-4 h-4 mr-2 text-blue-400" />
+                <span className="font-medium">
+                  Ghế: {seatNumbers.join(", ")}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
-        <button
-          onClick={() => onViewDetails(booking)}
-          className="w-full bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 font-medium py-2 px-4 rounded-lg border border-orange-500/30 transition-colors"
-        >
-          Chi tiết
-        </button>
+        <div className="mt-4 flex gap-2">
+          <button
+            onClick={() => onViewDetails(booking)}
+            className="flex-1 bg-gradient-to-r from-orange-500/20 to-orange-600/20 hover:from-orange-500/30 hover:to-orange-600/30 text-orange-400 text-sm font-medium py-2 px-3 rounded-lg border border-orange-500/30 transition-all duration-300 hover:shadow-md hover:shadow-orange-500/20"
+          >
+            Chi tiết
+          </button>
+          {canReview && (
+            <button
+              onClick={() => onOpenReview(booking)}
+              className="flex-1 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition-all duration-300 hover:shadow-md hover:shadow-yellow-500/30 transform hover:scale-105"
+            >
+              ⭐ Đánh giá
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

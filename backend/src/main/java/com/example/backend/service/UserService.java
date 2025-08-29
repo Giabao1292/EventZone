@@ -16,12 +16,19 @@ import java.util.Set;
 
 public interface UserService {
     User findByUsername(String username);
+
     void updateProfileByUsername(String username, UserUpdateRequest request);
+
     String updateAvatar(String username, MultipartFile file, Cloudinary cloudinary) throws IOException;
+
     void changePassword(String username, ChangePasswordRequest request);
+
     TokenResponse saveUser(UserTemp user);
+
     void addToWishlist(String username, Integer eventId);
+
     void removeFromWishlist(String username, Integer eventId);
+
     Set<EventSummaryDTO> getWishlist(String email);
 
     PageResponse<UserResponseDTO> getListUser(Pageable pageable, String... search);
@@ -36,4 +43,5 @@ public interface UserService {
 
     List<RoleResponseDTO> getListRole();
 
+    List<TopClientResponse> getTopBooking(Pageable pageable);
 }

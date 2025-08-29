@@ -1,25 +1,27 @@
-// src/components/dashboard/ProfitExpensesChart.jsx
-import Chart from "react-apexcharts"; // Import Chart từ react-apexcharts
-import { MoreVertical } from "lucide-react"; // Cho icon ba chấm
-import { useState } from "react";
+import Chart from "react-apexcharts";
+import { MoreVertical } from "lucide-react";
+import { useState, useEffect } from "react";
 
-const ProfitExpensesChart = () => {
+const ProfitExpensesChart = ({ revenueDetails }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
 
-  // Cấu hình biểu đồ từ dashboard.js
+  const categories = revenueDetails?.map((item) => item.bucket) || [];
+  const bookingData = revenueDetails?.map((item) => item.booking) || [];
+  const adsData = revenueDetails?.map((item) => item.ads) || [];
+
   const chartOptions = {
     series: [
       {
-        name: "Pixel ",
-        data: [9, 5, 3, 7, 5, 10, 3],
+        name: "Ticket Revenue",
+        data: bookingData,
       },
       {
-        name: "Ample ",
-        data: [6, 3, 9, 5, 4, 6, 4],
+        name: "Ads Revenue",
+        data: adsData,
       },
     ],
     chart: {
@@ -36,7 +38,7 @@ const ProfitExpensesChart = () => {
       strokeDashArray: 3,
       borderColor: "rgba(0,0,0,.1)",
     },
-    colors: ["#1e88e5", "#21c1d6"],
+    colors: ["#0085db", "#fb977d"],
     plotOptions: {
       bar: {
         horizontal: false,
@@ -54,7 +56,7 @@ const ProfitExpensesChart = () => {
     },
     xaxis: {
       type: "category",
-      categories: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+      categories: categories,
       axisTicks: {
         show: false,
       },
@@ -76,7 +78,7 @@ const ProfitExpensesChart = () => {
     },
     fill: {
       opacity: 1,
-      colors: ["#0085db", "#fb977d"], // Thay đổi màu sắc theo ảnh nếu khác (ban đầu có thể là `colors` bên trên)
+      colors: ["#0085db", "#fb977d"],
     },
     tooltip: {
       theme: "dark",
@@ -115,19 +117,19 @@ const ProfitExpensesChart = () => {
             >
               <div className="card-body p-0 py-2">
                 <a
-                  href="javscript:void(0)"
+                  href="#"
                   className="flex gap-2 items-center font-medium px-4 py-2.5 hover:bg-gray-200 text-gray-400"
                 >
                   <p className="text-sm">Action</p>
                 </a>
                 <a
-                  href="javscript:void(0)"
+                  href="#"
                   className="flex gap-2 items-center font-medium px-4 py-2.5 hover:bg-gray-200 text-gray-400"
                 >
                   <p className="text-sm">Another Action</p>
                 </a>
                 <a
-                  href="javscript:void(0)"
+                  href="#"
                   className="flex gap-2 items-center font-medium px-4 py-2.5 hover:bg-gray-200 text-gray-400"
                 >
                   <p className="text-sm">Something else here</p>
@@ -135,7 +137,6 @@ const ProfitExpensesChart = () => {
               </div>
             </div>
           </div>
-          {/* Dropdown menu */}
           <div className="hs-dropdown relative inline-flex [--placement:bottom-right] sm:[--trigger:hover]">
             <a
               className="relative hs-dropdown-toggle cursor-pointer align-middle rounded-full"
@@ -173,7 +174,6 @@ const ProfitExpensesChart = () => {
             </div>
           </div>
         </div>
-        {/* Biểu đồ */}
         <Chart
           options={chartOptions}
           series={chartOptions.series}

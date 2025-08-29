@@ -80,3 +80,116 @@ export const createRole = async (roleName) => {
   });
   return res.data;
 };
+export const getTopClients = async (params = {}) => {
+  try {
+    const response = await apiClient.get("/users/top", { params });
+    // Trả về phần 'data' của response, nơi chứa danh sách top clients
+    // Dựa trên cấu trúc ResponseData của bạn: { code, message, data }
+    if (response.data && response.data.code === 200) {
+      return response.data.data;
+    } else {
+      // Xử lý trường hợp API trả về code khác 200 hoặc cấu trúc không mong muốn
+      throw new Error(
+        response.data.message ||
+          "Failed to fetch top clients: Invalid response."
+      );
+    }
+  } catch (error) {
+    console.error("Error fetching top clients:", error);
+    // Ném lỗi để component gọi có thể bắt và xử lý
+    throw error;
+  }
+};
+
+export const getBankList = async () => {
+  try {
+    const res = await apiClient.get("/users/banks");
+    if (res.data && res.data.code === 200) {
+      return res.data.data;
+    } else {
+      throw new Error(res.data.message || "Failed to fetch bank list");
+    }
+  } catch (error) {
+    console.error("Error fetching bank list:", error);
+    throw error;
+  }
+};
+
+export const addBankAccount = async (bankData) => {
+  try {
+    const res = await apiClient.post("/users/banks", {
+      bankName: bankData.bankName,
+      accountNumber: bankData.accountNumber,
+      holderName: bankData.holderName,
+      code: bankData.code,
+      isDefault: bankData.isDefault || 0,
+    });
+    if (res.data && res.data.code === 200) {
+      return res.data.data;
+    } else {
+      throw new Error(res.data.message || "Failed to add bank account");
+    }
+  } catch (error) {
+    console.error("Error adding bank account:", error);
+    if (error.response && error.response.data && error.response.data.message) {
+      throw new Error(error.response.data.message);
+    }
+    throw new Error("Có lỗi xảy ra khi thêm tài khoản ngân hàng!");
+  }
+};
+
+// New function for sending bank verification code
+export const sendBankVerificationCode = async () => {
+  try {
+    const res = await apiClient.post("/users/banks/sending-code");
+    if (res.data && res.data.code === 200) {
+      return res.data;
+    } else {
+      throw new Error(res.data.message || "Failed to send verification code");
+    }
+  } catch (error) {
+    console.error("Error sending verification code:", error);
+    if (error.response && error.response.data && error.response.data.message) {
+      throw new Error(error.response.data.message);
+    }
+    throw new Error("Có lỗi xảy ra khi gửi mã xác thực!");
+  }
+};
+
+// Alias for backward compatibility
+export const addBank = addBankAccount;
+
+export const deleteBank = async (bankId) => {
+  try {
+    const res = await apiClient.delete(`/users/banks/${bankId}`);
+    if (res.data && res.data.code === 200) {
+      return res.data;
+    } else {
+      throw new Error(res.data.message || "Failed to delete bank");
+    }
+  } catch (error) {
+    console.error("Error deleting bank:", error);
+    if (error.response && error.response.data && error.response.data.message) {
+      throw new Error(error.response.data.message);
+    }
+    throw new Error("Có lỗi xảy ra khi xóa tài khoản ngân hàng!");
+  }
+};
+
+// Future API for setting default bank (if needed)
+export const setDefaultBank = async (bankId) => {
+  try {
+    const res = await apiClient.patch(`/users/banks/${bankId}/default`);
+    if (res.data && res.data.code === 200) {
+      return res.data;
+    } else {
+      throw new Error(res.data.message || "Failed to set default bank");
+    }
+  } catch (error) {
+    console.error("Error setting default bank:", error);
+    if (error.response && error.response.data && error.response.data.message) {
+      throw new Error(error.response.data.message);
+    }
+    throw new Error("Có lỗi xảy ra khi thiết lập tài khoản mặc định!");
+  }
+};

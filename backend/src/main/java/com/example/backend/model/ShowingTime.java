@@ -73,4 +73,9 @@ public class ShowingTime {
     @OneToMany(mappedBy = "showingTime", cascade = CascadeType.ALL)
     private Set<Review> reviews = new HashSet<>();
 
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 20, nullable = false)
+    private ShowingTimeStatus status = ShowingTimeStatus.ACTIVE;
+
 }

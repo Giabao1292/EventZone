@@ -1,6 +1,6 @@
 package com.example.backend.service;
 
-import com.example.backend.model.UserTemp;
+import com.example.backend.model.*;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -14,12 +14,11 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 import java.time.LocalDateTime;
+import java.time.Year;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-import com.example.backend.model.User;
-import com.example.backend.model.Event;
-import com.example.backend.model.ShowingTime;
+import org.springframework.scheduling.annotation.Async;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -29,6 +28,7 @@ public class MailService {
     private String emailFrom;
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
+    private final ImageService imageService;
     public void sendConfirmEmail(UserTemp user) throws MessagingException {
         log.info("Sending confirm email with verify code {}", user.getVerificationToken());
         MimeMessage messsage = mailSender.createMimeMessage();
@@ -122,5 +122,156 @@ public class MailService {
         mailSender.send(message);
     }
 
+    @Async
+    public void sendRescheduleEmailAsync(String toEmail, String eventTitle, String oldStartTime,
+                                         String oldEndTime, String newStartTime, String newEndTime) {
+        log.info("sendRescheduleEmailAsync called for email: {}", toEmail);
+        try {
+            // Giả sử sendRescheduleEmail nhận 6 tham số (không có fullName)
+            sendRescheduleEmail(toEmail, eventTitle, oldStartTime, oldEndTime, newStartTime, newEndTime);
+            log.info("Reschedule email sent successfully to {}", toEmail);
+        } catch (MessagingException e) {
+            log.error("Failed to send reschedule email notification asynchronously", e);
+        }
+    }
+
+
+
+    public void sendRescheduleEmail(String toEmail, String eventTitle, String oldStartTime,
+                                    String oldEndTime, String newStartTime, String newEndTime) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        Context context = new Context();
+        Map<String, Object> properties = new HashMap<>();
+
+        // Nếu bạn có tên người dùng thì thêm vào context, hoặc để mặc định "Bạn"
+        properties.put("fullName", "Bạn");  // Hoặc lấy từ param nếu có
+        properties.put("eventTitle", eventTitle);
+        properties.put("oldStartTime", oldStartTime);
+        properties.put("oldEndTime", oldEndTime);
+        properties.put("newStartTime", newStartTime);
+        properties.put("newEndTime", newEndTime);
+        context.setVariables(properties);
+
+        helper.setTo(toEmail);
+        helper.setFrom(emailFrom);
+        helper.setSubject("[Thông báo] Suất chiếu đã dời lịch");
+        helper.setText(templateEngine.process("reschedule-email.html", context), true);
+
+        mailSender.send(message);
+    }
+
+
+    public void sendRejectRescheduleEmail(String toEmail, String fullName, String eventTitle, String rejectReason) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        Context context = new Context();
+        context.setVariable("fullName", fullName);
+        context.setVariable("eventTitle", eventTitle);
+        context.setVariable("rejectReason", rejectReason);
+
+        helper.setTo(toEmail);
+        helper.setFrom(emailFrom);
+        helper.setSubject("[Thông báo] Yêu cầu dời lịch bị từ chối");
+        helper.setText(templateEngine.process("reject-reschedule-email.html", context), true);
+
+        mailSender.send(message);
+    }
+    public void sendBookingConfirmationEmail(User user, Booking booking) {
+        log.info("Sending booking confirmation email to {} for booking ID {}", user.getEmail(), booking.getId());
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            Context context = new Context();
+            Map<String, Object> properties = new HashMap<>();
+            properties.put("fullName", user.getFullName() != null ? user.getFullName() : "Khách hàng");
+            properties.put("eventTitle", booking.getShowingTime().getEvent().getEventTitle());
+            properties.put("bookingId", booking.getId());
+            properties.put("bookingDate", booking.getCreatedDatetime().format(DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy")));
+            properties.put("eventDate", booking.getShowingTime().getStartTime().format(DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy")));
+            properties.put("finalPrice", booking.getFinalPrice());
+
+            // Địa chỉ sự kiện
+            String address = booking.getShowingTime().getAddress() != null
+                    ? booking.getShowingTime().getAddress().getVenueName() + " - " + booking.getShowingTime().getAddress().getLocation()
+                    : "Không rõ địa điểm";
+            properties.put("address", address);
+
+            // QR Code
+            String qrImageUrl = imageService.getQRCodeImageUrl(booking.getQrPublicId());
+            properties.put("qrImageUrl", qrImageUrl != null ? qrImageUrl : "");
+
+            // Ghép thông tin ghế
+            StringBuilder seatInfo = new StringBuilder();
+            if (booking.getTblBookingSeats() != null && !booking.getTblBookingSeats().isEmpty()) {
+                for (BookingSeat bs : booking.getTblBookingSeats()) {
+                    String zone = bs.getZone() != null ? bs.getZone().getZoneName() : "Không rõ khu";
+                    String seat = bs.getSeat() != null ? bs.getSeat().getSeatLabel() : "Không rõ ghế";
+                    seatInfo.append(zone).append(" - Seat ").append(seat).append("<br/>");
+                }
+            } else {
+                seatInfo.append("Không có thông tin ghế<br/>");
+            }
+            properties.put("seatInfo", seatInfo.toString());
+
+            context.setVariables(properties);
+
+            helper.setTo(user.getEmail());
+            helper.setFrom(emailFrom);
+            helper.setSubject("Xác nhận đặt vé - " + booking.getShowingTime().getEvent().getEventTitle());
+
+            String emailContent = templateEngine.process("booking-confirmation-email.html", context);
+            helper.setText(emailContent, true);
+
+            mailSender.send(message);
+            log.info("Email sent to {}", user.getEmail());
+
+        } catch (Exception e) {
+            log.error("Failed to send email to {}: {}", user.getEmail(), e.getMessage(), e);
+        }
+    }
+
+    public void sendApproveRescheduleToOrganizer(
+            String toEmail, String fullName, String eventTitle,
+            String oldStartTime, String oldEndTime, String newStartTime, String newEndTime) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        Context context = new Context();
+        context.setVariable("fullName", fullName);
+        context.setVariable("eventTitle", eventTitle);
+        context.setVariable("oldStartTime", oldStartTime);
+        context.setVariable("oldEndTime", oldEndTime);
+        context.setVariable("newStartTime", newStartTime);
+        context.setVariable("newEndTime", newEndTime);
+
+        helper.setTo(toEmail);
+        helper.setFrom(emailFrom);
+        helper.setSubject("[Thông báo] Yêu cầu dời lịch đã được phê duyệt");
+        helper.setText(templateEngine.process("approve-reschedule-organizer.html", context), true);
+
+        mailSender.send(message);
+    }
+
+    public void sendBankAccountVerificationEmail(String toEmail, String code) throws MessagingException {
+        String subject = "Xác minh thêm tài khoản ngân hàng";
+
+        // Tạo Thymeleaf context
+        Context context = new Context();
+        context.setVariable("code", code);
+        context.setVariable("year", Year.now().getValue());
+
+        // Gửi mail
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+        helper.setTo(toEmail);
+        helper.setSubject(subject);
+        helper.setText(templateEngine.process("add-bank-account-verification.html", context), true);
+
+        mailSender.send(message);
+    }
 
 }

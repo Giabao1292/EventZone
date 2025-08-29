@@ -29,7 +29,7 @@ public class ReviewController {
         return ResponseEntity.ok(new ResponseData<>(200, "Tạo review thành công", review));
     }
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER','ORGANIZER','ADMIN')")
     @PutMapping("/{reviewId}")
     public ResponseEntity<ResponseData<ReviewResponse>> updateReview(
             @PathVariable Integer reviewId,
@@ -67,11 +67,20 @@ public class ReviewController {
     public ResponseEntity<ResponseData<List<ReviewResponse>>> getReviewsByShowingTimeQuery(
             @RequestParam("showingTimeId") Integer showingTimeId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "active") String status // <-- thêm param
     ) {
-        List<ReviewResponse> reviews = reviewService.getReviewsByShowingTime(showingTimeId, page, size);
+        List<ReviewResponse> reviews;
+        if ("all".equals(status)) {
+            // trả về cả active và deleted
+            reviews = reviewService.getAllReviewsByShowingTime(showingTimeId, page, size);
+        } else {
+            // như cũ, chỉ active
+            reviews = reviewService.getReviewsByShowingTime(showingTimeId, page, size);
+        }
         return ResponseEntity.ok(new ResponseData<>(200, "Lấy danh sách review thành công", reviews));
     }
+
 
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -87,6 +96,15 @@ public class ReviewController {
     }
 
 
+
+    @GetMapping("/has-reviewed")
+    public ResponseEntity<ResponseData<Boolean>> hasUserReviewed(
+            @RequestParam("showingTimeId") Integer showingTimeId,
+            @RequestParam("currentUserId") Integer currentUserId
+    ) {
+        boolean hasReviewed = reviewService.hasUserReviewed(showingTimeId, currentUserId);
+        return ResponseEntity.ok(new ResponseData<>(200, "Kiểm tra thành công", hasReviewed));
+    }
 
 
 }

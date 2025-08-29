@@ -18,6 +18,23 @@ import {
   CardTitle,
 } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
+import PropTypes from "prop-types";
+
+// Hàm đếm số lượng seatLabels (ngăn trường hợp seatLabels là "" hoặc null)
+const countSeatLabels = (seatLabels) => {
+  if (!seatLabels || seatLabels.trim() === "") return 0;
+  return seatLabels.split(",").filter((x) => x.trim() !== "").length;
+};
+
+// Hàm đếm tổng số ghế theo zoneSeatCounts: "2,3,1" => 6
+const sumZoneSeats = (zoneSeatCounts) => {
+  if (!zoneSeatCounts || zoneSeatCounts.trim() === "") return 0;
+  return zoneSeatCounts
+    .split(",")
+    .map((x) => parseInt(x.trim()))
+    .filter((x) => !isNaN(x))
+    .reduce((a, b) => a + b, 0);
+};
 
 const AttendeeModal = ({
   isOpen,
@@ -25,6 +42,7 @@ const AttendeeModal = ({
   attendee,
   onCheckIn,
   isCheckingIn,
+  checkInError,
 }) => {
   if (!isOpen || !attendee) return null;
 
@@ -47,6 +65,13 @@ const AttendeeModal = ({
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  // Tổng số ghế: seatLabels + zoneSeatCounts
+  const getSeatCount = () => {
+    const seatsByLabel = countSeatLabels(attendee.seatLabels);
+    const seatsByZone = sumZoneSeats(attendee.zoneSeatCounts);
+    return seatsByLabel + seatsByZone;
   };
 
   return (
@@ -83,7 +108,7 @@ const AttendeeModal = ({
                 <Phone className="w-5 h-5 text-green-600" />
                 <div>
                   <p className="text-sm text-gray-600">Số điện thoại</p>
-                  <p className="font-medium">{attendee.phone}</p>
+                  <p className="font-medium">{attendee.phone || "Chưa có"}</p>
                 </div>
               </div>
             </div>
@@ -101,9 +126,31 @@ const AttendeeModal = ({
                 <Users className="w-5 h-5 text-orange-600" />
                 <div>
                   <p className="text-sm text-gray-600">Số ghế</p>
-                  <p className="font-medium">{attendee.numberOfSeats} ghế</p>
+                  <p className="font-medium">{getSeatCount()} ghế</p>
                 </div>
               </div>
+
+              {/* Hiển thị Ghế cụ thể nếu có */}
+              {attendee.seatLabels && attendee.seatLabels.trim() !== "" && (
+                <div className="flex items-center gap-3">
+                  <Users className="w-5 h-5 text-yellow-600" />
+                  <div>
+                    <p className="text-sm text-gray-600">Ghế cụ thể</p>
+                    <p className="font-medium">{attendee.seatLabels}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Hiển thị Khu vực nếu có */}
+              {attendee.zoneNames && attendee.zoneNames.trim() !== "" && (
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  <span>
+                    <p className="text-sm text-gray-600">Khu vực</p>
+                    {attendee.zoneNames || "Chưa chọn khu vực"}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -136,6 +183,18 @@ const AttendeeModal = ({
             )}
           </div>
 
+          {/* Error Message */}
+          {checkInError && (
+            <div className="border-t pt-4">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p className="text-red-700 text-sm font-medium">
+                  Lỗi check-in:
+                </p>
+                <p className="text-red-600 text-sm">{checkInError}</p>
+              </div>
+            </div>
+          )}
+
           {/* Actions */}
           <div className="border-t pt-4 flex gap-3">
             {attendee.checkInStatus === "NOT_CHECKED_IN" && (
@@ -162,6 +221,15 @@ const AttendeeModal = ({
       </Card>
     </div>
   );
+};
+
+AttendeeModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  attendee: PropTypes.object,
+  onCheckIn: PropTypes.func.isRequired,
+  isCheckingIn: PropTypes.bool.isRequired,
+  checkInError: PropTypes.string,
 };
 
 export default AttendeeModal;

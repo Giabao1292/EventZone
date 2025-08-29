@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import { Search } from "lucide-react";
 import { toast } from "react-toastify";
@@ -9,8 +7,10 @@ import BackgroundEffect from "../ui/BackGround";
 import backGround from "../assets/images/background/background.png";
 import wishlistService from "../services/wishlistServices";
 import EventCard from "../ui/EventCard";
+import useAuth from "../hooks/useAuth"; // Import useAuth
 
 export default function WishlistPage() {
+  const { isAuthenticated } = useAuth(); // Get authentication status
   const [wishlist, setWishlist] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -74,20 +74,20 @@ export default function WishlistPage() {
     <div className="min-h-screen text-white relative overflow-hidden">
       <BackgroundEffect image={backGround} />
 
-      {/* Header */}
       <div className="text-center py-12 px-4 relative z-10">
         <div className="bg-black/50 backdrop-blur-sm rounded-2xl p-8 mx-auto max-w-4xl border border-gray-800/50">
           <h1 className="text-3xl md:text-4xl font-bold mb-4 text-white drop-shadow-lg">
             📌 Danh sách yêu thích
           </h1>
           <p className="text-gray-200 text-sm mb-2 max-w-xl mx-auto drop-shadow-md">
-            Danh sách sự kiện bạn đã thêm vào yêu thích để dễ dàng theo dõi và đặt vé sau này.
+            Danh sách sự kiện bạn đã thêm vào yêu thích để dễ dàng theo dõi và
+            đặt vé sau này.
           </p>
           <p className="text-orange-300 text-sm font-medium mb-6 drop-shadow-md">
-            Bạn có thể xóa sự kiện khỏi danh sách bất cứ lúc nào hoặc nhấn vào sự kiện để xem chi tiết.
+            Bạn có thể xóa sự kiện khỏi danh sách bất cứ lúc nào hoặc nhấn vào
+            sự kiện để xem chi tiết.
           </p>
 
-          {/* Tìm kiếm */}
           <div className="max-w-md mx-auto relative">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
             <Input
@@ -101,7 +101,6 @@ export default function WishlistPage() {
         </div>
       </div>
 
-      {/* Danh sách sự kiện */}
       <div className="px-6 pb-16 relative z-10">
         {sortedWishlist.length === 0 ? (
           <div className="text-center py-12">
@@ -135,6 +134,7 @@ export default function WishlistPage() {
                 event={event}
                 isFavorite={event.isFavorite}
                 onToggleFavorite={handleToggleWishlist}
+                isAuthenticated={isAuthenticated} // Pass isAuthenticated
               />
             ))}
           </div>

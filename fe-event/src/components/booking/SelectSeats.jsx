@@ -12,17 +12,18 @@ import {
 } from "lucide-react";
 import apiClient from "../../api/axios";
 
+// Bảng màu được tối ưu cho nền tối
 const SOFT_COLORS = [
-  "#A5B4FC",
-  "#6EE7B7",
-  "#FECACA",
-  "#FDE68A",
-  "#C7D2FE",
-  "#FBCFE8",
-  "#FCD34D",
-  "#E0E7FF",
-  "#FDBA74",
-  "#BFDBFE",
+  "#A5B4FC", // Xanh nhạt
+  "#6EE7B7", // Xanh lá nhạt
+  "#FECACA", // Hồng nhạt
+  "#FDE68A", // Vàng nhạt
+  "#D8B4FE", // Tím nhạt
+  "#FBCFE8", // Hồng phấn
+  "#FCD34D", // Vàng sáng
+  "#BAE6FD", // Xanh dương nhạt
+  "#FDBA74", // Cam nhạt
+  "#A5B4FC", // Lặp lại để đảm bảo đủ màu
 ];
 
 const GRID_SIZE = 30;
@@ -36,6 +37,9 @@ export default function SelectSeats() {
   const [error, setError] = useState(null);
   const [zoneSelections, setZoneSelections] = useState([]);
   const [seatSelections, setSeatSelections] = useState([]);
+  const [vouchers, setVouchers] = useState([]);
+  const [selectedVoucher, setSelectedVoucher] = useState(null);
+  const [voucherError, setVoucherError] = useState(null);
   const isLayoutLoaded = useRef(false);
 
   const fetchLayout = useCallback(async () => {
@@ -69,16 +73,49 @@ export default function SelectSeats() {
     }
   }, [showingId, event, showing]);
 
+  const fetchVouchers = useCallback(async () => {
+    try {
+      const { data } = await apiClient.get("/vouchers/me");
+      console.log("Raw voucher API response:", data);
+      if (data.code === 200) {
+        const validVouchers = data.data.redeemedVouchers.filter((voucher) => {
+          const now = new Date();
+          const validFrom = new Date(voucher.validFrom);
+          const validUntil = new Date(voucher.validUntil);
+          return now >= validFrom && now <= validUntil && voucher.status === 1;
+        });
+        console.log("Valid redeemed vouchers:", validVouchers);
+        setVouchers(validVouchers);
+        const welcomeVoucher = validVouchers.find(
+          (v) => v.voucherCode === "WELCOME10"
+        );
+        if (welcomeVoucher) {
+          setSelectedVoucher(welcomeVoucher);
+          console.log("Auto-selected Voucher:", welcomeVoucher);
+        } else {
+          console.log("No WELCOME10 voucher found in valid redeemed vouchers");
+        }
+      } else {
+        setVoucherError("Không thể tải danh sách voucher");
+        console.log("Voucher API error:", data.message);
+      }
+    } catch (err) {
+      console.error("Lỗi tải voucher:", err);
+      setVoucherError("Không thể tải danh sách voucher");
+    }
+  }, []);
+
   useEffect(() => {
     fetchLayout();
-  }, [fetchLayout]);
+    fetchVouchers();
+  }, [fetchLayout, fetchVouchers]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 flex items-center justify-center">
+      <div className="min-h-screen  bg-transparent flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-300 text-lg">Đang tải sơ đồ...</p>
+          <div className="w-16 h-16 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-200 text-lg">Đang tải sơ đồ...</p>
         </div>
       </div>
     );
@@ -86,14 +123,14 @@ export default function SelectSeats() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 flex items-center justify-center">
-        <div className="bg-slate-800/90 backdrop-blur-sm border border-red-500/30 rounded-xl shadow-lg p-6 max-w-md">
+      <div className="min-h-screen bg-transparent  flex items-center justify-center">
+        <div className="bg-slate-800/90 backdrop-blur-sm border border-red-500/30 rounded-xl shadow-lg shadow-slate-900/50 p-6 max-w-md">
           <div className="text-center">
             <div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <X className="w-6 h-6 text-red-400" />
             </div>
             <h3 className="font-semibold text-white mb-2">Có lỗi xảy ra</h3>
-            <p className="text-slate-300">{error}</p>
+            <p className="text-slate-200">{error}</p>
           </div>
         </div>
       </div>
@@ -104,9 +141,12 @@ export default function SelectSeats() {
 
   const { eventTitle, startTime, location, zones = [], seats = [] } = layout;
 
-  const total =
+  const totalBeforeDiscount =
     zoneSelections.reduce((sum, s) => sum + s.zone.price * s.qty, 0) +
     seatSelections.reduce((sum, s) => sum + s.price, 0);
+  const total = selectedVoucher
+    ? Math.max(0, totalBeforeDiscount - selectedVoucher.discountAmount)
+    : totalBeforeDiscount;
 
   const priceList = [
     ...zones.map((z) => ({
@@ -181,6 +221,78 @@ export default function SelectSeats() {
     });
   };
 
+  const validateVoucher = (voucher, total) => {
+    if (!voucher) {
+      console.log("No voucher selected for validation");
+      return true;
+    }
+    const now = new Date();
+    const validFrom = new Date(voucher.validFrom);
+    const validUntil = new Date(voucher.validUntil);
+    console.log("Validating voucher:", {
+      voucher,
+      total,
+      now,
+      validFrom,
+      validUntil,
+    });
+    if (now < validFrom || now > validUntil) {
+      setVoucherError("Voucher đã hết hạn");
+      console.log("Voucher validation failed: Expired");
+      return false;
+    }
+    if (voucher.discountAmount > total) {
+      setVoucherError("Giá trị voucher lớn hơn tổng đơn hàng");
+      console.log("Voucher validation failed: Discount exceeds total");
+      return false;
+    }
+    console.log("Voucher validation passed");
+    return true;
+  };
+
+  const handleVoucherChange = (e) => {
+    const voucher = vouchers.find(
+      (v) => v.voucherId === Number(e.target.value)
+    );
+    setSelectedVoucher(voucher || null);
+    setVoucherError(null);
+    console.log("Selected Voucher:", voucher);
+  };
+
+  const handleContinue = () => {
+    if (
+      selectedVoucher &&
+      !validateVoucher(selectedVoucher, totalBeforeDiscount)
+    ) {
+      console.log("Voucher validation failed:", {
+        selectedVoucher,
+        totalBeforeDiscount,
+      });
+      return;
+    }
+    const payload = [
+      ...zoneSelections.map((s) => ({
+        type: "zone",
+        zoneId: s.zone.id,
+        qty: s.qty,
+        price: s.zone.price,
+        zoneName: s.zone.name,
+      })),
+      ...seatSelections.map((s) => ({
+        type: "seat",
+        seatId: s.id,
+        seatLabel: s.label,
+        price: s.price,
+        qty: 1,
+      })),
+      ...(selectedVoucher
+        ? [{ type: "voucher", voucherId: selectedVoucher.voucherId }]
+        : []),
+    ];
+    console.log("Payload sent to handleStep1Complete:", payload);
+    handleStep1Complete(payload);
+  };
+
   const renderMap = () => {
     const containerWidth = 700;
     const containerHeight = 480;
@@ -199,13 +311,8 @@ export default function SelectSeats() {
 
     if (zones.length > 0 || seats.length > 0) {
       return (
-        <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl shadow-lg p-6">
-          <div className="mb-6 text-center">
-            <div className="inline-flex items-center gap-2 bg-slate-700 text-white px-6 py-2 rounded-full shadow-md border border-slate-600">
-              <div className="w-3 h-3 bg-white rounded"></div>
-              <span className="text-sm font-medium">Sân khấu</span>
-            </div>
-          </div>
+        <div className="bg-slate-800/70 backdrop-blur-md border border-slate-600 rounded-xl shadow-lg shadow-slate-900/50 p-6">
+          <div className="mb-6 text-center"></div>
           <div
             style={{
               width: containerWidth,
@@ -229,12 +336,12 @@ export default function SelectSeats() {
                     key={`zone-${zone.id}`}
                     onClick={() => toggleZone(zone)}
                     className={`
-                      absolute flex items-center justify-center text-sm font-semibold rounded-lg shadow-md border-2 transition-all cursor-pointer
+                      absolute flex items-center justify-center text-sm font-semibold rounded-lg shadow-md shadow-slate-900/30 border-2 transition-all cursor-pointer
                       ${
                         selected
                           ? "ring-4 ring-blue-400/50 border-blue-400 scale-105 z-10"
                           : available
-                          ? "hover:scale-105 border-transparent hover:shadow-lg"
+                          ? "hover:scale-105 border-transparent hover:shadow-lg hover:shadow-slate-900/50"
                           : "cursor-not-allowed border-gray-600 opacity-60"
                       }
                     `}
@@ -276,12 +383,12 @@ export default function SelectSeats() {
                     key={`seat-${seat.id}`}
                     onClick={() => toggleSeat(seat)}
                     className={`
-                      absolute flex items-center justify-center text-xs font-bold rounded-full border-2 shadow transition-all
+                      absolute flex items-center justify-center text-xs font-bold rounded-full border-2 shadow-md shadow-slate-900/30 transition-all
                       ${
                         seat.available
                           ? selected
                             ? "ring-4 ring-blue-400/50 border-blue-400 scale-110 z-20 cursor-pointer"
-                            : "hover:scale-105 cursor-pointer border-transparent"
+                            : "hover:scale-105 cursor-pointer border-transparent hover:shadow-lg hover:shadow-slate-900/50"
                           : "cursor-not-allowed border-gray-600 opacity-60"
                       }
                     `}
@@ -312,27 +419,27 @@ export default function SelectSeats() {
     }
 
     return (
-      <div className="text-center text-slate-400 bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-8 shadow-lg">
-        <Ticket className="w-12 h-12 mx-auto mb-4 text-slate-500" />
+      <div className="text-center text-slate-200 bg-slate-800/70 backdrop-blur-md border border-slate-600 rounded-xl p-8 shadow-lg shadow-slate-900/50">
+        <Ticket className="w-12 h-12 mx-auto mb-4 text-slate-400" />
         <p>Không có dữ liệu sơ đồ</p>
       </div>
     );
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800">
+    <div className="min-h-screen bg-transparent">
       <div className="grid lg:grid-cols-3 gap-6 p-6 max-w-7xl mx-auto">
         {/* Left Column - Seat Map */}
         <div className="lg:col-span-2 space-y-6">
           {/* Event Header */}
-          <div className="bg-slate-800/90 backdrop-blur-sm border border-slate-700 rounded-xl shadow-lg p-6">
+          <div className="bg-slate-800/70 backdrop-blur-md border border-slate-600 rounded-xl shadow-lg shadow-slate-900/50 p-6">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center border border-blue-500/30">
                 <Ticket className="w-6 h-6 text-blue-400" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-white">{eventTitle}</h1>
-                <div className="flex items-center gap-6 text-sm text-slate-300 mt-2">
+                <div className="flex items-center gap-6 text-sm text-slate-200 mt-2">
                   <div className="flex items-center gap-2">
                     <CalendarClock className="w-4 h-4 text-blue-400" />
                     {startTime
@@ -349,12 +456,12 @@ export default function SelectSeats() {
           </div>
 
           {/* Seat Map */}
-          <div className="bg-slate-800/90 backdrop-blur-sm border border-slate-700 rounded-xl shadow-lg p-6">
+          <div className="bg-slate-800/70 backdrop-blur-md border border-slate-600 rounded-xl shadow-lg shadow-slate-900/50 p-6">
             <div className="mb-4">
               <h2 className="text-xl font-bold text-white mb-2">
                 Sơ đồ chỗ ngồi
               </h2>
-              <p className="text-slate-300 text-sm">
+              <p className="text-slate-200 text-sm">
                 Nhấn vào khu vực hoặc ghế để chọn
               </p>
             </div>
@@ -365,7 +472,7 @@ export default function SelectSeats() {
         {/* Right Column - Selection Summary & Price Legend */}
         <div className="space-y-6">
           {/* Price Legend */}
-          <div className="bg-slate-800/90 backdrop-blur-sm border border-slate-700 rounded-xl shadow-lg p-6">
+          <div className="bg-slate-800/70 backdrop-blur-md border border-slate-600 rounded-xl shadow-lg shadow-slate-900/50 p-6">
             <div className="flex items-center gap-2 mb-4">
               <BadgeDollarSign className="w-5 h-5 text-green-400" />
               <h3 className="text-xl font-bold text-white">Bảng giá</h3>
@@ -374,7 +481,7 @@ export default function SelectSeats() {
               {priceList.map((p, idx) => (
                 <div
                   key={p.key}
-                  className="flex items-center gap-3 p-4 rounded-lg border border-slate-600 transition-all hover:border-slate-500 bg-slate-700/50"
+                  className="flex items-center gap-3 p-4 rounded-lg border border-slate-600 transition-all hover:border-slate-500 hover:shadow-md hover:shadow-slate-900/50 bg-slate-700/30"
                   style={{
                     backgroundColor: `${priceColorMap[p.key]}15`,
                   }}
@@ -388,7 +495,7 @@ export default function SelectSeats() {
                   />
                   <div>
                     <div className="font-semibold text-white">{p.type}</div>
-                    <div className="text-sm text-slate-300 font-medium">
+                    <div className="text-sm text-slate-200 font-medium">
                       {Number(p.price).toLocaleString("vi-VN")}₫
                     </div>
                   </div>
@@ -399,7 +506,7 @@ export default function SelectSeats() {
 
           {/* Zone Selections */}
           {zoneSelections.length > 0 && (
-            <div className="bg-slate-800/90 backdrop-blur-sm border border-slate-700 rounded-xl shadow-lg p-6">
+            <div className="bg-slate-800/70 backdrop-blur-md border border-slate-600 rounded-xl shadow-lg shadow-slate-900/50 p-6">
               <div className="flex items-center gap-2 mb-4">
                 <Users2 className="w-5 h-5 text-purple-400" />
                 <h3 className="text-lg font-bold text-white">
@@ -410,13 +517,13 @@ export default function SelectSeats() {
                 {zoneSelections.map((sel) => (
                   <div
                     key={sel.zone.id}
-                    className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg border border-slate-600"
+                    className="flex items-center justify-between p-4 bg-slate-700/30 rounded-lg border border-slate-600 shadow-md shadow-slate-900/30"
                   >
                     <div>
                       <div className="font-semibold text-white">
                         {sel.zone.name}
                       </div>
-                      <div className="text-sm text-slate-300">
+                      <div className="text-sm text-slate-200">
                         {sel.zone.price.toLocaleString("vi-VN")}₫ / vé
                       </div>
                     </div>
@@ -447,19 +554,19 @@ export default function SelectSeats() {
 
           {/* Seat Selections */}
           {seatSelections.length > 0 && (
-            <div className="bg-slate-800/90 backdrop-blur-sm border border-slate-700 rounded-xl shadow-lg p-6">
+            <div className="bg-slate-800/70 backdrop-blur-md border border-slate-600 rounded-xl shadow-lg shadow-slate-900/50 p-6">
               <h3 className="text-lg font-bold text-white mb-4">Ghế đã chọn</h3>
               <div className="space-y-3">
                 {seatSelections.map((seat) => (
                   <div
                     key={seat.id}
-                    className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg border border-slate-600"
+                    className="flex items-center justify-between p-4 bg-slate-700/30 rounded-lg border border-slate-600 shadow-md shadow-slate-900/30"
                   >
                     <div>
                       <div className="font-semibold text-white">
                         Ghế {seat.label}
                       </div>
-                      <div className="text-sm text-slate-300">
+                      <div className="text-sm text-slate-200">
                         {seat.price?.toLocaleString("vi-VN")}₫
                       </div>
                     </div>
@@ -477,7 +584,7 @@ export default function SelectSeats() {
 
           {/* Empty State */}
           {zoneSelections.length + seatSelections.length === 0 && (
-            <div className="bg-slate-800/90 backdrop-blur-sm border border-slate-700 rounded-xl shadow-lg p-6">
+            <div className="bg-slate-800/70 backdrop-blur-md border border-slate-600 rounded-xl shadow-lg shadow-slate-900/50 p-6">
               <div className="text-center">
                 <div className="w-16 h-16 bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Ticket className="w-8 h-8 text-slate-400" />
@@ -485,7 +592,7 @@ export default function SelectSeats() {
                 <h3 className="font-semibold text-white mb-2">
                   Chưa chọn chỗ ngồi
                 </h3>
-                <p className="text-sm text-slate-300">
+                <p className="text-sm text-slate-200">
                   Nhấn vào khu vực hoặc ghế trên sơ đồ để chọn
                 </p>
               </div>
@@ -493,38 +600,56 @@ export default function SelectSeats() {
           )}
 
           {/* Total & Continue Button */}
-          <div className="bg-slate-800/90 backdrop-blur-sm border border-slate-700 rounded-xl shadow-lg p-6">
+          <div className="bg-slate-800/70 backdrop-blur-md border border-slate-600 rounded-xl shadow-lg shadow-slate-900/50 p-6">
             <div className="space-y-4">
+              {/* Voucher Selection */}
+              {vouchers.length > 0 && (
+                <div className="mb-4">
+                  <label className="block text-white font-semibold mb-2">
+                    Chọn Voucher
+                  </label>
+                  <select
+                    value={selectedVoucher?.voucherId || ""}
+                    onChange={handleVoucherChange}
+                    className="w-full p-2 rounded-lg bg-slate-700 text-white border border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    aria-label="Chọn voucher giảm giá"
+                  >
+                    <option value="">Không sử dụng voucher</option>
+                    {vouchers.map((voucher) => (
+                      <option key={voucher.voucherId} value={voucher.voucherId}>
+                        {voucher.voucherName} (
+                        {voucher.discountAmount.toLocaleString("vi-VN")}₫)
+                      </option>
+                    ))}
+                  </select>
+                  {voucherError && (
+                    <p className="text-red-400 text-sm mt-2">{voucherError}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Total Price */}
               <div className="flex justify-between items-center pb-4 border-b border-slate-600">
                 <span className="text-lg font-semibold text-white">
                   Tổng cộng:
                 </span>
-                <span className="text-2xl font-bold text-blue-400">
-                  {total.toLocaleString("vi-VN")}₫
-                </span>
+                <div className="text-right">
+                  {selectedVoucher && (
+                    <span className="block text-sm text-slate-200 line-through">
+                      {totalBeforeDiscount.toLocaleString("vi-VN")}₫
+                    </span>
+                  )}
+                  <span className="text-2xl font-bold text-blue-400">
+                    {total.toLocaleString("vi-VN")}₫
+                  </span>
+                </div>
               </div>
 
+              {/* Continue Button */}
               <button
-                onClick={() =>
-                  handleStep1Complete([
-                    ...zoneSelections.map((s) => ({
-                      type: "zone",
-                      zoneId: s.zone.id,
-                      qty: s.qty,
-                      price: s.zone.price,
-                      zoneName: s.zone.name,
-                    })),
-                    ...seatSelections.map((s) => ({
-                      type: "seat",
-                      seatId: s.id,
-                      seatLabel: s.label,
-                      price: s.price,
-                      qty: 1,
-                    })),
-                  ])
-                }
+                onClick={handleContinue}
                 disabled={zoneSelections.length + seatSelections.length === 0}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-slate-600 disabled:to-slate-600 disabled:cursor-not-allowed text-white py-4 rounded-xl text-lg font-semibold transition-all shadow-lg hover:shadow-xl"
+                className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 disabled:from-slate-600 disabled:to-slate-600 disabled:cursor-not-allowed text-white py-4 rounded-xl text-lg font-semibold transition-all shadow-md shadow-slate-900/50 hover:shadow-lg hover:shadow-slate-900/70"
               >
                 Tiếp tục thanh toán
               </button>

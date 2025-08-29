@@ -22,6 +22,8 @@ public class EventSummaryDTO {
     private String imageUrl;
     private String status;
     private String category;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     public EventSummaryDTO(Event event) {
         this.id = event.getId();
@@ -43,6 +45,11 @@ public class EventSummaryDTO {
         this.imageUrl = event.getPosterImage();
         this.status = event.getStatus() != null ? event.getStatus().getStatusName() : null;
         this.category = event.getCategory() != null ? event.getCategory().getCategoryName() : null;
+        this.createdAt = event.getCreatedAt() != null ? event.getCreatedAt().atZone(ZoneId.of("Asia/Ho_Chi_Minh")).toLocalDateTime() : null;
+        this.updatedAt = event.getUpdatedAt() != null ? event.getUpdatedAt().atZone(ZoneId.of("Asia/Ho_Chi_Minh")).toLocalDateTime() : null;
+        
+        // Debug log
+        System.out.println("Event ID: " + event.getId() + " - CreatedAt: " + this.createdAt + " - UpdatedAt: " + this.updatedAt + " - StartTime: " + event.getStartTime());
     }
 
     private String formatDate(LocalDateTime localDateTime) {

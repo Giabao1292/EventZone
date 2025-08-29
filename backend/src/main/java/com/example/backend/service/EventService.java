@@ -8,9 +8,13 @@ import com.example.backend.model.Event;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Map;
 
 public interface EventService {
+
     List<Event> getApprovedEvents();
+
+    Map<String, List<EventHomeDTO>> getHomeEventsGroupedByStatus();
 
     List<EventResponse> getPosterImagesByCategory(int categoryId);
 
@@ -18,7 +22,7 @@ public interface EventService {
 
     Event submitEvent(int eventId);
 
-    EventDetailDTO getEventDetailById(int eventId);
+    EventDetailDTO getEventDetailById(int eventId, String userEmail);
 
     PageResponse<EventSummaryAdmin> searchEvent(Pageable pageable, String... search);
 
@@ -32,11 +36,21 @@ public interface EventService {
 
     void updateStatus(UpdateStatusEvent status, int eventId);
 
-
     Event findById(Integer id);
 
     List<EventHomeDTO> userSearchEvent(String[] search);
 
     FeaturedEventResponse getFeaturedEventsForHome();
 
+    List<EventHomeDTO> recommendEvents(String email);
+
+    List<EventResponse> getEventsForReviewByCategory(int categoryId);
+
+    PageResponse<EventResponse> getEventsForReviewAllCategoriesPaged(int page, int size, String search, Integer categoryId);
+
+    List<EventHomeDTO> getTopEvents(Pageable pageable);
+
+    List<EventSummaryAdmin> getEventsWithReviews();
+
+    List<Event> findMyEventsWithReviews(int organizerId);
 }

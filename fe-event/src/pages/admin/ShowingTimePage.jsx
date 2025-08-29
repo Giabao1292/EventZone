@@ -36,7 +36,6 @@ import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
-import QRScanner from "./QrScanner";
 import AttendeeModal from "../../components/admin/AttendeeModal";
 
 const Select = ({ value, onValueChange, children, className = "" }) => {
@@ -92,6 +91,7 @@ const ShowingTimeManagement = ({ eventId, eventTitle, onBack }) => {
   const [selectedAttendee, setSelectedAttendee] = useState(null);
   const [isAttendeeModalOpen, setIsAttendeeModalOpen] = useState(false);
   const [isCheckingIn, setIsCheckingIn] = useState(false);
+  const [checkInError, setCheckInError] = useState("");
 
   // Fetch showing times when component mounts
   useEffect(() => {
@@ -184,6 +184,7 @@ const ShowingTimeManagement = ({ eventId, eventTitle, onBack }) => {
 
   const handleCheckIn = async (bookingId) => {
     setIsCheckingIn(true);
+    setCheckInError(""); // Clear previous error
     try {
       await checkInAttendee(bookingId);
       // Refresh attendees list and analytics
@@ -193,7 +194,12 @@ const ShowingTimeManagement = ({ eventId, eventTitle, onBack }) => {
       setIsAttendeeModalOpen(false);
     } catch (error) {
       console.error("Error checking in attendee:", error);
-      alert("Có lỗi xảy ra khi check-in!");
+      // Extract error message from response
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Có lỗi xảy ra khi check-in!";
+      setCheckInError(errorMessage);
     } finally {
       setIsCheckingIn(false);
     }
@@ -212,7 +218,6 @@ const ShowingTimeManagement = ({ eventId, eventTitle, onBack }) => {
         selectedShowingTime.startTime,
         qrToken
       );
-
       if (response.code === 200 && response.data.content.length > 0) {
         const attendee = response.data.content[0];
         setSelectedAttendee(attendee);
@@ -583,7 +588,7 @@ const ShowingTimeManagement = ({ eventId, eventTitle, onBack }) => {
                         }}
                       />
                     </div>
-                    <Button
+                    {/* <Button
                       onClick={() => setIsQRScannerOpen(true)}
                       className="h-12 px-4 bg-green-600 hover:bg-green-700"
                       disabled={isSearchingByQR}
@@ -593,7 +598,7 @@ const ShowingTimeManagement = ({ eventId, eventTitle, onBack }) => {
                       ) : (
                         <QrCode className="w-5 h-5" />
                       )}
-                    </Button>
+                    </Button> */}
                   </div>
                 </div>
 
@@ -743,16 +748,16 @@ const ShowingTimeManagement = ({ eventId, eventTitle, onBack }) => {
                           </div>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          {attendee.checkInStatus === "NOT_CHECKED_IN" && (
-                            <Button
-                              size="sm"
-                              onClick={() => handleCheckIn(attendee.id)}
-                            >
-                              <UserCheck className="w-4 h-4 mr-2" />
-                              Check-in
-                            </Button>
-                          )}
-                          <Button
+                          {/* {attendee.checkInStatus === "NOT_CHECKED_IN" && (
+                                                        <Button
+                                                            size="sm"
+                                                            onClick={() => handleCheckIn(attendee.id)}
+                                                        >
+                                                            <UserCheck className="w-4 h-4 mr-2" />
+                                                            Check-in
+                                                        </Button>
+                                                    )} */}
+                          {/* <Button
                             size="sm"
                             variant="outline"
                             onClick={() =>
@@ -761,7 +766,7 @@ const ShowingTimeManagement = ({ eventId, eventTitle, onBack }) => {
                           >
                             <Mail className="w-4 h-4 mr-2" />
                             Gửi email
-                          </Button>
+                          </Button> */}
                         </div>
                       </div>
                     </div>
@@ -821,11 +826,6 @@ const ShowingTimeManagement = ({ eventId, eventTitle, onBack }) => {
       )}
 
       {/* QR Scanner Modal */}
-      <QRScanner
-        isOpen={isQRScannerOpen}
-        onClose={() => setIsQRScannerOpen(false)}
-        onScan={handleQRScan}
-      />
 
       {/* Attendee Detail Modal */}
       <AttendeeModal
@@ -834,6 +834,7 @@ const ShowingTimeManagement = ({ eventId, eventTitle, onBack }) => {
         attendee={selectedAttendee}
         onCheckIn={handleCheckIn}
         isCheckingIn={isCheckingIn}
+        checkInError={checkInError}
       />
     </div>
   );

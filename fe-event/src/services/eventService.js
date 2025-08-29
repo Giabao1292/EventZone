@@ -1,22 +1,20 @@
 import apiClient from "../api/axios";
 
+// Lấy danh sách event cho homepage
 export const getHomeEvents = async () => {
   const res = await apiClient.get("/events/home");
   return res.data.data; // {ongoing, upcoming}
 };
 
-// Search events with pagination and filters
+// Search events (có phân trang, filter)
 export const searchEvents = async (page = 0, size = 10, searchParams = []) => {
   try {
     const params = new URLSearchParams();
     params.append("page", page.toString());
     params.append("size", size.toString());
-
-    // Add search parameters in format: search=field:value
     searchParams.forEach((param) => {
       params.append("search", param);
     });
-
     const response = await apiClient.get(`/events?${params}`);
     return response.data;
   } catch (error) {
@@ -25,33 +23,27 @@ export const searchEvents = async (page = 0, size = 10, searchParams = []) => {
   }
 };
 
+// Lấy danh sách event (admin) - sửa đúng truyền params
 export const getEvents = async (page, pageSize, searchParams = []) => {
   try {
-    const formattedSearchParams = Array.isArray(searchParams)
-      ? searchParams
-      : [];
-
     const params = new URLSearchParams();
     params.append("page", page.toString());
     params.append("size", pageSize.toString());
-
-    formattedSearchParams.forEach((param) => {
+    (Array.isArray(searchParams) ? searchParams : []).forEach((param) => {
       params.append("search", param);
     });
 
-    const response = await apiClient.get("/events", {
-      params: Object.fromEntries(params),
-    });
+    // Truyền params trực tiếp cho axios
+    const response = await apiClient.get("/events", { params });
 
     const data = response.data;
-
     if (data.code === 200 && data.data && data.data.content) {
       return {
         code: 200,
         data: {
           content: data.data.content.map((event) => ({
-            eventId: event.id,
-            eventName: event.eventTitle,
+            id: event.id?.toString() || "",
+            title: event.eventTitle,
             category: event.categoryName,
             organizerName: event.organizerName,
             location: event.address,
@@ -70,7 +62,6 @@ export const getEvents = async (page, pageSize, searchParams = []) => {
         message: "Events fetched successfully",
       };
     }
-
     return data;
   } catch (error) {
     console.error("Error fetching events:", error);
@@ -82,12 +73,11 @@ export const getEvents = async (page, pageSize, searchParams = []) => {
   }
 };
 
+// Lấy chi tiết 1 event (dùng cho cả admin, organizer)
 export const getEventDetails = async (eventId) => {
   try {
     const response = await apiClient.get(`/events/${eventId}`);
     const data = response.data;
-
-    // Map API response to expected format
     if (data.code === 200 && data.data) {
       const event = data.data;
       return {
@@ -107,17 +97,16 @@ export const getEventDetails = async (eventId) => {
             : "",
           location: event.address,
           address: event.address,
-          maxParticipants: 500, // Not provided in API
-          price: 0, // Not provided in API
+          maxParticipants: 500,
+          price: 0,
           registrationDeadline: event.startTime,
-          contactEmail: "contact@event.com", // Not provided in API
-          contactPhone: "+84 123 456 789", // Not provided in API
+          contactEmail: "contact@event.com",
+          contactPhone: "+84 123 456 789",
           requirements: event.bannerText || "",
           galleryImages: [
             { url: event.headerImage || "/placeholder.svg" },
             { url: event.orgLogoUrl || "/placeholder.svg" },
           ],
-          // Additional fields from API
           rejectionReason: event.rejectionReason || "",
           ageRating: event.ageRating,
           organizerName: event.organizerName,
@@ -131,67 +120,37 @@ export const getEventDetails = async (eventId) => {
         message: "Event details fetched successfully",
       };
     }
-
     return data;
   } catch (error) {
     console.error("Error fetching event details:", error);
-    // Return fallback data on error
     return {
-      code: 200,
-      data: {
-        eventName: "Tech Conference 2024",
-        thumbnailUrl: "/placeholder.svg",
-        bannerUrl: "/placeholder.svg",
-        description:
-          "A comprehensive technology conference featuring the latest innovations and trends.",
-        startDate: "2024-03-15",
-        endDate: "2024-03-16",
-        startTime: "09:00",
-        endTime: "17:00",
-        location: "Ho Chi Minh City Convention Center",
-        address: "123 Nguyen Hue Street, District 1, Ho Chi Minh City",
-        maxParticipants: 500,
-        price: 1500000,
-        registrationDeadline: "2024-03-10",
-        contactEmail: "contact@techconf.com",
-        contactPhone: "+84 123 456 789",
-        requirements:
-          "Participants should bring their own laptops and business cards.",
-        galleryImages: [
-          { url: "/placeholder.svg" },
-          { url: "/placeholder.svg" },
-        ],
-      },
-      message: "Event details fetched successfully",
+      code: 500,
+      data: null,
+      message: "Failed to fetch event details",
     };
   }
 };
 
-// Get event detail by ID (alias for getEventDetails)
 export const getEventDetail = async (eventId) => {
   return await getEventDetails(eventId);
 };
 
+// Lấy danh mục sự kiện
 export const getEventCategories = async () => {
   try {
     const response = await apiClient.get("/events/categories");
     return response.data;
   } catch (error) {
     console.error("Error fetching event categories:", error);
-    // Return fallback data on error
     return {
-      code: 200,
-      data: [
-        { categoryCode: "TECH", categoryName: "Technology" },
-        { categoryCode: "MUSIC", categoryName: "Music & Entertainment" },
-        { categoryCode: "BUSINESS", categoryName: "Business & Networking" },
-        { categoryCode: "EDUCATION", categoryName: "Education & Training" },
-      ],
-      message: "Event categories fetched successfully",
+      code: 500,
+      data: [],
+      message: "Failed to fetch event categories",
     };
   }
 };
 
+// Cập nhật trạng thái sự kiện (duyệt/từ chối...)
 export const updateEventStatus = async (
   eventId,
   status,
@@ -202,7 +161,6 @@ export const updateEventStatus = async (
       status,
       ...(rejectionReason && { rejectionReason }),
     };
-
     const response = await apiClient.patch(`/events/${eventId}/status`, body);
     return response.data;
   } catch (error) {
@@ -213,49 +171,31 @@ export const updateEventStatus = async (
     throw error;
   }
 };
-
-// NEW: Get showing times for an event
+export const getRecommendedEvents = async () => {
+  try {
+    const response = await apiClient.get("/events/recommend");
+    return response.data.data || [];
+  } catch (error) {
+    console.error("❌ Lỗi khi lấy sự kiện gợi ý:", error);
+    return [];
+  }
+};
+// Lấy showing times của 1 event
 export const getEventShowingTimes = async (eventId) => {
   try {
     const response = await apiClient.get(`/events/${eventId}/showing-times`);
     return response.data;
   } catch (error) {
     console.error("Error fetching showing times:", error);
-    // Return mock data for development
     return {
-      code: 200,
-      data: [
-        {
-          id: 1,
-          event_id: eventId,
-          startTime: "2024-03-15T09:00:00",
-          endTime: "2024-03-15T12:00:00",
-          saleOpenTime: "2024-03-01T00:00:00",
-          saleCloseTime: "2024-03-14T23:59:59",
-        },
-        {
-          id: 2,
-          event_id: eventId,
-          startTime: "2024-03-15T14:00:00",
-          endTime: "2024-03-15T17:00:00",
-          saleOpenTime: "2024-03-01T00:00:00",
-          saleCloseTime: "2024-03-14T23:59:59",
-        },
-        {
-          id: 3,
-          event_id: eventId,
-          startTime: "2024-03-16T09:00:00",
-          endTime: "2024-03-16T12:00:00",
-          saleOpenTime: "2024-03-01T00:00:00",
-          saleCloseTime: "2024-03-15T23:59:59",
-        },
-      ],
-      message: "Showing times fetched successfully",
+      code: 500,
+      data: [],
+      message: "Failed to fetch showing times",
     };
   }
 };
 
-// NEW: Get attendees for a specific event and showing time with pagination
+// Lấy danh sách attendee cho 1 showing time của event (phân trang)
 export const getEventAttendees = async (
   eventId,
   startTime,
@@ -269,7 +209,6 @@ export const getEventAttendees = async (
     params.append("size", size.toString());
     params.append("startTime", startTime);
 
-    // Add search parameters
     search.forEach((param) => {
       params.append("search", param);
     });
@@ -280,56 +219,21 @@ export const getEventAttendees = async (
     return response.data;
   } catch (error) {
     console.error("Error fetching attendees:", error);
-    // Return mock data for development
     return {
-      code: 200,
+      code: 500,
       data: {
-        content: [
-          {
-            id: 1,
-            fullName: "Nguyễn Văn An",
-            email: "nguyenvanan@email.com",
-            phone: "0901234567",
-            qrToken: "QR001234567",
-            paidAt: "2024-01-15T10:30:00Z",
-            numberOfSeats: 2,
-            checkInTime: "2024-03-15T08:45:00Z",
-            checkInStatus: "CHECKED_IN",
-          },
-          {
-            id: 2,
-            fullName: "Trần Thị Bình",
-            email: "tranthibinh@email.com",
-            phone: "0912345678",
-            qrToken: "QR001234568",
-            paidAt: "2024-01-16T14:20:00Z",
-            numberOfSeats: 1,
-            checkInTime: null,
-            checkInStatus: "NOT_CHECKED_IN",
-          },
-          {
-            id: 3,
-            fullName: "Lê Văn Cường",
-            email: "levancuong@email.com",
-            phone: "0923456789",
-            qrToken: "QR001234569",
-            paidAt: "2024-01-17T09:15:00Z",
-            numberOfSeats: 3,
-            checkInTime: null,
-            checkInStatus: "NOT_CHECKED_IN",
-          },
-        ],
-        totalElements: 25,
-        totalPages: 3,
+        content: [],
+        totalElements: 0,
+        totalPages: 0,
         number: page,
         size: size,
       },
-      message: "Attendees fetched successfully",
+      message: "Failed to fetch attendees",
     };
   }
 };
 
-// NEW: Search attendee by QR token
+// Search attendee bằng QR token
 export const searchAttendeeByQR = async (eventId, startTime, qrToken) => {
   try {
     const params = new URLSearchParams();
@@ -337,7 +241,6 @@ export const searchAttendeeByQR = async (eventId, startTime, qrToken) => {
     params.append("size", "1");
     params.append("startTime", startTime);
     params.append("search", `qrToken:${qrToken}`);
-
     const response = await apiClient.get(
       `/events/${eventId}/attendees?${params}`
     );
@@ -348,7 +251,7 @@ export const searchAttendeeByQR = async (eventId, startTime, qrToken) => {
   }
 };
 
-// NEW: Get analytics for event
+// Lấy thống kê analytics cho showing time
 export const getEventAnalytics = async (eventId, startTime) => {
   try {
     const params = new URLSearchParams();
@@ -360,9 +263,8 @@ export const getEventAnalytics = async (eventId, startTime) => {
     return response.data;
   } catch (error) {
     console.error("Error fetching analytics:", error);
-    // Return mock data for development
     return {
-      code: 200,
+      code: 500,
       data: {
         numberOfAttendees: 0,
         numberOfCheckIns: 0,
@@ -370,12 +272,12 @@ export const getEventAnalytics = async (eventId, startTime) => {
         sale: 0,
         averageAttendees: 0.0,
       },
-      message: "Analytics fetched successfully",
+      message: "Failed to fetch analytics",
     };
   }
 };
 
-// NEW: Check-in attendee
+// Check-in attendee
 export const checkInAttendee = async (bookingId) => {
   try {
     const response = await apiClient.patch(`/bookings/${bookingId}/check-in`);
@@ -386,12 +288,10 @@ export const checkInAttendee = async (bookingId) => {
   }
 };
 
-// Helper function to build search parameters
+// Hàm build search params ví dụ
 export const buildSearchParams = (statusName, eventTitle) => {
   const searchParams = [];
-
   if (statusName && statusName !== "all") {
-    // Map display status to API status
     const statusMap = {
       pending: "PENDING",
       approved: "APPROVED",
@@ -401,42 +301,22 @@ export const buildSearchParams = (statusName, eventTitle) => {
     const apiStatus = statusMap[statusName] || statusName.toUpperCase();
     searchParams.push(`statusName:${apiStatus}`);
   }
-
   if (eventTitle && eventTitle.trim()) {
     searchParams.push(`eventTitle:${eventTitle.trim()}`);
   }
-
   return searchParams;
 };
 
-// Map API response to component format
-export const mapApiEventToComponent = (apiEvent) => {
-  return {
-    id: apiEvent.id?.toString() || "",
-    title: apiEvent.eventTitle || "",
-    description: apiEvent.description || "",
-    startDate: apiEvent.startTime ? apiEvent.startTime.split("T")[0] : "",
-    endDate: apiEvent.endTime ? apiEvent.endTime.split("T")[0] : "",
-    time: apiEvent.startTime
-      ? apiEvent.startTime.split("T")[1]?.substring(0, 5)
-      : "",
-    location: apiEvent.address || "",
-    price: 0,
-    maxTickets: 0,
-    soldTickets: 0,
-    category: apiEvent.categoryName || "",
-    imageUrl: apiEvent.posterImage || "/placeholder.svg?height=200&width=300",
-    organizerId: "",
-    organizerName: apiEvent.organizerName || "",
-    organizerEmail: "",
-    status: mapApiStatusToDisplay(apiEvent.status),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    tags: [],
-    featured: false,
-    ageRating: apiEvent.ageRating || "",
-    endTime: apiEvent.endTime || "",
-  };
+export const getEventsByStatus = async (organizerId, statusId) => {
+  try {
+    const res = await apiClient.get(
+      `/events/organizer/${organizerId}/status/${statusId}`
+    );
+    return res.data.data || [];
+  } catch (error) {
+    console.error("Lỗi khi lấy sự kiện theo status:", error);
+    return [];
+  }
 };
 
 // Map API detail response to component format
@@ -467,8 +347,18 @@ export const mapApiEventDetailToComponent = (apiEventDetail) => {
     organizerName: apiEventDetail.organizerName || "",
     organizerEmail: apiEventDetail.organizerEmail || "",
     status: mapApiStatusToDisplay(apiEventDetail.status),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: apiEventDetail.createdAt
+      ? new Date(apiEventDetail.createdAt).toISOString()
+      : apiEventDetail.startTime
+      ? new Date(apiEventDetail.startTime).toISOString()
+      : new Date().toISOString(),
+    updatedAt: apiEventDetail.updatedAt
+      ? new Date(apiEventDetail.updatedAt).toISOString()
+      : apiEventDetail.createdAt
+      ? new Date(apiEventDetail.createdAt).toISOString()
+      : apiEventDetail.startTime
+      ? new Date(apiEventDetail.startTime).toISOString()
+      : new Date().toISOString(),
     tags: [],
     featured: false,
     ageRating: apiEventDetail.ageRating || "",
@@ -476,6 +366,73 @@ export const mapApiEventDetailToComponent = (apiEventDetail) => {
     orgLogoUrl: "",
     showingTimes: apiEventDetail.showingTimes || [],
   };
+};
+
+// Map API response to component format
+export const mapApiEventToComponent = (apiEvent) => {
+  return {
+    id: apiEvent.id?.toString() || "",
+    title: apiEvent.eventTitle || "",
+    description: apiEvent.description || "",
+    startDate: apiEvent.startTime ? apiEvent.startTime.split("T")[0] : "",
+    endDate: apiEvent.endTime ? apiEvent.endTime.split("T")[0] : "",
+    time: apiEvent.startTime
+      ? apiEvent.startTime.split("T")[1]?.substring(0, 5)
+      : "",
+    location: apiEvent.address || "",
+    price: 0,
+    maxTickets: 0,
+    soldTickets: 0,
+    category: apiEvent.categoryName || "",
+    imageUrl: apiEvent.posterImage || "/placeholder.svg?height=200&width=300",
+    organizerId: "",
+    organizerName: apiEvent.organizerName || "",
+    organizerEmail: "",
+    status: mapApiStatusToDisplay(apiEvent.status),
+    createdAt: apiEvent.createdAt
+      ? new Date(apiEvent.createdAt).toISOString()
+      : apiEvent.startTime
+      ? new Date(apiEvent.startTime).toISOString()
+      : new Date().toISOString(),
+    updatedAt: apiEvent.updatedAt
+      ? new Date(apiEvent.updatedAt).toISOString()
+      : apiEvent.createdAt
+      ? new Date(apiEvent.createdAt).toISOString()
+      : apiEvent.startTime
+      ? new Date(apiEvent.startTime).toISOString()
+      : new Date().toISOString(),
+    tags: [],
+    featured: false,
+    ageRating: apiEvent.ageRating || "",
+    endTime: apiEvent.endTime || "",
+  };
+};
+
+export const userSearchEvents = async (searchParams = []) => {
+  try {
+    const params = new URLSearchParams();
+
+    // Thêm từng search param
+    searchParams.forEach((param) => {
+      if (param && param.trim()) {
+        params.append("search", param);
+      }
+    });
+
+    const queryString = params.toString();
+    const url = queryString
+      ? `/events/public?${queryString}`
+      : "/events/public";
+    const response = await apiClient.get(url);
+    return response.data.data || [];
+  } catch (error) {
+    console.error("❌ Lỗi khi tìm kiếm sự kiện:", error);
+    return {
+      code: 500,
+      data: [],
+      message: "Lỗi khi tìm kiếm sự kiện",
+    };
+  }
 };
 
 // Map API status to display status
@@ -542,42 +499,108 @@ export const getEventStats = (events) => {
   }
 };
 
-export async function getEventsByStatus(organizerId, statusId) {
+export const getAllEvents = async () => {
   try {
-    const res = await apiClient.get(
-      `/events/organizer/${organizerId}/status/${statusId}`
-    );
-    // Giả sử API trả về { code: 200, data: [...] }
-    return res.data.data || [];
+    const response = await apiClient.get("/events", {
+      params: { page: 0, size: 1000 },
+    });
+    // Trả về mảng cho FE dùng dropdown select
+    return response.data.data?.content || [];
   } catch (error) {
-    console.error("Lỗi khi lấy sự kiện theo status:", error);
+    console.error("Error fetching all events:", error);
     return [];
   }
-}
+};
 
-export const userSearchEvents = async (searchParams = []) => {
+export const getEventsWithReviews = async () => {
   try {
-    const params = new URLSearchParams();
-
-    // Thêm từng search param
-    searchParams.forEach((param) => {
-      if (param && param.trim()) {
-        params.append("search", param);
-      }
-    });
-
-    const queryString = params.toString();
-    const url = queryString
-      ? `/events/public?${queryString}`
-      : "/events/public";
-    const response = await apiClient.get(url);
+    const response = await apiClient.get("/events/with-reviews");
+    // Trả về mảng cho FE dùng dropdown select
     return response.data.data || [];
   } catch (error) {
-    console.error("❌ Lỗi khi tìm kiếm sự kiện:", error);
+    console.error("Error fetching events with reviews:", error);
+    return [];
+  }
+};
+
+export const getMyEventsWithReviews = async (token) => {
+  try {
+    const response = await apiClient.get("/events/my-events-with-reviews", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data.data || [];
+  } catch (error) {
+    console.error("❌ Lỗi khi lấy danh sách sự kiện có đánh giá:", error);
+    return [];
+  }
+};
+
+export const getMyEvents = async (token) => {
+  try {
+    const response = await apiClient.get("/events/myevents", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data.data || [];
+  } catch (error) {
+    console.error("❌ Lỗi khi lấy danh sách sự kiện của tôi:", error);
     return {
-      code: 500,
+      code: error.response?.status || 500,
       data: [],
-      message: "Lỗi khi tìm kiếm sự kiện",
+      message: "Lỗi khi lấy danh sách sự kiện của tôi",
+    };
+  }
+};
+
+// Lấy danh sách event review được theo category
+export const getEndedEventsByCategory = async (categoryId) => {
+  try {
+    const response = await apiClient.get(`/events/reviewable`, {
+      params: { categoryId },
+    });
+    // Đảm bảo trả về đúng kiểu mảng event cho FE xài luôn
+    // Nếu backend trả về dạng { code, message, data }
+    return response.data.data || [];
+  } catch (error) {
+    console.error("Error fetching ended/reviewable events:", error);
+    return [];
+  }
+};
+
+export const getReviewableEvents = async (
+  page = 0,
+  size = 20,
+  search = "",
+  categoryId = null
+) => {
+  try {
+    const params = new URLSearchParams();
+    params.append("page", page.toString());
+    params.append("size", size.toString());
+    if (search && search.trim()) {
+      params.append("search", `eventTitle:${search.trim()}`);
+    }
+    if (categoryId && categoryId !== "all") {
+      params.append("categoryId", categoryId);
+    }
+    // Giả sử BE định nghĩa endpoint này:
+    const response = await apiClient.get(
+      `/events/reviewable/all?${params.toString()}`
+    );
+    const data = response.data.data;
+    // Trả về PageResponse dạng { content: [...], totalElements, totalPages, number, size }
+    return data;
+  } catch (error) {
+    console.error("Lỗi khi lấy sự kiện reviewable:", error);
+    return {
+      content: [],
+      totalElements: 0,
+      totalPages: 1,
+      number: 0,
+      size: size,
     };
   }
 };

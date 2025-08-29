@@ -40,7 +40,12 @@ const NotificationDropdown = ({
       const notifications = notificationsResponse.data || [];
       const unreadCountFromAPI = unreadResponse.data || 0;
 
-      setAllNotifications(notifications);
+      // Sắp xếp thông báo theo thời gian mới nhất lên đầu
+      const sortedNotifications = notifications.sort((a, b) => {
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
+
+      setAllNotifications(sortedNotifications);
       setUnreadCount(unreadCountFromAPI);
     } catch (error) {
       console.error("Error fetching notifications:", error);
@@ -59,7 +64,11 @@ const NotificationDropdown = ({
         const exists = prev.some((n) => n.id === latestNotification.id);
         if (!exists) {
           setUnreadCount((prevCount) => prevCount + 1);
-          return [latestNotification, ...prev];
+          // Thêm thông báo mới vào đầu và sắp xếp lại theo thời gian
+          const updatedNotifications = [latestNotification, ...prev];
+          return updatedNotifications.sort((a, b) => {
+            return new Date(b.createdAt) - new Date(a.createdAt);
+          });
         }
         return prev;
       });

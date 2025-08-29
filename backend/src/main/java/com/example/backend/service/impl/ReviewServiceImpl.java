@@ -1,3 +1,4 @@
+
 package com.example.backend.service.impl;
 
 import com.example.backend.dto.request.ReviewRequest;
@@ -8,13 +9,13 @@ import com.example.backend.repository.ShowingTimeRepository;
 import com.example.backend.repository.ReviewRepository;
 import com.example.backend.service.ReviewService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import lombok.RequiredArgsConstructor;
+
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -69,6 +70,16 @@ public class ReviewServiceImpl implements ReviewService {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new RuntimeException("Review không tồn tại"));
 
+        // Nếu chỉ muốn update status (ẩn bình luận, do organizer hoặc admin gọi)
+        if (dto.getStatus() != null) {
+            // Có thể bổ sung check role ở đây (tùy yêu cầu)
+            review.setStatus(ReviewStatus.valueOf(dto.getStatus()));
+            review.setUpdatedAt(LocalDateTime.now());
+            reviewRepository.save(review);
+            return toResponseDto(review);
+        }
+
+        // User sửa bình luận của mình (và phải là active)
         if (!review.getUser().getId().equals(currentUserId) || review.getStatus() != ReviewStatus.active) {
             throw new RuntimeException("Bạn không thể sửa review này");
         }
@@ -113,23 +124,43 @@ public class ReviewServiceImpl implements ReviewService {
                 .toList();
     }
 
-    // Method mới: admin lấy review theo trạng thái (status)
+    // THÊM MỚI: Lấy tất cả review (không filter status)
     @Override
-    public List<ReviewResponse> getReviewsByShowingTimeForAdmin(Integer showingTimeId, int page, int size, String status) {
+    public List<ReviewResponse> getAllReviewsByShowingTime(Integer showingTimeId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        ReviewStatus reviewStatus;
-        try {
-            reviewStatus = ReviewStatus.valueOf(status);
-        } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Trạng thái review không hợp lệ: " + status);
-        }
-
-        Page<Review> reviewPage = reviewRepository.findByShowingTimeIdAndStatus(showingTimeId, reviewStatus, pageable);
+        Page<Review> reviewPage = reviewRepository.findByShowingTimeId(showingTimeId, pageable);
         return reviewPage.getContent()
                 .stream()
                 .map(this::toResponseDto)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<ReviewResponse> getReviewsByShowingTimeForAdmin(Integer showingTimeId, int page, int size, String status) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        Page<Review> reviewPage;
+
+        if ("all".equalsIgnoreCase(status)) {
+            // Lấy cả active và deleted
+            reviewPage = reviewRepository.findByShowingTimeIdAndStatusIn(showingTimeId,
+                    List.of(ReviewStatus.active, ReviewStatus.deleted), pageable);
+        } else {
+            ReviewStatus reviewStatus;
+            try {
+                reviewStatus = ReviewStatus.valueOf(status);
+            } catch (IllegalArgumentException e) {
+                throw new RuntimeException("Trạng thái review không hợp lệ: " + status);
+            }
+            reviewPage = reviewRepository.findByShowingTimeIdAndStatus(showingTimeId, reviewStatus, pageable);
+        }
+
+        return reviewPage.getContent()
+                .stream()
+                .map(this::toResponseDto)
+                .collect(Collectors.toList());
+    }
+
 
     @Override
     public List<Integer> getShowingTimeIdsByUserId(Integer userId) {
@@ -155,4 +186,13 @@ public class ReviewServiceImpl implements ReviewService {
         dto.setUpdatedAt(r.getUpdatedAt());
         return dto;
     }
+
+    @Override
+    public boolean hasUserReviewed(Integer showingTimeId, Integer userId) {
+        return reviewRepository.existsByShowingTime_IdAndUser_IdAndStatus(
+                showingTimeId, userId, ReviewStatus.active
+        );
+    }
+
+
 }

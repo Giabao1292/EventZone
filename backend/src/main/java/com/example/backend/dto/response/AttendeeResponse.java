@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Builder
 @Getter
@@ -21,4 +22,8 @@ public class AttendeeResponse {
     private int numberOfSeats;
     private Instant checkInTime;
     private CheckIn checkInStatus;
+
+    private String seatLabels;
+    private String zoneNames;
+    private String zoneSeatCounts;
 }

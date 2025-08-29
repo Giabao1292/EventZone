@@ -1,33 +1,165 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import useNotifications from "../../../hooks/useNotification";
+import { notificationService } from "../../../services/notificationServices";
+import useWebSocket from "../../../hooks/useWebSocket";
 
 const DDNotification = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
   const dropdownRef = useRef(null);
   const timerRef = useRef(null);
+  const [allNotifications, setAllNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
 
-  // Use shared notification hook with admin-specific options
-  const {
-    allNotifications,
-    unreadCount,
-    loading,
-    connected,
-    handleNotificationClick,
-    handleMarkAllAsRead,
-    formatTime,
-  } = useNotifications({
-    wsOptions: {
-      notificationPrefix: "[Admin]",
-    },
-    onNotificationClick: (notification) => {
-      if (notification.redirectPath) {
-        window.location.href = notification.redirectPath;
-      }
-    },
+  // WebSocket hook
+  const { connected, notifications: wsNotifications } = useWebSocket({
+    notificationPrefix: "[Admin]",
   });
+
+  // Fetch initial notifications and unread count
+  const fetchNotifications = async () => {
+    try {
+      setLoading(true);
+      const [notificationsResponse, unreadResponse] = await Promise.all([
+        notificationService.getAllNotifications(),
+        notificationService.getUnreadCount(),
+      ]);
+
+      const notifications = notificationsResponse.data || [];
+      const unreadCountFromAPI = unreadResponse.data || 0;
+
+      // Sắp xếp thông báo theo thời gian mới nhất lên đầu
+      const sortedNotifications = notifications.sort((a, b) => {
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
+
+      setAllNotifications(sortedNotifications);
+      setUnreadCount(unreadCountFromAPI);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle new WebSocket notifications
+  useEffect(() => {
+    if (wsNotifications.length > 0 && !isMarkingAllRead) {
+      const latestNotification = wsNotifications[0];
+
+      // Add to notifications list if not already exists
+      setAllNotifications((prev) => {
+        const exists = prev.some((n) => n.id === latestNotification.id);
+        if (!exists) {
+          setUnreadCount((prevCount) => prevCount + 1);
+          // Thêm thông báo mới vào đầu và sắp xếp lại theo thời gian
+          const updatedNotifications = [latestNotification, ...prev];
+          return updatedNotifications.sort((a, b) => {
+            return new Date(b.createdAt) - new Date(a.createdAt);
+          });
+        }
+        return prev;
+      });
+
+      // Show browser notification if permission granted
+      if (Notification.permission === "granted") {
+        const title = `[Admin] ${latestNotification.title}`;
+        new Notification(title, {
+          body: latestNotification.content,
+          icon: "/favicon.ico",
+        });
+      }
+    }
+  }, [wsNotifications, isMarkingAllRead]);
+
+  // Request notification permission on component mount
+  useEffect(() => {
+    if (Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  // Fetch notifications on component mount
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  // Format time
+  const formatTime = (timestamp) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now - date) / (1000 * 60));
+
+    if (diffInMinutes < 1) return "Vừa xong";
+    if (diffInMinutes < 60) return `${diffInMinutes} phút trước`;
+    if (diffInMinutes < 1440)
+      return `${Math.floor(diffInMinutes / 60)} giờ trước`;
+    return `${Math.floor(diffInMinutes / 1440)} ngày trước`;
+  };
+
+  // Mark notification as read and handle redirect
+  const handleNotificationClick = async (notification) => {
+    try {
+      if (!notification.isRead) {
+        await notificationService.markAsRead(notification.id);
+
+        // Update local state immediately
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+        setAllNotifications((prev) =>
+          prev.map((n) =>
+            n.id === notification.id ? { ...n, isRead: true } : n
+          )
+        );
+      }
+
+      if (notification.redirectPath) {
+        if (typeof window !== "undefined") {
+          window.location.href = notification.redirectPath;
+        }
+      }
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      // Revert state on error
+      if (!notification.isRead) {
+        setUnreadCount((prev) => prev + 1);
+        setAllNotifications((prev) =>
+          prev.map((n) =>
+            n.id === notification.id ? { ...n, isRead: false } : n
+          )
+        );
+      }
+    }
+  };
+
+  // Mark all as read
+  const handleMarkAllAsRead = async () => {
+    if (isMarkingAllRead || unreadCount === 0) return;
+
+    try {
+      setIsMarkingAllRead(true);
+
+      // Call API first
+      await notificationService.markAllAsRead();
+
+      // Update state immediately after successful API call
+      setUnreadCount(0);
+      setAllNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+
+      // Refresh from server to ensure consistency
+      setTimeout(() => {
+        fetchNotifications();
+      }, 500);
+    } catch (error) {
+      console.error("Error marking all as read:", error);
+      // Refresh from server on error to get correct state
+      fetchNotifications();
+    } finally {
+      setIsMarkingAllRead(false);
+    }
+  };
 
   // Xử lý hiệu ứng delay khi hover
   const handleMouseEnter = () => {

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Xác minh thêm tài khoản ngân hàng</title>
+    <style>
+        .container {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            padding: 24px;
+            border-radius: 8px;
+            max-width: 500px;
+            margin: auto;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .code {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2563eb;
+            background-color: #e0edff;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-align: center;
+            letter-spacing: 6px;
+            margin: 20px 0;
+        }
+
+        .footer {
+            font-size: 13px;
+            color: #777;
+            margin-top: 30px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Xác minh thêm tài khoản ngân hàng</h2>
+    <p>Chúng tôi đã nhận được yêu cầu thêm tài khoản ngân hàng vào hệ thống của bạn.</p>
+    <p>Vui lòng sử dụng mã xác minh bên dưới để hoàn tất quá trình:</p>
+    <div class="code" th:text="${code}">123456</div>
+    <p>Mã có hiệu lực trong vòng <strong>5 phút</strong>. Tuyệt đối không chia sẻ mã này với người khác.</p>
+    <p>Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email.</p>
+
+    <div class="footer">
+        &copy; <span th:text="${year}">2025</span> Your Company. Bảo mật thông tin của bạn là ưu tiên hàng đầu.
+    </div>
+</div>
+</body>
+</html>
